@@ -12,21 +12,21 @@
 
     --sidebar-width: 255px;
 
-    --sidebar-bg: #fbfaf7;
+    --sidebar-bg: #31382c;
 
-    --sidebar-border: #e8e5de;
+    --sidebar-border: #4a5144;
 
-    --sidebar-text: #272820;
+    --sidebar-text: #f8f6f0;
 
-    --sidebar-muted: #8b8178;
+    --sidebar-muted: #c2c8bd;
 
     --sidebar-green: #53634b;
 
     --sidebar-green-dark: #3f5140;
 
-    --sidebar-active: #e8ede9;
+    --sidebar-active: #585f53;
 
-    --sidebar-danger: #a65a55;
+    --sidebar-danger: #e7aaa5;
 
 }
 
@@ -90,7 +90,7 @@
 
     gap: 10px;
 
-    color: #25271f;
+    color: var(--sidebar-text);
 
     font-family:
         'Poppins', sans-serif;
@@ -108,7 +108,7 @@
 
 .sidebar-logo:hover {
 
-    color: #25271f;
+    color: var(--sidebar-text);
 
     text-decoration: none;
 
@@ -127,7 +127,7 @@
 
     flex-shrink: 0;
 
-    color: #65735b;
+    color: var(--sidebar-muted);
 
     font-size: 17px;
 
@@ -142,7 +142,7 @@
         0
         28px;
 
-    color: #968c82;
+    color: var(--sidebar-muted);
 
     font-size: 11px;
 
@@ -173,8 +173,8 @@
     scrollbar-width: thin;
 
     scrollbar-color:
-        #cfcac1
-        transparent;
+        #72766e
+        var(--sidebar-bg);
 
 }
 
@@ -190,14 +190,14 @@
 
 .sidebar-navigation::-webkit-scrollbar-track {
 
-    background: transparent;
+    background: var(--sidebar-bg);
 
 }
 
 
 .sidebar-navigation::-webkit-scrollbar-thumb {
 
-    background: #cfcac1;
+    background: #72766e;
 
     border-radius: 20px;
 
@@ -230,7 +230,7 @@
         8px
         17px;
 
-    color: #887d73;
+    color: var(--sidebar-muted);
 
     font-size: 10px;
 
@@ -290,9 +290,9 @@
 
 .sidebar-link:hover {
 
-    background: #f0f1ed;
+    background: rgba(248, 246, 240, 0.06);
 
-    color: var(--sidebar-green);
+    color: var(--sidebar-text);
 
     text-decoration: none;
 
@@ -308,7 +308,7 @@
     background:
         var(--sidebar-active);
 
-    color: #3e5841;
+    color: var(--sidebar-text);
 
     font-weight: 600;
 
@@ -452,7 +452,7 @@
 
     overflow: hidden;
 
-    color: #292a25;
+    color: var(--sidebar-text);
 
     font-size: 12px;
 
@@ -478,7 +478,7 @@
 
     overflow: hidden;
 
-    color: #948b82;
+    color: var(--sidebar-muted);
 
     font-size: 9.5px;
 
@@ -584,9 +584,9 @@
 
 .sidebar-logout:hover {
 
-    background: #f8eeee;
+    background: rgba(231, 170, 165, 0.08);
 
-    color: #813f3b;
+    color: #f1bbb6;
 
     text-decoration: none;
 

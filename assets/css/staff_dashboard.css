@@ -96,10 +96,10 @@ body {
 
     padding: 0 30px;
 
-    background: #fbfaf7;
+    background: var(--sidebar-bg, #31382c);
 
     border-bottom:
-        1px solid #e8e5de;
+        1px solid var(--sidebar-border, #4a5144);
 
 }
 
@@ -108,7 +108,7 @@ body {
 
     margin: 0;
 
-    color: #5f665a;
+    color: var(--sidebar-text, #f8f6f0);
 
     font-size: 14px;
 
