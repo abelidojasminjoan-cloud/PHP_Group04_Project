@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../services/EmailService.php';
 
 /* =========================================================
    ONLY ALLOW POST
@@ -172,42 +173,111 @@ $passwordHash = password_hash(
    $status = 'pending';
 ========================================================= */
 
+
 $roleId = 3;
+$status = 'pending';
 
+try {
+    // Generate a cryptographically secure token.
+    $token = bin2hex(random_bytes(32));
 
-/* DEVELOPMENT */
+    // Store only the hash in MySQL.
+    $tokenHash = hash('sha256', $token);
 
-$status = 'active';
+    $passwordHash = password_hash(
+        $password,
+        PASSWORD_DEFAULT
+    );
 
+    $conn->begin_transaction();
 
-/* PRODUCTION - ENABLE LATER */
+    // Create pending customer account.
+    $stmt = $conn->prepare(
+        'INSERT INTO users
+            (role_id, first_name, last_name,
+             email, password, status)
+         VALUES (?, ?, ?, ?, ?, ?)'
+    );
 
-// $status = 'pending';
+    $stmt->bind_param(
+        'isssss',
+        $roleId,
+        $firstName,
+        $lastName,
+        $email,
+        $passwordHash,
+        $status
+    );
 
+    $stmt->execute();
 
-$insertStatement = $conn->prepare(
-    'INSERT INTO users
-    (
-        role_id,
-        first_name,
-        last_name,
-        email,
-        password,
-        status
-    )
-    VALUES (?, ?, ?, ?, ?, ?)'
-);
+    $userId = $conn->insert_id;
 
+    $stmt->close();
 
-$insertStatement->bind_param(
-    'isssss',
-    $roleId,
-    $firstName,
-    $lastName,
-    $email,
-    $passwordHash,
-    $status
-);
+    // Save hashed verification token.
+    $stmt = $conn->prepare(
+        'INSERT INTO email_verification_tokens
+            (user_id, token_hash, expires_at)
+         VALUES (
+            ?, ?,
+            DATE_ADD(NOW(), INTERVAL 30 MINUTE)
+         )'
+    );
+
+    $stmt->bind_param(
+        'is',
+        $userId,
+        $tokenHash
+    );
+
+    $stmt->execute();
+    $stmt->close();
+
+    $conn->commit();
+
+    // Send email after database transaction completes.
+    $emailSent = sendVerificationEmail(
+        $email,
+        $firstName,
+        $token
+    );
+
+    unset($_SESSION['register_data']);
+
+    if ($emailSent) {
+        $_SESSION['login_success'] =
+            'Account created! Check your email for '
+            . 'the verification link before logging in.';
+    } else {
+        $_SESSION['login_success'] =
+            'Account created, but we could not send '
+            . 'the verification email. Please contact '
+            . 'support to request another link.';
+    }
+
+    header('Location: ' . BASE_URL . '/login.php');
+    exit;
+
+} catch (Throwable $e) {
+    try {
+        $conn->rollback();
+    } catch (Throwable $ignored) {
+    }
+
+    error_log(
+        'PureVia registration error: '
+        . $e->getMessage()
+    );
+
+    $_SESSION['register_error'] =
+        'Unable to complete registration. '
+        . 'Please try again.';
+
+    header('Location: ' . BASE_URL . '/register.php');
+    exit;
+}
+
 
 
 /* =========================================================
