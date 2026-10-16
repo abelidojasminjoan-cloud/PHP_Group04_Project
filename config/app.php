@@ -4,7 +4,21 @@
    PUREVIA
    APPLICATION CONFIGURATION
 ========================================================= */
+declare(strict_types=1);
 
+$projectRoot = dirname(__DIR__);
+$autoload = $projectRoot . '/vendor/autoload.php';
+
+if (!is_file($autoload)) {
+    throw new RuntimeException(
+        'Composer dependencies missing. Run composer install.'
+    );
+}
+
+require_once $autoload;
+
+$dotenv = Dotenv\Dotenv::createImmutable($projectRoot);
+$dotenv->load();
 
 /* =========================================================
    APPLICATION INFORMATION
@@ -30,9 +44,16 @@ define(
 
 define(
     'APP_ENV',
-    'development'
+    strtolower($_ENV['APP_ENV'] ?? 'local')
 );
 
+define(
+    'APP_URL',
+    rtrim(
+        $_ENV['APP_URL'] ?? 'http://localhost/purevia_website',
+        '/'
+    )
+);
 
 /* =========================================================
    ERROR DISPLAY
@@ -44,7 +65,7 @@ define(
    Hide PHP errors from users.
 ========================================================= */
 
-if (APP_ENV === 'development') {
+if (APP_ENV !== 'production') {
 
     error_reporting(E_ALL);
 
