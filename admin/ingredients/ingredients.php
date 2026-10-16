@@ -185,6 +185,8 @@ $totalIngredients = count($ingredients);
 
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form2.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin_delete.css">
 </head>
 
 
@@ -590,6 +592,7 @@ $totalIngredients = count($ingredients);
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
 </body>
 
 </html>

@@ -330,6 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function populateForm(data, editing = false) {
         form.reset();
+        window.PureViaAccountValidation.clear(form);
 
         action.value = editing
             ? "update"
@@ -601,9 +602,9 @@ document.addEventListener("DOMContentLoaded", () => {
         ].filter(Boolean);
 
         if (parts.length < 3) {
-            alert(
-                "Please select your location and enter your street address first."
-            );
+            const street = document.getElementById('addressLine1');
+            window.PureViaAccountValidation.setError(street, 'Please select your location and enter your street address first.');
+            street.focus();
             return;
         }
 
@@ -624,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener("submit", event => {
 
-        if (!form.reportValidity()) {
+        if (!window.PureViaAccountValidation.validate(form)) {
             event.preventDefault();
             return;
         }
@@ -642,9 +643,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
             event.preventDefault();
 
-            alert(
-                "Please select Home or Office."
-            );
+            window.PureViaAccountValidation.setError(form.querySelector('[name="address_label"]'), 'Please select Home or Office.');
             return;
         }
 
@@ -662,9 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
             event.preventDefault();
 
-            alert(
-                "Please select a valid province."
-            );
+            window.PureViaAccountValidation.setError(province, 'Please select a valid province.');
 
             province.focus();
             return;
@@ -682,9 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
             event.preventDefault();
 
-            alert(
-                "Please select a valid city."
-            );
+            window.PureViaAccountValidation.setError(city, 'Please select a valid city.');
 
             city.focus();
             return;
@@ -706,9 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
             event.preventDefault();
 
-            alert(
-                "Please select a valid barangay."
-            );
+            window.PureViaAccountValidation.setError(barangay, 'Please select a valid barangay.');
 
             barangay.focus();
             return;
@@ -728,5 +721,9 @@ document.addEventListener("DOMContentLoaded", () => {
             config.initialForm || defaultForm,
             Boolean(config.isEdit)
         );
+        Object.entries(config.fieldErrors || {}).forEach(([name, message]) => {
+            const input = form.querySelector('[name="' + name + '"]');
+            if (input) window.PureViaAccountValidation.setError(input, message);
+        });
     }
 });

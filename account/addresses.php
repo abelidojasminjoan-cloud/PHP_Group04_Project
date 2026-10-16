@@ -71,6 +71,10 @@ if (empty($_SESSION['csrf_token'])) {
 /* FLASH MESSAGES */
 $success = (string) ($_SESSION['address_success'] ?? '');
 $error = (string) ($_SESSION['address_error'] ?? '');
+$fieldErrors = $_SESSION['address_field_errors'] ?? [];
+$oldAddress = $_SESSION['address_old'] ?? [];
+unset($_SESSION['address_field_errors'], $_SESSION['address_old']);
+if ($fieldErrors) $error = '';
 
 unset(
     $_SESSION['address_success'],
@@ -119,6 +123,10 @@ $defaultForm = [
 ];
 
 $initialForm = $editAddress ?? $defaultForm;
+if ($oldAddress && (int) ($oldAddress['id'] ?? 0) === (int) ($editAddress['id'] ?? 0)) {
+    $initialForm = array_replace($initialForm, $oldAddress);
+    $openModal = true;
+}
 
 /* DATA FOR EDIT MODAL */
 $addressJson = [];
@@ -303,7 +311,7 @@ $jsonFlags = JSON_HEX_TAG |
             <?php endif; ?>
 
             <?php if ($error !== ''): ?>
-                <div class="account-alert error" role="alert">
+                <div class="account-form-error" role="alert">
                     <?= e($error) ?>
                 </div>
             <?php endif; ?>
@@ -434,7 +442,7 @@ $jsonFlags = JSON_HEX_TAG |
                                 </button>
 
                                 <!-- DELETE: AVAILABLE FOR ALL ADDRESSES -->
-                                <form
+                                <form novalidate
                                     method="POST"
                                     action="<?= BASE_URL ?>/actions/account/manage-address.php"
                                     data-address-delete-form
@@ -470,7 +478,7 @@ $jsonFlags = JSON_HEX_TAG |
                             <!-- BOTTOM-RIGHT: SET AS DEFAULT -->
                             <?php if (!$isDefault): ?>
 
-                                <form
+                                <form novalidate
                                     method="POST"
                                     action="<?= BASE_URL ?>/actions/account/manage-address.php"
                                     class="address-set-default-form"
@@ -548,7 +556,7 @@ $jsonFlags = JSON_HEX_TAG |
 
         </header>
 
-        <form
+        <form novalidate
             id="addressModalForm"
             method="POST"
             action="<?= BASE_URL ?>/actions/account/manage-address.php"
@@ -589,7 +597,7 @@ $jsonFlags = JSON_HEX_TAG |
                             id="recipient_first_name"
                             name="recipient_first_name"
                             maxlength="100"
-                            required
+                            aria-required="true"
                         >
                     </div>
 
@@ -604,7 +612,7 @@ $jsonFlags = JSON_HEX_TAG |
                             id="recipient_last_name"
                             name="recipient_last_name"
                             maxlength="100"
-                            required
+                            aria-required="true"
                         >
                     </div>
 
@@ -632,7 +640,7 @@ $jsonFlags = JSON_HEX_TAG |
                         <select
                             id="addressCountry"
                             name="country"
-                            required
+                            aria-required="true"
                         >
                             <option value="Philippines">
                                 Philippines
@@ -646,7 +654,7 @@ $jsonFlags = JSON_HEX_TAG |
                             Region
                         </label>
 
-                        <select id="addressRegion" required>
+                        <select id="addressRegion" aria-required="true">
                             <option value="">
                                 Select region
                             </option>
@@ -662,7 +670,7 @@ $jsonFlags = JSON_HEX_TAG |
                         <select
                             id="addressProvince"
                             name="province"
-                            required
+                            aria-required="true"
                             disabled
                         >
                             <option value="">
@@ -680,7 +688,7 @@ $jsonFlags = JSON_HEX_TAG |
                         <select
                             id="addressCity"
                             name="city"
-                            required
+                            aria-required="true"
                             disabled
                         >
                             <option value="">
@@ -719,7 +727,7 @@ $jsonFlags = JSON_HEX_TAG |
                             maxlength="20"
                             inputmode="numeric"
                             placeholder="e.g. 1200"
-                            required
+                            aria-required="true"
                         >
                     </div>
 
@@ -736,7 +744,7 @@ $jsonFlags = JSON_HEX_TAG |
                             maxlength="255"
                             rows="3"
                             placeholder="Street name, building, house or unit number"
-                            required
+                            aria-required="true"
                         ></textarea>
                     </div>
 
@@ -801,7 +809,7 @@ $jsonFlags = JSON_HEX_TAG |
                                         name="address_label"
                                         value="Home"
                                         checked
-                                        required
+                                        aria-required="true"
                                     >
                                     <span>Home</span>
                                 </label>
@@ -811,7 +819,7 @@ $jsonFlags = JSON_HEX_TAG |
                                         type="radio"
                                         name="address_label"
                                         value="Office"
-                                        required
+                                        aria-required="true"
                                     >
                                     <span>Office</span>
                                 </label>
@@ -877,7 +885,8 @@ window.PUREVIA_ADDRESS_CONFIG = <?= json_encode([
     'defaultForm' => $defaultForm,
     'initialForm' => $initialForm,
     'openModal' => $openModal,
-    'isEdit' => $editAddress !== null
+    'isEdit' => $editAddress !== null,
+    'fieldErrors' => $fieldErrors
 ], $jsonFlags) ?>;
 </script>
 

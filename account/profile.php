@@ -102,6 +102,8 @@ if (empty($_SESSION['csrf_token'])) {
 
 $success = (string) ($_SESSION['profile_success'] ?? '');
 $error = (string) ($_SESSION['profile_error'] ?? '');
+$photoError = (string) ($_SESSION['profile_photo_error'] ?? '');
+unset($_SESSION['profile_photo_error']);
 
 unset($_SESSION['profile_success'], $_SESSION['profile_error']);
 ?>
@@ -233,7 +235,7 @@ unset($_SESSION['profile_success'], $_SESSION['profile_error']);
             <?php endif; ?>
 
             <?php if ($error !== ''): ?>
-                <div class="account-alert error" role="alert">
+                <div class="account-form-error" role="alert">
                     <?= e($error) ?>
                 </div>
             <?php endif; ?>
@@ -317,11 +319,12 @@ unset($_SESSION['profile_success'], $_SESSION['profile_error']);
 
                     </div>
 
-                    <form
+                    <form novalidate
                         id="profilePhotoForm"
+                        data-field-errors="<?= e(json_encode(['profile_photo' => $photoError], JSON_THROW_ON_ERROR)) ?>"
                         method="POST"
                         enctype="multipart/form-data"
-                        action="<?= BASE_URL ?>/actions/account/upload-profile-photo.php"
+                        action="<?= BASE_URL ?>/actions/account/profile_photo.php"
                     >
                         <input
                             type="hidden"
@@ -335,7 +338,7 @@ unset($_SESSION['profile_success'], $_SESSION['profile_error']);
                             id="profilePhotoInput"
                             accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                             hidden
-                            required
+                            aria-required="true"
                         >
 
                         <button

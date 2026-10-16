@@ -1,9 +1,117 @@
 /* =========================================================
    PUREVIA ADMIN CATEGORIES
-   SEARCH + FILTER + DELETE
+   ADD MODAL + SEARCH + FILTER + DELETE
 ========================================================= */
 
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Category-only modal handling; product_form.js is not loaded or modified.
+    const categoryModal = document.getElementById('addCategoryModal');
+    const categoryForm = document.getElementById('addCategoryForm');
+    const categoryOpener = document.getElementById('openAddCategoryModal');
+
+    if (categoryModal && categoryForm && categoryOpener) {
+        const nameInput = document.getElementById('categoryName');
+        const descriptionInput = document.getElementById('categoryDescription');
+        const submitButton = categoryForm.querySelector('[type="submit"]');
+        let previousFocus = null;
+        let backgroundElements = [];
+        let saving = false;
+
+        function setFieldError(input, errorId, message) {
+            const label = document.getElementById(errorId);
+            label.textContent = message;
+            label.hidden = !message;
+            input.setAttribute('aria-invalid', message ? 'true' : 'false');
+        }
+
+        function openCategoryModal(resetForm) {
+            previousFocus = document.activeElement === document.body ? categoryOpener : document.activeElement;
+            if (resetForm) {
+                categoryForm.reset();
+                // A server validation response can contain old default values.
+                nameInput.value = '';
+                descriptionInput.value = '';
+                setFieldError(nameInput, 'categoryNameError', '');
+                setFieldError(descriptionInput, 'categoryDescriptionError', '');
+                document.getElementById('categoryFormError').hidden = true;
+            }
+            categoryModal.classList.add('is-open');
+            categoryModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('form-modal-open');
+            backgroundElements = Array.from(document.body.children)
+                .filter(element => element !== categoryModal && !['SCRIPT', 'STYLE'].includes(element.tagName))
+                .map(element => ({ element, inert: element.inert }));
+            backgroundElements.forEach(({ element }) => { element.inert = true; });
+            const firstInvalid = categoryForm.querySelector('[aria-invalid="true"]');
+            (firstInvalid || nameInput).focus();
+        }
+
+        function closeCategoryModal() {
+            if (saving) return;
+            backgroundElements.forEach(({ element, inert }) => { element.inert = inert; });
+            backgroundElements = [];
+            (previousFocus && previousFocus.isConnected ? previousFocus : categoryOpener).focus();
+            categoryModal.classList.remove('is-open');
+            categoryModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('form-modal-open');
+        }
+
+        categoryOpener.addEventListener('click', function () { openCategoryModal(true); });
+        categoryModal.querySelectorAll('[data-close-category-modal]').forEach(function (button) {
+            button.addEventListener('click', closeCategoryModal);
+        });
+
+        categoryModal.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                closeCategoryModal();
+            }
+            if (event.key !== 'Tab') return;
+            const focusable = Array.from(categoryModal.querySelectorAll('button, input, textarea, [tabindex="0"]'))
+                .filter(element => !element.disabled && element.getClientRects().length);
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        });
+
+        categoryForm.addEventListener('submit', function (event) {
+            if (saving) {
+                event.preventDefault();
+                return;
+            }
+            const name = nameInput.value.trim();
+            const description = descriptionInput.value.trim();
+            let nameError = '';
+            if (!name) nameError = 'Please enter a category name.';
+            else if (Array.from(name).length > 100) nameError = 'Use no more than 100 characters.';
+            const descriptionError = Array.from(description).length > 5000
+                ? 'Use no more than 5,000 characters.' : '';
+            setFieldError(nameInput, 'categoryNameError', nameError);
+            setFieldError(descriptionInput, 'categoryDescriptionError', descriptionError);
+            document.getElementById('categoryFormError').hidden = true;
+
+            if (nameError || descriptionError) {
+                event.preventDefault();
+                (nameError ? nameInput : descriptionInput).focus();
+                return;
+            }
+            saving = true;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding…';
+            categoryForm.setAttribute('aria-busy', 'true');
+        });
+
+        if (categoryModal.classList.contains('is-open')) {
+            openCategoryModal(false);
+        }
+    }
 
     /* =====================================================
        ELEMENTS
@@ -21,8 +129,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const noCategoriesFound =
         document.getElementById('noCategoriesFound');
 
-    const deleteButtons =
-        document.querySelectorAll('.delete-category-button');
 
 
     /* =====================================================
@@ -128,53 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    /* =====================================================
-       DELETE CATEGORY
-    ===================================================== */
-
-    deleteButtons.forEach(function (button) {
-
-        button.addEventListener(
-            'click',
-            function () {
-
-                const categoryId =
-                    button.dataset.categoryId;
-
-                const categoryName =
-                    button.dataset.categoryName;
-
-
-                if (!categoryId) {
-                    return;
-                }
-
-
-                const confirmed =
-                    confirm(
-                        'Are you sure you want to delete "' +
-                        categoryName +
-                        '"?'
-                    );
-
-
-                if (!confirmed) {
-                    return;
-                }
-
-
-                /* =========================================
-                   SEND TO DELETE PROCESSOR
-                ========================================= */
-
-                window.location.href =
-                    './delete_category.php?id=' +
-                    encodeURIComponent(categoryId);
-
-            }
-        );
-
-    });
+    // Admin deletion confirmations are handled by admin_delete.js.
 
 
     /* =====================================================

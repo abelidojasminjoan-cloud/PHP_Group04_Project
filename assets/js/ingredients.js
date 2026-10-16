@@ -22,8 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const noIngredientsFound =
         document.getElementById('noIngredientsFound');
 
-    const deleteButtons =
-        document.querySelectorAll('.delete-ingredient-button');
 
 
     /* =====================================================
@@ -142,59 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    /* =====================================================
-       DELETE INGREDIENT
-    ===================================================== */
-
-    deleteButtons.forEach(function (button) {
-
-        button.addEventListener(
-            'click',
-            function () {
-
-
-                const ingredientId =
-                    button.dataset.ingredientId;
-
-
-                const ingredientName =
-                    button.dataset.ingredientName;
-
-
-                if (!ingredientId) {
-                    return;
-                }
-
-
-                /* CONFIRM DELETE */
-
-                const confirmed =
-                    confirm(
-                        'Are you sure you want to delete "' +
-                        ingredientName +
-                        '"?'
-                    );
-
-
-                if (!confirmed) {
-                    return;
-                }
-
-
-                /* =========================================
-                   GO TO DELETE PROCESSOR
-                ========================================= */
-
-                window.location.href =
-                    './delete_ingredient.php?id=' +
-                    encodeURIComponent(
-                        ingredientId
-                    );
-
-            }
-        );
-
-    });
+    // Admin deletion confirmations are handled by admin_delete.js.
 
 
     /* =====================================================
