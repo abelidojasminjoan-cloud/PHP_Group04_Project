@@ -1,349 +1,450 @@
+
 <?php
-
-/* =========================================================
+/* =====================================================
    PUREVIA HEADER
-========================================================= */
+===================================================== */
 
-
-/* =========================================================
-   CURRENT PAGE
-========================================================= */
-
-$currentPage = basename($_SERVER['PHP_SELF']);
-
-
-/* =========================================================
-   USER SESSION
-========================================================= */
+$currentPage = basename($_SERVER['PHP_SELF'] ?? '');
 
 $role = $_SESSION['role'] ?? 'guest';
-
 $userName = $_SESSION['name'] ?? 'Guest';
-
-
-/* =========================================================
-   USER INITIAL
-========================================================= */
 
 $userInitial = '';
 
-if ($role !== 'guest' && !empty($userName)) {
-
-    $userInitial = strtoupper(
-        substr($userName, 0, 1)
-    );
-
+if ($role !== 'guest' && $userName !== '') {
+    $userInitial = strtoupper(substr($userName, 0, 1));
 }
 
-
-/* =========================================================
-   CART COUNT
-========================================================= */
-
 /*
- * Temporary value.
- * Later this will come from carts/cart_items.
- */
-
+    cart count.
+*/
 $cartCount = 0;
+$headerUserId = (int) ($_SESSION['user_id'] ?? 0);
+
+if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
+    $stmt = $conn->prepare("
+        SELECT COALESCE(SUM(ci.quantity), 0) AS total
+        FROM carts c
+        INNER JOIN cart_items ci ON ci.cart_id = c.id
+        WHERE c.user_id = ?
+    ");
+
+    $stmt->bind_param('i', $headerUserId);
+    $stmt->execute();
+
+    $result = $stmt->get_result()->fetch_assoc();
+    $cartCount = (int) ($result['total'] ?? 0);
+
+    $stmt->close();
+}
 
 ?>
 
+<header class="site-header" id="pureviaHeader">
 
-<!-- =========================================
-     PUREVIA HEADER
-========================================== -->
-
-<header class="site-header">
-
-
-    <!-- =====================================
+    <!-- ==========================================
          ANNOUNCEMENT BAR
-    ====================================== -->
+         ALWAYS VISIBLE
+    =========================================== -->
 
     <div class="announcement-bar">
-
         <p>
             COMPLIMENTARY SHIPPING ON ORDERS OVER ₱75+
             YOUR CLEAR PATH TO BETTER SKIN
         </p>
-
     </div>
 
+    <!-- ==========================================
+         NAVIGATION AREA
+         SEARCH OVERLAYS THIS AREA ONLY
+    =========================================== -->
 
-    <!-- =====================================
-         MAIN NAVIGATION
-    ====================================== -->
+    <div class="pv-header-navigation">
 
-    <div class="navbar">
+        <div class="navbar">
 
+            <!-- LEFT NAVIGATION -->
 
-        <!-- =================================
-             LEFT SIDE
-        ================================== -->
+            <div class="navbar-left">
 
-        <div class="navbar-left">
-
-
-            <!-- BRAND -->
-
-            <a
-                href="<?= BASE_URL ?>/index.php"
-                class="brand"
-            >
-
-                <span class="brand-icon">
-                    <i class="fa-solid fa-leaf"></i>
-                </span>
-
-                <span class="brand-name">
-                    PUREVIA
-                </span>
-
-            </a>
-
-
-            <!-- MAIN MENU -->
-
-            <nav class="main-nav">
-
+                
                 <a
-                    href="<?= BASE_URL ?>/shop.php"
-                    class="<?= $currentPage === 'shop.php' ? 'active' : '' ?>"
+                    href="<?= BASE_URL ?>/index.php"
+                    class="brand"
+                    aria-label="PureVia Home"
                 >
-                    Shop
-                </a>
-
-
-                <a
-                    href="<?= BASE_URL ?>/skin-match.php"
-                    class="<?= $currentPage === 'skin-match.php' ? 'active' : '' ?>"
-                >
-                    Skin Match
-                </a>
-
-            </nav>
-
-        </div>
-
-
-        <!-- =================================
-             RIGHT SIDE
-        ================================== -->
-
-        <div class="navbar-right">
-
-
-            <!-- =================================
-                 SEARCH
-            ================================== -->
-
-            <a
-                href="<?= BASE_URL ?>/search.php"
-                class="nav-icon"
-                aria-label="Search"
-                title="Search"
-            >
-
-                <i class="fa-solid fa-magnifying-glass"></i>
-
-            </a>
-
-
-            <!-- =================================
-                HEART / SKIN PROFILE
-            ================================== -->
-
-            <?php if ($role === 'customer'): ?>
-
-                <a
-                    href="<?= BASE_URL ?>/account/skin-profile.php"
-                    class="nav-icon"
-                    aria-label="Skin Profile"
-                    title="Skin Profile"
-                >
-                    <i class="fa-regular fa-heart"></i>
-                </a>
-
-            <?php else: ?>
-
-                <a
-                    href="#"
-                    class="nav-icon"
-                    aria-label="Favorites"
-                    title="Favorites"
-                >
-                    <i class="fa-regular fa-heart"></i>
-                </a>
-
-            <?php endif; ?>
-
-
-            <!-- =================================
-                CUSTOMER ACCOUNT
-            ================================== -->
-
-            <?php if ($role === 'customer'): ?>
-
-                <div class="account-dropdown">
-
-                    <!-- ACCOUNT TRIGGER -->
-                    <button
-                        type="button"
-                        class="account-link account-dropdown-trigger"
-                        id="accountDropdownTrigger"
-                        aria-label="Account menu"
-                        aria-expanded="false"
-                        aria-controls="accountDropdownMenu"
+                    <img
+                        src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png"
+                        alt="PureVia"
+                        class="brand-logo"
+                        width="180"
+                        height="70"
                     >
-
-                        <span class="account-avatar">
-                            <?= htmlspecialchars($userInitial) ?>
-                        </span>
-
-                        <span class="account-name">
-                            <?= htmlspecialchars($userName) ?>
-                        </span>
-
-                    </button>
+                </a>
 
 
-                    <!-- ACCOUNT DROPDOWN -->
-                    <div
-                        class="account-dropdown-menu"
-                        id="accountDropdownMenu"
-                        aria-hidden="true"
+                <nav class="main-nav">
+
+                    <a
+                        href="<?= BASE_URL ?>/shop.php"
+                        class="<?= $currentPage === 'shop.php' ? 'active' : '' ?>"
                     >
+                        SHOP
+                    </a>
 
-                        <a
-                            href="<?= BASE_URL ?>/account/profile.php"
-                            class="account-dropdown-item"
-                        >
-                            <i class="fa-regular fa-user"></i>
+                    <a
+                        href="<?= BASE_URL ?>/skin-match.php"
+                        class="<?= $currentPage === 'skin-match.php' ? 'active' : '' ?>"
+                    >
+                        SKIN MATCH
+                    </a>
 
-                            <span>My Profile</span>
-                        </a>
+                </nav>
 
+            </div>
 
-                        <a
-                            href="<?= BASE_URL ?>/my-orders.php"
-                            class="account-dropdown-item"
-                        >
-                            <i class="fa-solid fa-box"></i>
+            <!-- RIGHT NAVIGATION -->
 
-                            <span>My Orders</span>
-                        </a>
+            <div class="navbar-right">
 
-
-                        <div class="account-dropdown-divider"></div>
-
-
-                        <a
-                            href="<?= BASE_URL ?>/actions/auth/logout.php"
-                            class="account-dropdown-item account-dropdown-logout"
-                        >
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-
-                            <span>Sign Out</span>
-                        </a>
-
-                    </div>
-
-                </div>
-
-            <!-- =================================
-                 ADMIN ACCOUNT
-            ================================== -->
-
-            <?php elseif ($role === 'admin'): ?>
-
-                <a
-                    href="<?= BASE_URL ?>/admin/dashboard.php"
-                    class="account-link"
-                    aria-label="Admin Dashboard"
-                    title="Admin Dashboard"
-                >
-
-                    <span class="account-avatar">
-                        <?= htmlspecialchars($userInitial) ?>
-                    </span>
-
-                    <span class="account-name">
-                        Admin
-                    </span>
-
-                </a>
-
-
-            <!-- =================================
-                 STAFF ACCOUNT
-            ================================== -->
-
-            <?php elseif ($role === 'staff'): ?>
-
-                <a
-                    href="<?= BASE_URL ?>/staff/dashboard.php"
-                    class="account-link"
-                    aria-label="Staff Dashboard"
-                    title="Staff Dashboard"
-                >
-
-                    <span class="account-avatar">
-                        <?= htmlspecialchars($userInitial) ?>
-                    </span>
-
-                    <span class="account-name">
-                        Staff
-                    </span>
-
-                </a>
-
-
-            <!-- =================================
-                GUEST ACCOUNT
-            ================================== -->
-
-            <?php else: ?>
+                <!-- SEARCH ICON -->
 
                 <button
                     type="button"
-                    class="nav-icon guest-account-icon login-modal-trigger"
-                    id="openLoginModal"
-                    aria-label="Login"
-                    title="Login"
+                    class="nav-icon pv-search-trigger"
+                    id="pvSearchTrigger"
+                    aria-label="Open search"
+                    aria-expanded="false"
+                    aria-controls="pvSearchPanel"
                 >
-                    <i class="fa-regular fa-user"></i>
+                    <div class="pv-search-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             xmlns="http://www.w3.org/2000/svg" focusable="false">
+                            <path d="M14.9536 14.9458L21 21M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                                  stroke="currentColor" stroke-width="2"
+                                  stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
                 </button>
 
-            <?php endif; ?>
+                <!-- SKIN PROFILE / FAVORITES -->
+
+                <?php if ($role === 'customer'): ?>
+
+                    <a
+                        href="<?= BASE_URL ?>/account/skin-profile.php"
+                        class="nav-icon"
+                        aria-label="Skin Profile"
+                    >
+                        <i class="fa-regular fa-heart"></i>
+                    </a>
+
+                <?php else: ?>
+
+                    <a
+                        href="#"
+                        class="nav-icon"
+                        aria-label="Favorites"
+                    >
+                        <i class="fa-regular fa-heart"></i>
+                    </a>
+
+                <?php endif; ?>
+
+                <!-- ACCOUNT -->
+
+                <?php if ($role === 'customer'): ?>
+
+                    <div class="account-dropdown">
+
+                        <button
+                            type="button"
+                            class="account-link account-dropdown-trigger"
+                            id="accountDropdownTrigger"
+                            aria-expanded="false"
+                            aria-controls="accountDropdownMenu"
+                        >
+                            <span class="account-avatar">
+                                <?= htmlspecialchars($userInitial, ENT_QUOTES, 'UTF-8') ?>
+                            </span>
+
+                            <span class="account-name">
+                                <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>
+                            </span>
+                        </button>
+
+                        <div
+                            class="account-dropdown-menu"
+                            id="accountDropdownMenu"
+                            aria-hidden="true"
+                        >
+
+                            <a
+                                href="<?= BASE_URL ?>/account/profile.php"
+                                class="account-dropdown-item"
+                            >
+                                <i class="fa-regular fa-user"></i>
+                                <span>My Account</span>
+                            </a>
+
+                            <a
+                                href="<?= BASE_URL ?>/my-orders.php"
+                                class="account-dropdown-item"
+                            >
+                                <i class="fa-solid fa-box"></i>
+                                <span>My Orders</span>
+                            </a>
+
+                            <div class="account-dropdown-divider"></div>
+
+                            <a
+                                href="<?= BASE_URL ?>/actions/auth/logout.php"
+                                class="account-dropdown-item account-dropdown-logout"
+                            >
+                                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                <span>Sign Out</span>
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                <?php elseif ($role === 'admin'): ?>
+
+                    <a
+                        href="<?= BASE_URL ?>/admin/dashboard.php"
+                        class="account-link"
+                    >
+                        <span class="account-avatar">
+                            <?= htmlspecialchars($userInitial, ENT_QUOTES, 'UTF-8') ?>
+                        </span>
+
+                        <span class="account-name">Admin</span>
+                    </a>
+
+                <?php elseif ($role === 'staff'): ?>
+
+                    <a
+                        href="<?= BASE_URL ?>/staff/dashboard.php"
+                        class="account-link"
+                    >
+                        <span class="account-avatar">
+                            <?= htmlspecialchars($userInitial, ENT_QUOTES, 'UTF-8') ?>
+                        </span>
+
+                        <span class="account-name">Staff</span>
+                    </a>
+
+                <?php else: ?>
+
+                    <a
+                        href="<?= BASE_URL ?>/login.php"
+                        class="nav-icon guest-account-icon"
+                        aria-label="Sign in"
+                    >
+                        <div class="pv-person-icon" aria-hidden="true">
+                            <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 64 64"
+                                xmlns="http://www.w3.org/2000/svg"
+                                stroke-width="3"
+                                stroke="currentColor"
+                                fill="none"
+                            >
+                                <circle cx="32" cy="18.14" r="11.14"/>
+                                <path d="M54.55,56.85A22.55,22.55,0,0,0,32,34.3h0A22.55,22.55,0,0,0,9.45,56.85Z"/>
+                            </svg>
+                        </div>
+                    </a>
 
 
-            <!-- =================================
-                 BAG
-            ================================== -->
+                <?php endif; ?>
 
-            <a
-                href="<?= BASE_URL ?>/cart.php"
-                class="bag-link"
-                aria-label="Shopping Bag"
-                title="Shopping Bag"
-            >
+                <!-- SHOPPING BAG -->
 
-                <i class="fa-solid fa-bag-shopping"></i>
+                <a
+                    href="<?= BASE_URL ?>/cart.php"
+                    class="bag-link"
+                    aria-label="Shopping Bag, <?= (int) $cartCount ?> <?= $cartCount === 1 ? 'item' : 'items' ?>"
+                >
+                    <div class="pv-bag-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             xmlns="http://www.w3.org/2000/svg" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="feather feather-shopping-bag" focusable="false">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                    </div>
 
-                <span>
-                    Bag
+                    <span class="bag-count" aria-hidden="true" <?= $cartCount === 0 ? 'hidden' : '' ?>><?= $cartCount > 99 ? '99+' : (int) $cartCount ?></span>
+                </a>
 
-                    <span class="bag-count">
-                        (<?= (int) $cartCount ?>)
-                    </span>
-                </span>
-
-            </a>
-
+            </div>
 
         </div>
+
+        <!-- ==========================================
+             SEARCH PANEL
+             OVERLAYS NAVIGATION ONLY
+        =========================================== -->
+
+        <section
+            class="pv-search-panel"
+            id="pvSearchPanel"
+            role="search"
+            aria-label="Search PureVia products"
+            hidden
+        >
+
+            <div class="pv-search-inner">
+
+                <div class="pv-search-bar-row">
+
+                    <div class="pv-search-widget">
+
+                        <!-- SEARCH FORM -->
+
+                        <form
+                            class="pv-search-form"
+                            id="pvSearchForm"
+                            role="search"
+                            autocomplete="off"
+                        >
+
+                            <div class="pv-search-field">
+
+                                <label for="pvSearchInput">
+                                    Search
+                                </label>
+
+                                <input
+                                    type="search"
+                                    id="pvSearchInput"
+                                    name="q"
+                                    placeholder=""
+                                    aria-label="Search skincare products"
+                                    aria-autocomplete="list"
+                                    aria-controls="pvSearchDropdown"
+                                    aria-expanded="false"
+                                >
+
+                            </div>
+
+                            <!-- CLEAR SEARCH -->
+
+                            <button
+                                type="button"
+                                class="pv-search-clear"
+                                id="pvSearchClear"
+                                aria-label="Clear search"
+                                hidden
+                            >
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+
+                            <!-- SEARCH SUBMIT -->
+
+                            <button
+                                type="submit"
+                                class="pv-search-submit"
+                                aria-label="Submit search"
+                            >
+                                <div class="pv-search-icon" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg" focusable="false">
+                                        <path d="M14.9536 14.9458L21 21M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                                              stroke="currentColor" stroke-width="2"
+                                              stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </button>
+
+                        </form>
+
+                        <!-- ==================================
+                             LIVE SEARCH DROPDOWN
+                        =================================== -->
+
+                        <div
+                            class="pv-search-dropdown"
+                            id="pvSearchDropdown"
+                            hidden
+                        >
+
+                            <div class="pv-search-columns">
+
+                                <!-- SUGGESTIONS -->
+
+                                <div class="pv-search-suggestions">
+
+                                    <h3>SUGGESTIONS</h3>
+
+                                    <div id="pvSearchSuggestions"></div>
+
+                                </div>
+
+                                <!-- PRODUCTS -->
+
+                                <div class="pv-search-products">
+
+                                    <h3>PRODUCTS</h3>
+
+                                    <div id="pvSearchProducts"></div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- VIEW ALL RESULTS -->
+
+                            <a
+                                href="<?= BASE_URL ?>/shop.php"
+                                class="pv-search-view-all"
+                                id="pvSearchViewAll"
+                            >
+
+                                <span id="pvSearchViewAllText">
+                                    View all results
+                                </span>
+
+                                <i class="fa-solid fa-arrow-right"></i>
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                    <!-- CLOSE SEARCH -->
+
+                    <button
+                        type="button"
+                        class="pv-search-close"
+                        id="pvSearchClose"
+                        aria-label="Close search"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
 
     </div>
 
 </header>
+
+<!-- ==========================================
+     DARK BACKGROUND OVERLAY
+=========================================== -->
+
+<div
+    class="pv-search-overlay"
+    id="pvSearchOverlay"
+    hidden
+></div>

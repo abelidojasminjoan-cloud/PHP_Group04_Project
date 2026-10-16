@@ -2,7 +2,6 @@
    PUREVIA HEADER
 ========================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500&display=swap');
 
 
 /* =========================================
@@ -17,7 +16,7 @@
 
 body {
     margin: 0;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 
@@ -93,59 +92,78 @@ body {
 }
 
 
+
 /* =========================================
-   PUREVIA BRAND
+   PUREVIA IMAGE LOGO
 ========================================= */
 
 .brand {
-    display: flex;
-    align-items: center;
+    position: relative;
 
-    gap: 11px;
-
-    color: #292a25;
-
-    text-decoration: none;
-}
-
-
-/* Temporary leaf logo */
-
-.brand-icon {
     display: flex;
     align-items: center;
     justify-content: center;
 
-    color: #69745d;
+    width: 190px;
+    height: 78px;
 
-    font-size: 20px;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    text-decoration: none;
 }
 
+.brand-logo {
+    display: block;
 
-/* PUREVIA text */
-
-.brand-name {
-    font-family: 'Playfair Display', serif;
-
-    font-size: 25px;
-    font-weight: 400;
-
-    letter-spacing: 1.5px;
-}
-
-
-/*
-If you use an actual image logo,
-this will control its size.
-*/
-
-.brand img {
-    width: 32px;
-    height: 32px;
+    width: 190px;
+    height: 190px;
+    max-width: none;
 
     object-fit: contain;
+
+    transform: scale(0.80);
+    transform-origin: center;
+
 }
 
+
+/* Bootstrap lg breakpoint: shift only on wider screens. */
+@media (min-width: 992px) {
+    .site-header .brand {
+        left: -10px;
+    }
+
+    .site-header .navbar-left {
+        gap: 40px;
+    }
+}
+
+/* TABLET */
+@media (max-width: 900px) {
+    .brand {
+        width: 160px;
+        height: 70px;
+    }
+
+    .brand-logo {
+        width: 160px;
+        height: 160px;
+    }
+}
+
+/* MOBILE */
+@media (max-width: 650px) {
+    .brand {
+        width: 135px;
+        height: 65px;
+    }
+
+    .brand-logo {
+        width: 135px;
+        height: 135px;
+    }
+}
 
 /* =========================================
    MAIN NAVIGATION
@@ -212,7 +230,7 @@ this will control its size.
     display: flex;
     align-items: center;
 
-    gap: 25px;
+    gap: 16px;
 }
 
 
@@ -239,6 +257,26 @@ this will control its size.
 .nav-icon:hover {
     color: #69745d;
     transform: translateY(-1px);
+}
+
+.pv-search-icon,
+.pv-person-icon,
+.pv-bag-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.pv-search-icon svg,
+.pv-person-icon svg,
+.pv-bag-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 /* =========================================
@@ -318,10 +356,9 @@ this will control its size.
 ========================================= */
 
 .bag-link {
+    position: relative;
     display: flex;
     align-items: center;
-
-    gap: 8px;
 
     color: #292a25;
 
@@ -330,16 +367,32 @@ this will control its size.
     font-size: 11px;
 }
 
-.bag-link i {
-    font-size: 15px;
-}
-
 .bag-link:hover {
     color: #69745d;
 }
 
 .bag-count {
-    color: #6d6d68;
+    position: absolute;
+    top: -7px;
+    right: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #38654d;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.bag-count[hidden] {
+    display: none;
 }
 
 
@@ -420,10 +473,6 @@ this will control its size.
         padding: 0 20px;
     }
 
-    .brand-name {
-        font-size: 21px;
-    }
-
     .navbar-left {
         gap: 20px;
     }
@@ -437,10 +486,6 @@ this will control its size.
     }
 
     .account-name {
-        display: none;
-    }
-
-    .bag-link span {
         display: none;
     }
 
@@ -472,7 +517,7 @@ this will control its size.
 
     text-decoration: none;
 
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Poppins', sans-serif;
 
     cursor: pointer;
 }

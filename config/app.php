@@ -279,7 +279,7 @@ if (session_status() === PHP_SESSION_ACTIVE) {
 
 define(
     'MAX_LOGIN_ATTEMPTS',
-    5
+    3
 );
 
 

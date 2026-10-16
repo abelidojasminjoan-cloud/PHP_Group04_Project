@@ -50,7 +50,7 @@ body {
     background: var(--users-bg);
     color: var(--users-text);
 
-    font-family: 'DM Sans', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 
@@ -132,7 +132,7 @@ body {
 
     color: #11130f;
 
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 34px;
     font-weight: 600;
@@ -297,7 +297,7 @@ body {
 
     color: #22241e;
 
-    font-family: 'DM Sans', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 14px;
 }
@@ -372,7 +372,7 @@ body {
 
     color: #4e5549;
 
-    font-family: 'DM Sans', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 13px;
     font-weight: 500;
@@ -423,7 +423,7 @@ body {
 
     color: #272820;
 
-    font-family: 'DM Sans', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 
@@ -715,7 +715,7 @@ body {
 
     border-radius: 30px;
 
-    font-family: monospace;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 11px;
     font-weight: 500;
@@ -764,7 +764,7 @@ body {
 
     color: #81756c !important;
 
-    font-family: monospace;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 13px !important;
 

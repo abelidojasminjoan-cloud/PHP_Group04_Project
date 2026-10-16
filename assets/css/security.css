@@ -1,0 +1,424 @@
+
+:root {
+    --sec-bg: #f8f5f0;
+    --sec-white: #ffffff;
+    --sec-text: #151515;
+    --sec-muted: #a17f73;
+    --sec-border: #dcd1c4;
+    --sec-green: #38654d;
+    --sec-green-dark: #284b39;
+    --sec-active: #e8eeea;
+    --sec-radius: 12px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+.sec-page {
+    min-height: calc(100vh - 100px);
+    background: var(--sec-bg);
+    padding: 42px 24px 80px;
+    color: var(--sec-text);
+}
+
+.sec-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.sec-page-heading {
+    margin-bottom: 42px;
+}
+
+.sec-page-heading h1 {
+    margin: 0 0 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(30px, 3vw, 42px);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.sec-page-heading p {
+    margin: 0;
+    color: var(--sec-muted);
+    font-size: 15px;
+}
+
+.sec-layout {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    align-items: start;
+    gap: 40px;
+}
+
+/* SIDEBAR */
+
+.sec-sidebar {
+    background: var(--sec-white);
+    border: 1px solid var(--sec-border);
+    border-radius: var(--sec-radius);
+    padding: 26px 24px;
+}
+
+.sec-user {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 18px 0 20px;
+    border-bottom: 1px solid var(--sec-border);
+}
+
+.sec-avatar {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background: var(--sec-green);
+    color: white;
+    font-size: 23px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.sec-user-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+}
+
+.sec-user-email {
+    font-size: 12px;
+    color: var(--sec-muted);
+    overflow-wrap: anywhere;
+}
+
+.sec-role {
+    display: inline-flex;
+    margin-top: 12px;
+    padding: 7px 13px;
+    border-radius: 30px;
+    background: var(--sec-active);
+    color: var(--sec-green);
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+/* SIDEBAR LINKS */
+
+.sec-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-top: 15px;
+}
+
+.sec-nav a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 42px;
+    padding: 10px 14px;
+    border-radius: 7px;
+    color: var(--sec-text);
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sec-nav a span {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.sec-nav a:hover,
+.sec-nav a.active {
+    background: var(--sec-active);
+    color: var(--sec-green);
+}
+
+.sec-nav-divider {
+    height: 1px;
+    margin: 12px 0;
+    background: var(--sec-border);
+}
+
+/* MAIN CONTENT */
+
+.sec-content {
+    min-width: 0;
+}
+
+.sec-content h2 {
+    margin: 0 0 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 29px;
+    font-weight: 500;
+}
+
+.sec-card {
+    width: 100%;
+    max-width: 562px;
+    background: var(--sec-white);
+    border: 1px solid var(--sec-border);
+    border-radius: var(--sec-radius);
+    padding: 30px;
+}
+
+.sec-card h3 {
+    margin: 0 0 24px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 22px;
+    font-weight: 500;
+}
+
+/* FORM */
+
+#secPasswordForm {
+    max-width: 500px;
+}
+
+.sec-field {
+    margin-bottom: 21px;
+}
+
+.sec-field label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.sec-input-wrap {
+    position: relative;
+}
+
+.sec-input-wrap input {
+    display: block;
+    width: 100%;
+    height: 55px;
+    padding: 0 48px 0 17px;
+    border: 1px solid var(--sec-border);
+    border-radius: 9px;
+    background: var(--sec-white);
+    color: var(--sec-text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.sec-input-wrap input::placeholder {
+    color: #a79589;
+}
+
+.sec-input-wrap input:focus {
+    border-color: var(--sec-green);
+    box-shadow: 0 0 0 2px rgba(56, 101, 77, 0.08);
+}
+
+.sec-input-wrap input.sec-invalid {
+    border-color: #c63e32;
+}
+
+.sec-input-wrap input.sec-valid {
+    border-color: var(--sec-green);
+}
+
+/* SHOW/HIDE PASSWORD */
+
+.sec-toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #897d71;
+    cursor: pointer;
+}
+
+.sec-toggle-password:hover {
+    color: var(--sec-green);
+}
+
+.sec-toggle-password[hidden] {
+    display: none;
+}
+
+.sec-input-wrap input::-ms-reveal {
+    display: none;
+}
+
+/* VALIDATION TEXT */
+
+.sec-field-hint {
+    margin: 7px 0 0;
+    font-size: 12px;
+    color: var(--sec-muted);
+}
+
+.sec-field-hint.sec-hint-success {
+    color: var(--sec-green);
+}
+
+.sec-field-hint.sec-hint-error {
+    color: #c63e32;
+}
+
+.sec-client-error {
+    margin: 0 0 15px;
+    font-size: 13px;
+    color: #c63e32;
+}
+
+.sec-client-error[hidden] {
+    display: none;
+}
+
+/* SUBMIT BUTTON */
+
+.sec-submit {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 53px;
+    padding: 0 28px;
+    border: 1px solid var(--sec-green);
+    border-radius: 8px;
+    background: var(--sec-green);
+    color: white;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.sec-submit:hover {
+    background: var(--sec-green-dark);
+    border-color: var(--sec-green-dark);
+}
+
+.sec-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* SERVER ALERTS */
+
+.sec-alert {
+    max-width: 500px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.sec-alert p {
+    margin: 0;
+}
+
+.sec-alert p + p {
+    margin-top: 5px;
+}
+
+.sec-alert-error {
+    background: #fff0ed;
+    border: 1px solid #f1c4bd;
+    color: #b73127;
+}
+
+.sec-alert-success {
+    background: #eef5f0;
+    border: 1px solid #c5dccd;
+    color: var(--sec-green);
+}
+
+.sec-alert-success i {
+    margin-right: 7px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+    .sec-layout {
+        grid-template-columns: 210px minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    .sec-sidebar {
+        padding: 20px 15px;
+    }
+}
+
+@media (max-width: 700px) {
+    .sec-page {
+        padding: 28px 16px 55px;
+    }
+
+    .sec-page-heading {
+        margin-bottom: 28px;
+    }
+
+    .sec-layout {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .sec-sidebar {
+        padding: 15px;
+    }
+
+    .sec-user {
+        padding: 12px 0 18px;
+    }
+
+    .sec-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .sec-nav-divider {
+        grid-column: 1 / -1;
+    }
+
+    .sec-nav a {
+        font-size: 12px;
+        padding: 9px;
+        gap: 8px;
+    }
+
+    .sec-content h2 {
+        font-size: 26px;
+    }
+
+    .sec-card {
+        padding: 22px 18px;
+    }
+
+    .sec-card h3 {
+        font-size: 21px;
+    }
+
+    #secPasswordForm {
+        max-width: none;
+    }
+}

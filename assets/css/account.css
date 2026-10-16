@@ -1,26 +1,55 @@
-
 /* =========================================
-   PUREVIA CUSTOMER ACCOUNT
+   PUREVIA — ACCOUNT STYLES
 ========================================= */
 
 .account-page {
     min-height: calc(100vh - 110px);
-    background: #f8f5f0;
     padding: 33px 40px 65px;
-    font-family: 'DM Sans', sans-serif;
+    background: #f8f5f0;
+    font-family: 'Poppins', sans-serif;
+    color: #171717;
 }
 
 .account-page * {
     box-sizing: border-box;
 }
 
-.account-layout {
+/* =========================================
+   PAGE INTRODUCTION
+========================================= */
+
+.pv-account-intro {
     max-width: 1204px;
-    margin: 0 auto;
+    margin: 0 auto 28px;
+}
+
+.pv-account-intro h1 {
+    margin: 0 0 6px;
+    font: 600 31px 'Poppins', sans-serif;
+    color: #171717;
+}
+
+.pv-account-intro p {
+    margin: 0;
+    font-size: 13px;
+    color: #9b8475;
+}
+
+/* =========================================
+   ACCOUNT LAYOUT
+========================================= */
+
+.account-layout {
     display: grid;
     grid-template-columns: 250px minmax(0, 1fr);
-    gap: 40px;
     align-items: start;
+    gap: 40px;
+    max-width: 1204px;
+    margin: 0 auto;
+}
+
+.account-content {
+    min-width: 0;
 }
 
 /* =========================================
@@ -28,10 +57,10 @@
 ========================================= */
 
 .account-sidebar {
-    background: #fff;
+    padding: 30px 25px 25px;
     border: 1px solid #d9d0c4;
     border-radius: 15px;
-    padding: 45px 25px 25px;
+    background: #fff;
 }
 
 .account-user {
@@ -42,31 +71,38 @@
 }
 
 .account-user-avatar {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: #39624b;
-    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 70px;
+    height: 70px;
+    margin-bottom: 15px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #39624b;
+    color: #fff;
     font-size: 25px;
     font-weight: 700;
-    margin-bottom: 15px;
+}
+
+.account-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .account-user h3 {
+    margin: 0 0 9px;
+    color: #111;
     font-size: 17px;
     font-weight: 700;
-    color: #111;
-    margin: 0 0 9px;
 }
 
 .account-user p {
-    font-size: 12px;
-    color: #947f72;
-    overflow-wrap: anywhere;
     margin: 0 0 13px;
+    color: #947f72;
+    font-size: 12px;
+    overflow-wrap: anywhere;
 }
 
 .account-role {
@@ -74,15 +110,14 @@
     border-radius: 20px;
     background: #e9efea;
     color: #315d45;
-    font-size: 11px;
+    font: 11px 'Poppins', sans-serif;
     letter-spacing: 1px;
-    font-family: monospace;
 }
 
 .account-sidebar-divider {
     height: 1px;
-    background: #ddd3c7;
     margin: 20px 0;
+    background: #ddd3c7;
 }
 
 .account-sidebar-nav {
@@ -97,11 +132,11 @@
     gap: 15px;
     min-height: 48px;
     padding: 12px 18px;
+    border-radius: 10px;
     color: #171717;
     font-size: 15px;
     font-weight: 500;
     text-decoration: none;
-    border-radius: 10px;
     transition: background 0.2s, color 0.2s;
 }
 
@@ -117,12 +152,8 @@
 }
 
 /* =========================================
-   MAIN CONTENT
+   CONTENT HEADER
 ========================================= */
-
-.account-content {
-    min-width: 0;
-}
 
 .account-content-header {
     display: flex;
@@ -132,12 +163,11 @@
     margin-bottom: 25px;
 }
 
-.account-content-header h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 29px;
-    font-weight: 600;
-    color: #101010;
+.account-content-header h1,
+.account-content-header h2 {
     margin: 0;
+    color: #101010;
+    font: 600 26px 'Poppins', sans-serif;
 }
 
 .account-edit-btn {
@@ -145,13 +175,13 @@
     align-items: center;
     justify-content: center;
     min-width: 94px;
-    height: 53px;
+    min-height: 44px;
     padding: 0 20px;
-    background: transparent;
     border: 1px solid #386149;
-    border-radius: 10px;
+    border-radius: 9px;
+    background: transparent;
     color: #315a43;
-    font: 500 15px 'DM Sans', sans-serif;
+    font: 500 14px 'Poppins', sans-serif;
     text-decoration: none;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -159,26 +189,34 @@
 
 .account-edit-btn:hover {
     background: #386149;
-    color: white;
+    color: #fff;
 }
 
 /* =========================================
-   PROFILE INFORMATION CARD
+   PERSONAL INFORMATION + PROFILE PHOTO
 ========================================= */
 
+.account-profile-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 245px;
+    align-items: start;
+    gap: 18px;
+}
+
 .account-info-card {
-    background: #fff;
+    min-width: 0;
+    padding: 8px 25px;
     border: 1px solid #d9d0c4;
-    border-radius: 15px;
-    padding: 8px 30px;
+    border-radius: 12px;
+    background: #fff;
 }
 
 .account-info-row {
     display: grid;
-    grid-template-columns: 190px minmax(0, 1fr);
-    gap: 20px;
+    grid-template-columns: 155px minmax(0, 1fr);
     align-items: center;
-    min-height: 70px;
+    gap: 15px;
+    min-height: 67px;
     border-bottom: 1px solid #d9d0c4;
 }
 
@@ -187,28 +225,122 @@
 }
 
 .account-info-label {
-    font-family: monospace;
-    font-size: 13px;
-    letter-spacing: 1px;
     color: #9c8476;
+    font: 11px 'Poppins', sans-serif;
+    letter-spacing: 1px;
 }
 
 .account-info-value {
     color: #101010;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 600;
     overflow-wrap: anywhere;
 }
 
 /* =========================================
-   EDIT PROFILE PAGE
+   PROFILE PHOTO CARD
+========================================= */
+
+.account-photo-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    padding: 25px 18px 22px;
+    border: 1px solid #d9d0c4;
+    border-radius: 12px;
+    background: #fff;
+    text-align: center;
+}
+
+.account-photo-eyebrow {
+    margin-bottom: 12px;
+    color: #8f8074;
+    font: 10px 'Poppins', sans-serif;
+    letter-spacing: 1.5px;
+}
+
+.account-photo-card h3 {
+    margin: 0 0 6px;
+    color: #151515;
+    font: 600 20px 'Poppins', sans-serif;
+}
+
+.account-photo-card p {
+    max-width: 180px;
+    margin: 0 0 23px;
+    color: #9b8475;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.account-photo-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 110px;
+    height: 110px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    border: 5px solid #e9e6df;
+    border-radius: 50%;
+    background: #39624b;
+    color: #fff;
+    font-size: 27px;
+    font-weight: 700;
+}
+
+.account-photo-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#profilePhotoForm {
+    width: 100%;
+    margin: 0;
+}
+
+.account-photo-upload-btn {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 15px;
+    border: 1px solid #39624b;
+    border-radius: 7px;
+    background: #fff;
+    color: #315a43;
+    font: 600 12px 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.account-photo-upload-btn:hover {
+    background: #39624b;
+    color: #fff;
+}
+
+.account-photo-upload-btn:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.account-photo-card small {
+    display: block;
+    margin-top: 13px;
+    color: #9b8475;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+/* =========================================
+   EDIT PROFILE FORM
 ========================================= */
 
 .account-edit-card {
-    background: #fff;
+    padding: 30px;
     border: 1px solid #d9d0c4;
     border-radius: 15px;
-    padding: 30px;
+    background: #fff;
 }
 
 .account-edit-form {
@@ -229,33 +361,40 @@
     font-weight: 700;
 }
 
-.account-form-group input {
+.account-form-group input,
+.account-form-group select {
     width: 100%;
     height: 55px;
     padding: 0 18px;
     border: 1px solid #d9d0c4;
     border-radius: 10px;
+    outline: none;
     background: #fff;
     color: #111;
-    font: 15px 'DM Sans', sans-serif;
-    outline: none;
+    font: 15px 'Poppins', sans-serif;
     transition: border-color 0.2s;
 }
 
-.account-form-group input:focus {
+.account-form-group input:focus,
+.account-form-group select:focus {
     border-color: #39624b;
 }
 
 .account-form-group input[readonly] {
+    border-color: #e6dfd6;
     background: #faf9f7;
     color: #777;
-    border-color: #e6dfd6;
     cursor: not-allowed;
 }
 
 .account-form-group small {
-    font-size: 12px;
     color: #97877a;
+    font-size: 12px;
+}
+
+.account-optional {
+    color: #97877a;
+    font-weight: 400;
 }
 
 .account-name-fields {
@@ -265,7 +404,7 @@
 }
 
 /* =========================================
-   EDIT FORM BUTTONS
+   FORM ACTIONS
 ========================================= */
 
 .account-form-actions {
@@ -285,7 +424,7 @@
     border-radius: 10px;
     background: #39624b;
     color: #fff;
-    font: 700 15px 'DM Sans', sans-serif;
+    font: 700 15px 'Poppins', sans-serif;
     cursor: pointer;
     transition: background 0.2s;
 }
@@ -305,10 +444,10 @@
     justify-content: center;
     min-height: 53px;
     padding: 0 5px;
+    border: 0;
     background: transparent;
-    border: none;
     color: #111;
-    font: 600 15px 'DM Sans', sans-serif;
+    font: 600 15px 'Poppins', sans-serif;
     text-decoration: none;
     cursor: pointer;
 }
@@ -318,14 +457,14 @@
 }
 
 /* =========================================
-   ALERT MESSAGES
+   ALERTS
 ========================================= */
 
 .account-alert {
+    margin-bottom: 20px;
     padding: 14px 18px;
     border-radius: 9px;
     font-size: 13px;
-    margin-bottom: 20px;
 }
 
 .account-alert.success {
@@ -339,21 +478,69 @@
 }
 
 /* =========================================
+   ADDRESS RECIPIENT
+========================================= */
+
+.pv-address-page .address-recipient {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 6px 0 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.pv-address-page .address-recipient-name {
+    color: #151515;
+    font-weight: 700;
+}
+
+.pv-address-page .address-recipient-divider {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 1px;
+    height: 19px;
+    background: #c9c1b8;
+}
+
+.pv-address-page .address-recipient-phone {
+    color: #897b70;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+/* =========================================
    RESPONSIVE
 ========================================= */
+
+@media (max-width: 1100px) {
+    .account-layout {
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 22px;
+    }
+
+    .account-profile-grid {
+        grid-template-columns: minmax(0, 1fr) 200px;
+        gap: 14px;
+    }
+
+    .account-info-row {
+        grid-template-columns: 125px minmax(0, 1fr);
+    }
+}
 
 @media (max-width: 900px) {
     .account-page {
         padding: 30px 22px;
     }
 
-    .account-layout {
-        grid-template-columns: 220px minmax(0, 1fr);
-        gap: 22px;
+    .account-profile-grid {
+        grid-template-columns: 1fr;
     }
 
-    .account-info-row {
-        grid-template-columns: 140px minmax(0, 1fr);
+    .account-photo-card {
+        max-width: 350px;
     }
 
     .account-edit-card {
@@ -370,8 +557,13 @@
         padding: 22px;
     }
 
-    .account-content-header h1 {
-        font-size: 25px;
+    .pv-account-intro h1 {
+        font-size: 27px;
+    }
+
+    .account-content-header h1,
+    .account-content-header h2 {
+        font-size: 23px;
     }
 
     .account-info-card {
@@ -379,21 +571,21 @@
     }
 
     .account-info-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 16px 0;
+        grid-template-columns: 130px minmax(0, 1fr);
+        gap: 10px;
+        min-height: 64px;
     }
 
     .account-info-value {
-        font-size: 14px;
-    }
-
-    .account-name-fields {
-        grid-template-columns: 1fr;
+        font-size: 12px;
     }
 
     .account-edit-card {
         padding: 20px;
+    }
+
+    .account-name-fields {
+        grid-template-columns: 1fr;
     }
 
     .account-form-actions {
@@ -402,174 +594,147 @@
     }
 }
 
+@media (max-width: 420px) {
+    .account-page {
+        padding: 22px 15px;
+    }
+
+    .account-content-header {
+        gap: 12px;
+    }
+
+    .account-info-row {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: 5px;
+        padding: 13px 0;
+    }
+
+    .account-photo-card {
+        max-width: none;
+    }
+
+    .pv-address-page .address-recipient {
+        gap: 8px;
+        font-size: 12px;
+    }
+}
+
 /* =========================================
-   PUREVIA - DELIVERY ADDRESSES
+   PUREVIA — EDIT PROFILE TWO-COLUMN FIX
 ========================================= */
 
-.address-list {
+/* Keep form and avatar side by side */
+
+.account-edit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 245px;
+    align-items: start;
+    gap: 18px;
+    width: 100%;
+}
+
+/* Personal information form */
+
+.account-edit-grid .account-edit-card {
+    min-width: 0;
+    padding: 25px;
+    border: 1px solid #d9d0c4;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+/* Form spacing */
+
+.account-edit-grid .account-edit-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 }
 
-.address-card {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 26px;
-    background: #fff;
-    border: 1px solid #d9d0c4;
-    border-radius: 15px;
+/* Form inputs */
+
+.account-edit-grid .account-form-group {
+    gap: 8px;
 }
 
-.address-card-content {
-    flex: 1;
-    min-width: 0;
+.account-edit-grid .account-form-group input,
+.account-edit-grid .account-form-group select {
+    height: 47px;
+    border-radius: 8px;
+    font-size: 13px;
 }
 
-.address-card-heading {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-}
+/* Form labels */
 
-.address-card-heading h3 {
-    margin: 0;
-    font-size: 17px;
+.account-edit-grid .account-form-group label {
+    font-size: 13px;
     font-weight: 700;
 }
 
-.address-default-badge {
-    padding: 7px 13px;
-    background: #e9efea;
-    color: #315d45;
-    border-radius: 20px;
-    font: 11px monospace;
-    letter-spacing: 1px;
+/* Form actions */
+
+.account-edit-grid .account-form-actions {
+    margin-top: 0;
+    gap: 20px;
 }
 
-.address-card-content p {
-    margin: 5px 0;
-    font-size: 15px;
-    line-height: 1.5;
+.account-edit-grid .account-save-btn {
+    min-height: 45px;
+    padding: 0 22px;
+    border-radius: 8px;
+    font-size: 13px;
 }
 
-.address-card-actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
+.account-edit-grid .account-cancel-btn {
+    min-height: 45px;
+    font-size: 13px;
 }
 
-.address-card-actions form {
-    margin: 0;
-}
+/* Avatar card stays visible */
 
-.address-edit-link {
-    color: #111;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.address-edit-link:hover {
-    color: #39624b;
-}
-
-.address-default-btn {
-    background: transparent;
-    border: none;
-    color: #39624b;
-    font: 600 13px 'DM Sans', sans-serif;
-    cursor: pointer;
-}
-
-.address-default-btn:hover {
-    text-decoration: underline;
-}
-
-.address-delete-btn {
-    padding: 12px 16px;
-    border: none;
-    border-radius: 9px;
-    background: #c6382c;
-    color: #fff;
-    font: 600 13px 'DM Sans', sans-serif;
-    cursor: pointer;
-}
-
-.address-delete-btn:hover {
-    background: #a72d24;
-}
-
-.address-empty {
-    text-align: center;
-    background: #fff;
-    border: 1px solid #d9d0c4;
-    border-radius: 15px;
-    padding: 45px 20px;
-}
-
-.address-empty-icon {
-    font-size: 35px;
-}
-
-.address-empty p {
-    color: #8a8177;
-    margin-bottom: 24px;
-}
-
-.address-empty .account-save-btn {
-    text-decoration: none;
-}
-
-/* ADDRESS FORM */
-
-.address-label-select {
+.account-edit-grid .account-photo-card {
     width: 100%;
-    height: 55px;
-    padding: 0 18px;
-    border: 1px solid #d9d0c4;
-    border-radius: 10px;
-    background: #fff;
-    color: #111;
-    font: 15px 'DM Sans', sans-serif;
-    outline: none;
+    min-width: 0;
 }
 
-.address-label-select:focus {
-    border-color: #39624b;
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .account-edit-grid {
+        grid-template-columns: minmax(0, 1fr) 200px;
+        gap: 14px;
+    }
+
 }
 
-.address-default-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-size: 14px;
-}
+@media (max-width: 900px) {
 
-.address-default-option input {
-    width: 17px;
-    height: 17px;
-    accent-color: #39624b;
-}
+    .account-edit-grid {
+        grid-template-columns: 1fr;
+    }
 
-.address-default-note {
-    display: block;
-    margin-top: 9px;
-    color: #8a8177;
-    font-size: 12px;
+    .account-edit-grid .account-photo-card {
+        max-width: 350px;
+    }
+
 }
 
 @media (max-width: 650px) {
-    .address-card {
-        flex-direction: column;
+
+    .account-edit-grid .account-edit-card {
+        padding: 20px;
     }
 
-    .address-card-actions {
-        width: 100%;
+    .account-edit-grid .account-name-fields {
+        grid-template-columns: 1fr;
     }
+
+    .account-edit-grid .account-photo-card {
+        max-width: none;
+    }
+
 }
