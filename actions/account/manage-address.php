@@ -1,6 +1,5 @@
 
 <?php
-declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
@@ -27,7 +26,7 @@ $addressId = filter_var(
 ) ?: 0;
 
 $listUrl = BASE_URL . '/account/addresses.php';
-$formUrl = BASE_URL . '/account/address-form.php';
+$formUrl = BASE_URL . '/account/address_form.php';
 
 if ($action === 'update' && $addressId > 0) {
     $formUrl .= '?id=' . $addressId;
@@ -159,7 +158,7 @@ if ($action === 'create' || $action === 'update') {
         !is_string($addressLabel) ||
         !in_array(
             $addressLabel,
-            ['Home', 'Office', 'Other'],
+            ['Home', 'Office'],
             true
         )
     ) {
@@ -387,19 +386,21 @@ try {
         $message = 'Address updated successfully.';
     }
 
+    
     /* DELETE ADDRESS */
 
     elseif ($action === 'delete') {
 
-        if ((int) $existing['is_default'] === 1) {
-            throw new RuntimeException(
-                'Set another address as default before deleting this one.'
-            );
-        }
+        $wasDefault = (
+            (int) $existing['is_default'] === 1
+        );
+
+        /* DELETE CUSTOMER'S OWN ADDRESS */
 
         $stmt = $conn->prepare("
             DELETE FROM user_addresses
-            WHERE id = ? AND user_id = ?
+            WHERE id = ?
+              AND user_id = ?
         ");
 
         $stmt->bind_param(
@@ -411,8 +412,57 @@ try {
         $stmt->execute();
         $stmt->close();
 
+        /*
+         * IF DEFAULT ADDRESS WAS DELETED,
+         * AUTOMATICALLY ASSIGN ANOTHER ADDRESS.
+         */
+
+        if ($wasDefault) {
+
+            $stmt = $conn->prepare("
+                SELECT id
+                FROM user_addresses
+                WHERE user_id = ?
+                ORDER BY created_at ASC, id ASC
+                LIMIT 1
+                FOR UPDATE
+            ");
+
+            $stmt->bind_param('i', $userId);
+            $stmt->execute();
+
+            $replacement = $stmt
+                ->get_result()
+                ->fetch_assoc();
+
+            $stmt->close();
+
+            if ($replacement) {
+
+                $replacementId = (int) $replacement['id'];
+
+                $stmt = $conn->prepare("
+                    UPDATE user_addresses
+                    SET is_default = 1
+                    WHERE id = ?
+                      AND user_id = ?
+                ");
+
+                $stmt->bind_param(
+                    'ii',
+                    $replacementId,
+                    $userId
+                );
+
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+
         $message = 'Address deleted successfully.';
     }
+
+
 
     /* SET DEFAULT ADDRESS */
 

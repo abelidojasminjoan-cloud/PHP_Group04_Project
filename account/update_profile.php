@@ -32,13 +32,16 @@ if (!$user) {
     exit('Access denied.');
 }
 
-function e($value) {
+
+function e(mixed $value): string
+{
     return htmlspecialchars(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
     );
 }
+
 
 $fullName = trim(
     $user['first_name'] . ' ' . $user['last_name']
@@ -69,13 +72,24 @@ unset($_SESSION['profile_error']);
 
     <title>Edit Profile | PureVia</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
     <link rel="stylesheet"
           href="<?= BASE_URL ?>/assets/css/header.css">
 
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/search.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link rel="stylesheet"
           href="<?= BASE_URL ?>/assets/css/account.css">
+    <!-- Responsive adjustments -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
 </head>
 
 <body>
@@ -120,12 +134,22 @@ unset($_SESSION['profile_error']);
                     <span>📍</span> Addresses
                 </a>
 
+                <a href="<?= BASE_URL ?>/account/payment-cards.php"
+                   class="account-nav-item">
+                    <span aria-hidden="true">&#9635;</span> Payment Cards
+                </a>
+
+                <a href="<?= BASE_URL ?>/account/my-reviews.php"
+                   class="account-nav-item">
+                    <span aria-hidden="true">&#9734;</span> My Reviews
+                </a>
+
                 <a href="<?= BASE_URL ?>/account/skin-profile.php"
                    class="account-nav-item">
                     <span>✨</span> Skin Profile
                 </a>
 
-                <a href="<?= BASE_URL ?>/account/account-security.php"
+                <a href="<?= BASE_URL ?>/account/security.php"
                    class="account-nav-item">
                     <span>🔒</span> Security
                 </a>
@@ -162,7 +186,7 @@ unset($_SESSION['profile_error']);
             <div class="account-edit-card">
 
                 <form method="POST"
-                      action="<?= BASE_URL ?>/actions/account/update-profile.php"
+                      action="<?= BASE_URL ?>/actions/account/update_profile.php"
                       id="profileEditForm">
 
                     <input type="hidden"
@@ -259,6 +283,9 @@ unset($_SESSION['profile_error']);
 </main>
 
 <script src="<?= BASE_URL ?>/assets/js/account.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

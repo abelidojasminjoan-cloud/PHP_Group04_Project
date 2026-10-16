@@ -1,0 +1,705 @@
+/* =========================================
+   PUREVIA — DELIVERY ADDRESSES
+========================================= */
+
+.pv-address-page {
+    background: #f8f5f0;
+    min-height: 100vh;
+}
+
+.pv-address-page *,
+.pv-address-overlay * {
+    box-sizing: border-box;
+}
+
+.pv-address-overlay[hidden],
+.pv-default-hint[hidden] {
+    display: none !important;
+}
+
+/* PAGE HEADER */
+
+.pv-account-intro {
+    max-width: 1204px;
+    margin: 0 auto 28px;
+}
+
+.pv-account-intro h1 {
+    margin: 0 0 6px;
+    color: #171717;
+    font: 600 31px 'Poppins', sans-serif;
+}
+
+.pv-account-intro p {
+    margin: 0;
+    color: #9b8475;
+    font-size: 13px;
+}
+
+.pv-address-page .account-content-header h2 {
+    margin: 0;
+    color: #151515;
+    font: 600 24px 'Poppins', sans-serif;
+}
+
+/* ADDRESS LIST */
+
+.address-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ADDRESS CARD */
+
+.pv-address-page .address-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 170px;
+    padding: 18px 16px;
+    border: 1px solid #d9d0c4;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.pv-address-page .address-card-content {
+    flex: 1;
+    min-width: 0;
+    padding-right: 125px;
+}
+
+.pv-address-page .address-card-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.pv-address-page .address-card-heading h3 {
+    margin: 0;
+    color: #111;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pv-address-page .address-default-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    background: #e9efea;
+    color: #315d45;
+    font: 11px 'Poppins', sans-serif;
+    letter-spacing: 1px;
+}
+
+.pv-address-page .address-card-content p {
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* ADDRESS ACTIONS */
+
+.pv-address-page .address-card-actions {
+    display: contents;
+}
+
+.pv-address-page .address-card-actions form {
+    margin: 0;
+}
+
+/* Edit and Delete at the top-right */
+
+.pv-address-page .address-actions-main {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pv-address-page .address-edit-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 4px 2px;
+    border: 0;
+    background: transparent;
+    color: #111;
+    font: 600 11px 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.pv-address-page .address-edit-link:hover {
+    color: #38634e;
+}
+
+.pv-address-page .address-delete-btn {
+    min-height: 28px;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: #c6382c;
+    color: #fff;
+    font: 600 11px 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.pv-address-page .address-delete-btn:hover {
+    background: #a72d24;
+}
+
+/* Set as Default at the bottom-right */
+
+.pv-address-page .address-set-default-form {
+    display: flex;
+    align-self: flex-end;
+    justify-content: flex-end;
+    margin-top: 14px !important;
+}
+
+.pv-address-page .address-default-btn {
+    min-height: 34px;
+    padding: 9px 15px;
+    border: 1px solid #38634e;
+    border-radius: 7px;
+    background: #38634e;
+    color: #fff;
+    font: 600 11px 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.pv-address-page .address-default-btn:hover {
+    background: #294b39;
+}
+
+.pv-address-page .address-card-actions button:focus-visible {
+    outline: 2px solid #38634e;
+    outline-offset: 3px;
+}
+
+/* EMPTY ADDRESS STATE */
+
+.address-empty {
+    padding: 45px 20px;
+    border: 1px solid #d9d0c4;
+    border-radius: 15px;
+    background: #fff;
+    text-align: center;
+}
+
+.address-empty-icon {
+    font-size: 35px;
+}
+
+.address-empty p {
+    margin-bottom: 24px;
+    color: #8a8177;
+}
+
+.address-empty .account-save-btn {
+    text-decoration: none;
+}
+
+/* =========================================
+   ADDRESS MODAL
+========================================= */
+
+/* OVERLAY */
+
+.pv-address-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.43);
+    backdrop-filter: blur(3px);
+    font-family: 'Poppins', sans-serif;
+}
+
+body.pv-modal-open {
+    overflow: hidden;
+}
+
+/* MODAL CONTAINER */
+
+.pv-address-modal {
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 570px);
+    max-height: min(94vh, 850px);
+    overflow: hidden;
+    border: 1px solid #ded5ca;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 24px 75px rgba(0, 0, 0, 0.18);
+}
+
+/* MODAL HEADER */
+
+.pv-modal-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px 17px;
+    border-bottom: 1px solid #ddd4ca;
+    background: #fff;
+}
+
+.pv-modal-header h2 {
+    margin: 0 0 6px;
+    color: #222;
+    font: 600 21px 'Poppins', sans-serif;
+}
+
+.pv-modal-header p {
+    margin: 0;
+    color: #9c897d;
+    font-size: 11px;
+}
+
+.pv-modal-close {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: transparent;
+    color: #8d8176;
+    font-size: 23px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.pv-modal-close:hover {
+    color: #222;
+}
+
+/* MODAL FORM */
+
+#addressModalForm {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* SCROLLABLE BODY */
+
+.pv-modal-body {
+    min-height: 0;
+    padding: 20px 24px 25px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #d4ccc3 transparent;
+}
+
+.pv-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pv-modal-body::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #d4ccc3;
+}
+
+/* FORM GRID */
+
+.pv-address-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 15px;
+    row-gap: 15px;
+}
+
+.pv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.pv-field-full {
+    grid-column: 1 / -1;
+}
+
+.pv-field > label {
+    color: #34332f;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.pv-optional {
+    color: #a69b90;
+    font-weight: 400;
+}
+
+/* INPUTS */
+
+.pv-field input:not([type="radio"]):not([type="checkbox"]),
+.pv-field select,
+.pv-field textarea {
+    display: block;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #d8cfc4;
+    border-radius: 7px;
+    outline: none;
+    background: #fff;
+    color: #292823;
+    font: 12px 'Poppins', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pv-field input::placeholder,
+.pv-field textarea::placeholder {
+    color: #9e9388;
+}
+
+.pv-field select {
+    padding-right: 32px;
+    cursor: pointer;
+}
+
+.pv-field input:focus,
+.pv-field select:focus,
+.pv-field textarea:focus {
+    border-color: #38634e;
+    box-shadow: 0 0 0 2px rgba(56, 99, 78, 0.08);
+}
+
+.pv-field select:disabled {
+    background: #f1eee9;
+    color: #9d968d;
+    cursor: not-allowed;
+}
+
+.pv-field input[aria-invalid="true"],
+.pv-field select[aria-invalid="true"] {
+    border-color: #bd4335;
+}
+
+/* FIXED-SIZE COMPLETE ADDRESS */
+
+.pv-address-overlay #addressLine1.pv-complete-address {
+    display: block;
+    width: 100%;
+    height: 100px;
+    min-height: 100px;
+    max-height: 100px;
+    padding: 13px 15px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    resize: none;
+    border: 1px solid #d8cfc4;
+    border-radius: 8px;
+    background: #fff;
+    color: #292823;
+    font: 13px/1.6 'Poppins', sans-serif;
+    scrollbar-width: thin;
+    scrollbar-color: #c9c1b6 transparent;
+}
+
+.pv-address-overlay #addressLine1::-webkit-scrollbar {
+    width: 5px;
+}
+
+.pv-address-overlay #addressLine1::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background: #c9c1b6;
+}
+
+/* LOCATION PIN */
+
+.pv-location-box {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 75px;
+    padding: 13px 15px;
+    border: 1px dashed #d6c9b8;
+    border-radius: 10px;
+    background:
+        repeating-linear-gradient(
+            35deg,
+            transparent 0 48px,
+            rgba(210, 204, 195, 0.22) 49px 53px,
+            transparent 54px 100px
+        ),
+        #f7f5f1;
+}
+
+.pv-location-icon {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid #ded4c8;
+    border-radius: 50%;
+    background: #fff;
+    color: #38634e;
+    font-size: 22px;
+}
+
+.pv-location-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.pv-location-copy strong {
+    color: #252525;
+    font-size: 12px;
+}
+
+.pv-location-copy span {
+    color: #95877b;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.pv-location-button {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    border: 1px solid #38634e;
+    border-radius: 6px;
+    background: #fff;
+    color: #38634e;
+    font: 600 11px 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.pv-location-button:hover {
+    background: #eaf0eb;
+}
+
+/* =========================================
+   HOME / OFFICE / DEFAULT CHECKBOX
+========================================= */
+
+.pv-address-overlay .pv-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 16px;
+    width: 100%;
+}
+
+.pv-address-overlay .pv-address-labels {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 9px;
+}
+
+/* LABEL BUTTONS */
+
+.pv-label-choice {
+    position: relative;
+    cursor: pointer;
+}
+
+.pv-label-choice input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.pv-address-overlay .pv-label-choice span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    min-height: 43px;
+    padding: 10px 15px;
+    border: 1px solid #d9d0c5;
+    border-radius: 8px;
+    background: #fff;
+    color: #4b4742;
+    font-size: 13px;
+}
+
+.pv-label-choice input:checked + span {
+    border-color: #38634e;
+    background: #e8eeea;
+    color: #38634e;
+}
+
+.pv-label-choice input:focus-visible + span {
+    outline: 2px solid #38634e;
+    outline-offset: 2px;
+}
+
+/* DEFAULT CHECKBOX */
+
+.pv-address-overlay .pv-default-choice {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    gap: 9px;
+    margin: 0;
+    color: #3b3b3b;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.pv-address-overlay .pv-default-choice input[type="checkbox"] {
+    appearance: auto;
+    display: inline-block;
+    flex: 0 0 15px;
+    width: 15px;
+    height: 15px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    accent-color: #39624b;
+    cursor: pointer;
+}
+
+.pv-address-overlay .pv-default-choice input:disabled {
+    cursor: not-allowed;
+}
+
+.pv-address-overlay .pv-default-choice span {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.pv-address-overlay .pv-default-hint {
+    margin: 8px 0 0;
+    color: #97877a;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* MODAL FOOTER */
+
+.pv-modal-footer {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #ddd4ca;
+    background: #fff;
+}
+
+.pv-modal-cancel {
+    min-height: 39px;
+    padding: 0 15px;
+    border: 0;
+    background: transparent;
+    color: #242424;
+    font: 600 12px 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.pv-modal-save {
+    min-height: 39px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 7px;
+    background: #38634e;
+    color: #fff;
+    font: 700 12px 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.pv-modal-save:hover {
+    background: #294b39;
+}
+
+.pv-modal-save:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 650px) {
+    .pv-account-intro h1 {
+        font-size: 27px;
+    }
+
+    .pv-address-page .account-content-header h2 {
+        font-size: 21px;
+    }
+
+    .pv-address-page .address-card {
+        padding-top: 54px;
+    }
+
+    .pv-address-page .address-card-content {
+        padding-right: 0;
+    }
+
+    .pv-address-overlay {
+        padding: 10px;
+    }
+
+    .pv-address-modal {
+        max-height: 96dvh;
+        border-radius: 12px;
+    }
+
+    .pv-modal-header,
+    .pv-modal-body,
+    .pv-modal-footer {
+        padding-left: 17px;
+        padding-right: 17px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pv-address-overlay .pv-label-row {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .pv-address-overlay .pv-default-choice {
+        justify-content: flex-start;
+    }
+
+    .pv-address-overlay .pv-label-choice span {
+        min-width: 65px;
+        min-height: 39px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 420px) {
+    .pv-address-form-grid {
+        column-gap: 10px;
+    }
+
+    .pv-location-box {
+        flex-wrap: wrap;
+    }
+
+    .pv-location-button {
+        margin-left: auto;
+    }
+
+    .pv-address-page .account-content-header {
+        flex-wrap: wrap;
+    }
+}

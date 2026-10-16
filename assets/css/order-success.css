@@ -1,0 +1,126 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f8f5f0;
+}
+
+.pv-success-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 55px 20px 80px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.pv-success-content {
+    width: 100%;
+    max-width: 430px;
+    text-align: center;
+}
+
+.pv-success-check {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: #35654d;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 29px;
+}
+
+.pv-success-content h1 {
+    margin: 0 0 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: #111;
+}
+
+.pv-success-description {
+    font-size: 13px;
+    color: #a47f71;
+    margin-bottom: 13px;
+}
+
+.pv-success-order-number {
+    display: block;
+    font-size: 13px;
+    color: #35654d;
+    margin-bottom: 23px;
+}
+
+.pv-success-details {
+    background: #ede9e2;
+    border-radius: 12px;
+    padding: 17px;
+    margin-bottom: 20px;
+}
+
+.pv-success-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 12px;
+}
+
+.pv-success-detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.pv-success-detail-row span {
+    color: #a47f71;
+}
+
+.pv-success-detail-row strong {
+    color: #111;
+}
+
+.pv-success-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pv-success-button {
+    padding: 12px 20px;
+    min-width: 130px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.pv-success-primary {
+    background: #35654d;
+    color: white;
+}
+
+.pv-success-secondary {
+    border: 1px solid #35654d;
+    color: #35654d;
+    background: transparent;
+}
+
+@media (max-width: 480px) {
+    .pv-success-content h1 {
+        font-size: 28px;
+    }
+
+    .pv-success-actions {
+        flex-direction: column;
+    }
+
+    .pv-success-button {
+        width: 100%;
+    }
+}

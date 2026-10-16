@@ -57,9 +57,7 @@
         1px solid var(--sidebar-border);
 
     font-family:
-        'DM Sans',
-        Arial,
-        sans-serif;
+        'Poppins', sans-serif;
 
 }
 
@@ -95,9 +93,7 @@
     color: #25271f;
 
     font-family:
-        'Playfair Display',
-        Georgia,
-        serif;
+        'Poppins', sans-serif;
 
     font-size: 23px;
 

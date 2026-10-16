@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+body {
+    --bs-body-font-family: 'Poppins', sans-serif;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* PUREVIA RESPONSIVE FOUNDATION */
+
+img,
+video {
+    max-width: 100%;
+    height: auto;
+}
+
+input,
+select,
+textarea,
+button {
+    max-width: 100%;
+}
+
+@media (max-width: 991.98px) {
+    .pv-responsive-two-column {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* Use the existing page classes; laptop styles stay untouched. */
+    .account-layout,
+    .account-profile-grid,
+    .account-edit-grid,
+    .sec-layout,
+    .pv-cart-layout,
+    .pv-checkout-layout,
+    .pd-overview {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .account-content,
+    .account-info-card,
+    .pv-checkout-card,
+    .pv-checkout-summary,
+    .pv-cart-summary,
+    .admin-layout > *,
+    .staff-layout > * {
+        min-width: 0;
+    }
+
+    .pv-cart-summary,
+    .pv-checkout-summary {
+        position: static;
+    }
+
+    .account-sidebar-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .account-sidebar-nav .account-sidebar-divider {
+        grid-column: 1 / -1;
+    }
+
+    .account-nav-item {
+        min-width: 0;
+        padding: 10px;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .account-profile-grid .account-photo-card,
+    .account-edit-grid .account-photo-card {
+        max-width: none;
+    }
+
+    .bestsellers .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pv-checkout-products-table,
+    .table-wrapper,
+    .users-table-wrapper,
+    .products-table-wrapper,
+    .orders-table-wrapper,
+    .payments-table-wrapper,
+    .inventory-table-wrapper,
+    .categories-table-wrapper,
+    .ingredients-table-wrapper,
+    .skin-concerns-table-wrapper,
+    .audit-table-wrapper,
+    .login-table-wrapper,
+    .locked-table-wrapper {
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .account-content-header,
+    .pv-cart-heading,
+    .pv-checkout-heading,
+    .shop-toolbar {
+        flex-wrap: wrap;
+    }
+
+    /* Keep long forms usable when the phone keyboard is open. */
+    .login-modal,
+    .register-modal {
+        padding: 12px;
+    }
+
+    .login-card,
+    .register-modal-card {
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
+    }
+
+    .pv-address-modal {
+        width: 100%;
+        max-height: calc(100dvh - 20px);
+    }
+
+    .account-form-group input,
+    .account-form-group select,
+    .pv-field input,
+    .pv-field select,
+    .pv-field textarea,
+    .pv-address-editor input,
+    .pv-address-editor textarea,
+    .login-form input,
+    .register-form input {
+        font-size: 16px;
+    }
+
+    .pv-responsive-container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .pv-responsive-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .pv-responsive-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 650px) {
+    /* Keep Shop, Skin Match and the bag count available on phones. */
+    .site-header .navbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px 12px;
+        padding: 12px 16px;
+    }
+
+    .site-header .navbar-left {
+        display: contents;
+    }
+
+    .site-header .brand {
+        grid-column: 1;
+        grid-row: 1;
+        min-width: 0;
+    }
+
+    .site-header .navbar-right {
+        grid-column: 2;
+        grid-row: 1;
+        gap: 10px;
+    }
+
+    .site-header .main-nav {
+        display: flex;
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: center;
+        gap: 24px;
+    }
+
+    .site-header .main-nav a {
+        padding: 6px 0;
+    }
+
+    .site-header .main-nav a.active::after {
+        bottom: 0;
+    }
+
+    .site-header .account-name {
+        display: none;
+    }
+
+    .pv-address-form-grid,
+    .register-name-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 379.98px) {
+    .bestsellers .product-grid,
+    .shop-product-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pv-responsive-full-width {
+        width: 100%;
+    }
+
+    .pv-responsive-modal {
+        width: calc(100% - 24px);
+        max-height: 90dvh;
+        overflow-y: auto;
+    }
+}

@@ -1,0 +1,63 @@
+
+# ==========================================
+# PUREVIA - GITIGNORE
+# ==========================================
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Composer installed dependencies
+/vendor/
+
+# Composer temporary files
+composer.phar
+
+# Logs and error files
+*.log
+error_log
+/logs/
+/tmp/
+/temp/
+/cache/
+
+# Local configuration overrides
+config/*.local.php
+
+# User-uploaded files
+/uploads/products/*
+!/uploads/products/.gitkeep
+
+/uploads/profiles/*
+!/uploads/profiles/.gitkeep
+
+/uploads/reviews/*
+!/uploads/reviews/.gitkeep
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VS Code local settings
+.vscode/
+
+# JetBrains IDE
+.idea/
+
+# Test and coverage output
+/coverage/
+.phpunit.cache/
+.phpunit.result.cache
+
+# Temporary editor files
+*.swp
+*.swo
+*~
+*.bak
+
+# Local database exports and backups
+/backups/
+*.sql.gz
+*.sql.zip

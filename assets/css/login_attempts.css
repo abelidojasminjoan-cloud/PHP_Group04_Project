@@ -43,7 +43,7 @@ body {
 
     color: var(--login-text);
 
-    font-family: 'DM Sans', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 
@@ -115,7 +115,7 @@ body {
 
     color: #11130f;
 
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 34px;
     font-weight: 600;
@@ -223,7 +223,7 @@ body {
 
     color: #22241e;
 
-    font-family: 'DM Sans', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 14px;
 }
@@ -306,7 +306,7 @@ body {
 
     color: #4e5549;
 
-    font-family: 'DM Sans', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
 
     font-size: 13px;
     font-weight: 500;
@@ -502,8 +502,7 @@ body {
     color: #20221d;
 
     font-family:
-        'Courier New',
-        monospace;
+        'Poppins', sans-serif;
 
     font-size: 13px;
 }
@@ -540,8 +539,7 @@ body {
     color: #8b7c72;
 
     font-family:
-        'Courier New',
-        monospace;
+        'Poppins', sans-serif;
 
     font-size: 13px;
 
