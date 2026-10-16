@@ -445,15 +445,19 @@ else {
                     href="<?= $dashboardUrl ?>"
                     class="sidebar-link <?= sidebarActive('/staff/dashboard.php') ?>"
                 >
-                    <span class="sidebar-link-left">
+                    <div class="sidebar-link-left">
 
-                        <span class="sidebar-menu-icon">
-                            📊
-                        </span>
+                        <div class="sidebar-menu-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" focusable="false">
+                                <path d="M14,10V22H4a2,2,0,0,1-2-2V10Z"/>
+                                <path d="M22,10V20a2,2,0,0,1-2,2H16V10Z"/>
+                                <path d="M22,4V8H2V4A2,2,0,0,1,4,2H20A2,2,0,0,1,22,4Z"/>
+                            </svg>
+                        </div>
 
                         <span>Dashboard</span>
 
-                    </span>
+                    </div>
                 </a>
 
 
@@ -565,15 +569,19 @@ else {
                     href="<?= $dashboardUrl ?>"
                     class="sidebar-link <?= sidebarActive('/admin/dashboard.php') ?>"
                 >
-                    <span class="sidebar-link-left">
+                    <div class="sidebar-link-left">
 
-                        <span class="sidebar-menu-icon">
-                            📊
-                        </span>
+                        <div class="sidebar-menu-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" focusable="false">
+                                <path d="M14,10V22H4a2,2,0,0,1-2-2V10Z"/>
+                                <path d="M22,10V20a2,2,0,0,1-2,2H16V10Z"/>
+                                <path d="M22,4V8H2V4A2,2,0,0,1,4,2H20A2,2,0,0,1,22,4Z"/>
+                            </svg>
+                        </div>
 
                         <span>Dashboard</span>
 
-                    </span>
+                    </div>
                 </a>
 
 

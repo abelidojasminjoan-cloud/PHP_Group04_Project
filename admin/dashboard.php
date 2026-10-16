@@ -1,139 +1,161 @@
 <?php
-session_start();
 require_once __DIR__ . '/../config/app.php';
 
-$pageTitle = "Admin Dashboard";
-
-/*
-Temporary admin session.
-Remove when login is connected.
-*/
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
-
-
-/* =========================================
-   TEMPORARY DASHBOARD DATA
-
-   Later these values will come from MySQL.
-========================================= */
-
-$totalCustomers = 5;
-$totalProducts = 12;
-$ordersThisMonth = 5;
-$monthlyRevenue = 12480;
-$lowStockCount = 1;
-$pendingPayments = 1;
-
-
-/* =========================================
-   DATE / GREETING
-========================================= */
-
-date_default_timezone_set('Asia/Manila');
-
-$currentHour = (int) date('H');
-
-if ($currentHour < 12) {
-    $greeting = 'Good morning';
-} elseif ($currentHour < 18) {
-    $greeting = 'Good afternoon';
-} else {
-    $greeting = 'Good evening';
+if (empty($_SESSION['user_id'])) {
+    header('Location: ' . BASE_URL . '/login.php');
+    exit;
 }
 
+require_once __DIR__ . '/../config/db.php';
+
+$pageTitle = 'Admin Dashboard';
+$userId = (int) $_SESSION['user_id'];
+
+// Verify the current database role before loading any dashboard data.
+try {
+    $stmt = $conn->prepare("
+        SELECT u.first_name, u.status, r.role_name
+        FROM users AS u
+        INNER JOIN roles AS r ON r.id = u.role_id
+        WHERE u.id = ?
+        LIMIT 1
+    ");
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $adminUser = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+} catch (mysqli_sql_exception $error) {
+    error_log('Admin dashboard authorization failed: ' . $error->getMessage());
+    http_response_code(503);
+    exit('The dashboard is temporarily unavailable. Please try again.');
+}
+
+if (!$adminUser || strtolower($adminUser['status']) !== 'active') {
+    $_SESSION = [];
+    session_destroy();
+    header('Location: ' . BASE_URL . '/login.php');
+    exit;
+}
+
+$role = strtolower(trim($adminUser['role_name']));
+if ($role !== 'admin') {
+    header('Location: ' . BASE_URL . ($role === 'staff' ? '/staff/dashboard.php' : '/index.php'));
+    exit;
+}
+
+$adminFirstName = trim($adminUser['first_name']);
+$currentHour = (int) date('H');
+$greeting = $currentHour < 12 ? 'Good morning'
+    : ($currentHour < 18 ? 'Good afternoon' : 'Good evening');
 $currentDate = date('l, F j, Y');
-
-
-/* =========================================
-   SAMPLE RECENT ORDERS
-
-   Replace with database query later.
-========================================= */
-
-$recentOrders = [
-
-    [
-        'order_number' => 'ORD-2026-0891',
-        'customer' => 'Sofia Dela Rosa',
-        'date' => '2026-09-24',
-        'total' => 118.00,
-        'status' => 'processing',
-        'payment' => 'verified'
-    ],
-
-    [
-        'order_number' => 'ORD-2026-0887',
-        'customer' => 'James Uy',
-        'date' => '2026-09-23',
-        'total' => 168.00,
-        'status' => 'shipped',
-        'payment' => 'verified'
-    ],
-
-    [
-        'order_number' => 'ORD-2026-0882',
-        'customer' => 'Carlo Bautista',
-        'date' => '2026-09-22',
-        'total' => 128.00,
-        'status' => 'delivered',
-        'payment' => 'verified'
-    ],
-
-    [
-        'order_number' => 'ORD-2026-0878',
-        'customer' => 'Sofia Dela Rosa',
-        'date' => '2026-09-18',
-        'total' => 83.00,
-        'status' => 'delivered',
-        'payment' => 'verified'
-    ],
-
-    [
-        'order_number' => 'ORD-2026-0875',
-        'customer' => 'James Uy',
-        'date' => '2026-09-15',
-        'total' => 70.00,
-        'status' => 'pending',
-        'payment' => 'pending'
-    ]
-
-];
-
-
-/* =========================================
-   SAMPLE LOW STOCK PRODUCTS
-========================================= */
-
-$lowStockProducts = [
-
-    [
-        'name' => 'Oil-Control Gel Moisturizer',
-        'stock' => 8
-    ]
-
-];
-
-
-/* =========================================
-   ORDER STATUS COUNTS
-========================================= */
+$monthStart = new DateTimeImmutable('first day of this month 00:00:00');
+$monthEnd = $monthStart->modify('+1 month');
+$monthStartSql = $monthStart->format('Y-m-d H:i:s');
+$monthEndSql = $monthEnd->format('Y-m-d H:i:s');
 
 $orderStatusCounts = [
-    'pending' => 1,
-    'processing' => 2,
-    'shipped' => 1,
-    'delivered' => 3,
-    'cancelled' => 1
+    'pending' => 0,
+    'processing' => 0,
+    'shipped' => 0,
+    'delivered' => 0,
+    'cancelled' => 0
 ];
+// Preserve the existing five overview groups while covering every database status.
+$orderStatusClasses = [
+    'pending' => 'pending',
+    'confirmed' => 'processing',
+    'preparing' => 'processing',
+    'shipping' => 'shipped',
+    'delivered' => 'delivered',
+    'completed' => 'delivered',
+    'cancelled' => 'cancelled'
+];
+$dashboardError = null;
 
+try {
+    $totals = $conn->query("
+        SELECT
+            (SELECT COUNT(*)
+             FROM users AS u
+             INNER JOIN roles AS r ON r.id = u.role_id
+             WHERE LOWER(r.role_name) = 'customer') AS customers,
+            (SELECT COUNT(*) FROM products) AS products
+    ")->fetch_assoc();
+    $totalCustomers = (int) $totals['customers'];
+    $totalProducts = (int) $totals['products'];
+
+    // Revenue covers paid, non-cancelled orders placed in the displayed month.
+    // A half-open date range includes the whole month and keeps the date index usable.
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS orders,
+            COALESCE(SUM(CASE
+                WHEN payment_status = 'paid' AND order_status <> 'cancelled'
+                THEN total_amount ELSE 0 END), 0) AS revenue
+        FROM orders
+        WHERE created_at >= ? AND created_at < ?
+    ");
+    $stmt->bind_param('ss', $monthStartSql, $monthEndSql);
+    $stmt->execute();
+    $monthly = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    $ordersThisMonth = (int) $monthly['orders'];
+    $monthlyRevenue = (float) $monthly['revenue'];
+
+    // Count orders awaiting payment once, regardless of payment-attempt history.
+    $pendingPayments = (int) $conn->query("
+        SELECT COUNT(*) AS total
+        FROM orders
+        WHERE payment_status = 'pending' AND order_status <> 'cancelled'
+    ")->fetch_assoc()['total'];
+
+    // Inventory is held per variant. Include zero stock and each variant's own threshold.
+    $lowStockWhere = "p.status <> 'inactive'
+        AND pv.stock_quantity <= pv.low_stock_threshold";
+    $lowStockCount = (int) $conn->query("
+        SELECT COUNT(*) AS total
+        FROM product_variants AS pv
+        INNER JOIN products AS p ON p.id = pv.product_id
+        WHERE $lowStockWhere
+    ")->fetch_assoc()['total'];
+
+    $lowStockProducts = $conn->query("
+        SELECT CONCAT_WS(' · ', p.product_name,
+                NULLIF(pv.size_capacity, ''), NULLIF(pv.variant_label, '')) AS name,
+            pv.stock_quantity AS stock
+        FROM product_variants AS pv
+        INNER JOIN products AS p ON p.id = pv.product_id
+        WHERE $lowStockWhere
+        ORDER BY pv.stock_quantity ASC, p.product_name ASC, pv.id ASC
+        LIMIT 5
+    ")->fetch_all(MYSQLI_ASSOC);
+
+    // Use the customer name saved on the order, so later profile edits do not alter it.
+    $recentOrders = $conn->query("
+        SELECT order_number,
+            TRIM(CONCAT_WS(' ', first_name, last_name)) AS customer,
+            DATE(created_at) AS date, total_amount AS total,
+            order_status AS status, payment_status AS payment
+        FROM orders
+        ORDER BY created_at DESC, id DESC
+        LIMIT 5
+    ")->fetch_all(MYSQLI_ASSOC);
+
+    $statuses = $conn->query("
+        SELECT order_status, COUNT(*) AS total
+        FROM orders
+        GROUP BY order_status
+    ");
+    foreach ($statuses as $status) {
+        $group = $orderStatusClasses[$status['order_status']] ?? null;
+        if ($group !== null) {
+            $orderStatusCounts[$group] += (int) $status['total'];
+        }
+    }
+} catch (mysqli_sql_exception $error) {
+    error_log('Admin dashboard data failed: ' . $error->getMessage());
+    http_response_code(503);
+    $dashboardError = 'Dashboard data is temporarily unavailable. Please refresh and try again.';
+}
 ?>
 
 <!DOCTYPE html>
@@ -149,7 +171,7 @@ $orderStatusCounts = [
     >
 
     <title>
-         PureVia
+        <?= htmlspecialchars($pageTitle) ?> | PureVia
     </title>
 
 
@@ -202,7 +224,7 @@ $orderStatusCounts = [
          SIDEBAR
     ====================================== -->
 
-    <?php include("../includes/sidemenu.php"); ?>
+    <?php include __DIR__ . '/../includes/sidemenu.php'; ?>
 
 
     <!-- =====================================
@@ -244,7 +266,7 @@ $orderStatusCounts = [
                     <?= htmlspecialchars($currentDate) ?>
                     ·
                     <?= htmlspecialchars($greeting) ?>,
-                    <?= htmlspecialchars($_SESSION['first_name']) ?>!
+                    <?= htmlspecialchars($adminFirstName) ?>!
                 </p>
 
             </section>
@@ -254,6 +276,10 @@ $orderStatusCounts = [
             <!-- =================================
                  STATISTICS CARDS
             ================================== -->
+
+            <?php if ($dashboardError !== null): ?>
+                <p class="alert alert-danger" role="alert"><?= htmlspecialchars($dashboardError) ?></p>
+            <?php else: ?>
 
             <section class="dashboard-stats">
 
@@ -365,10 +391,10 @@ $orderStatusCounts = [
                     <div class="stat-card-content">
 
                         <p class="stat-number">
-                            ₱<?= number_format($monthlyRevenue, 0) ?>
+                            ₱<?= number_format($monthlyRevenue, 2) ?>
                         </p>
 
-                        <p class="stat-label">
+                        <p class="stat-label" title="Paid, non-cancelled orders placed this month">
                             Revenue (<?= date('M') ?>)
                         </p>
 
@@ -428,7 +454,7 @@ $orderStatusCounts = [
                             <?= number_format($pendingPayments) ?>
                         </p>
 
-                        <p class="stat-label">
+                        <p class="stat-label" title="Non-cancelled orders awaiting payment">
                             Pending Payments
                         </p>
 
@@ -457,7 +483,7 @@ $orderStatusCounts = [
                     </h2>
 
                     <a
-                        href="./orders/index.php"
+                        href="<?= BASE_URL ?>/admin/orders/orders.php"
                         class="view-all-link"
                     >
                         View All
@@ -489,6 +515,10 @@ $orderStatusCounts = [
 
 
                         <tbody>
+
+                            <?php if (!$recentOrders): ?>
+                                <tr><td colspan="6" class="text-center">No orders yet.</td></tr>
+                            <?php endif; ?>
 
                             <?php foreach ($recentOrders as $order): ?>
 
@@ -537,7 +567,7 @@ $orderStatusCounts = [
                                             class="
                                                 status-badge
                                                 status-<?= htmlspecialchars(
-                                                    $order['status']
+                                                    $orderStatusClasses[$order['status']] ?? 'pending'
                                                 ) ?>
                                             "
                                         >
@@ -607,6 +637,10 @@ $orderStatusCounts = [
 
                 <div class="low-stock-list">
 
+                    <?php if (!$lowStockProducts): ?>
+                        <p class="low-stock-product-name">No low-stock items.</p>
+                    <?php endif; ?>
+
                     <?php foreach ($lowStockProducts as $product): ?>
 
                         <div class="low-stock-row">
@@ -633,7 +667,7 @@ $orderStatusCounts = [
 
 
                                 <a
-                                    href="./inventory/index.php"
+                                    href="<?= BASE_URL ?>/admin/inventory/inventory.php"
                                     class="restock-link"
                                 >
                                     Restock
@@ -683,7 +717,7 @@ $orderStatusCounts = [
 
                     <!-- PROCESSING -->
 
-                    <div class="order-overview-card processing">
+                    <div class="order-overview-card processing" title="Confirmed and preparing orders">
 
                         <strong>
                             <?= $orderStatusCounts['processing'] ?>
@@ -699,7 +733,7 @@ $orderStatusCounts = [
 
                     <!-- SHIPPED -->
 
-                    <div class="order-overview-card shipped">
+                    <div class="order-overview-card shipped" title="Orders with shipping status">
 
                         <strong>
                             <?= $orderStatusCounts['shipped'] ?>
@@ -715,7 +749,7 @@ $orderStatusCounts = [
 
                     <!-- DELIVERED -->
 
-                    <div class="order-overview-card delivered">
+                    <div class="order-overview-card delivered" title="Delivered and completed orders">
 
                         <strong>
                             <?= $orderStatusCounts['delivered'] ?>
@@ -749,6 +783,8 @@ $orderStatusCounts = [
             </section>
 
 
+            <?php endif; ?>
+
         </main>
 
     </div>
@@ -758,7 +794,7 @@ $orderStatusCounts = [
          JAVASCRIPT
     ====================================== -->
 
-    <script src="../../assets/js/sidemenu.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

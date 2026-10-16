@@ -2,13 +2,26 @@
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/product_data.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-function failProduct(string $message): never
+function productJsonRequest(): bool
 {
+    return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+}
+
+function failProduct(string $message, int $status = 400): never
+{
+    if (productJsonRequest()) {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
+        echo json_encode(['success' => false, 'message' => $message]);
+        exit;
+    }
     $_SESSION['product_error'] = $message;
 
     header('Location: ./products.php');
@@ -24,12 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 /* ADMIN ONLY */
 
-if (
-    empty($_SESSION['user_id']) ||
-    (int) ($_SESSION['role_id'] ?? 0) !== 1
-) {
-    http_response_code(403);
-    exit('Access denied.');
+try {
+    $adminAllowed = productAdminAllowed($conn);
+} catch (Throwable $error) {
+    error_log('Product authorization failed: ' . $error->getMessage());
+    failProduct('Unable to verify admin access. Please try again.', 503);
+}
+if (!$adminAllowed) {
+    failProduct('Admin access is required. Please sign in again.', 403);
 }
 
 /* CSRF */
@@ -38,10 +53,11 @@ $token = $_POST['csrf_token'] ?? '';
 
 if (
     !is_string($token) ||
-    empty($_SESSION['csrf_product']) ||
+    !is_string($_SESSION['csrf_product'] ?? null) ||
+    $_SESSION['csrf_product'] === '' ||
     !hash_equals($_SESSION['csrf_product'], $token)
 ) {
-    failProduct('Invalid security token. Refresh the page.');
+    failProduct('Invalid security token. Refresh the page.', 403);
 }
 
 /* VALIDATE SELECTED DATABASE IDS */
@@ -49,7 +65,8 @@ if (
 function validProductIds(
     mysqli $conn,
     string $table,
-    array $ids
+    array $ids,
+    array $existingIds = []
 ): array {
 
     $allowedTables = [
@@ -91,10 +108,9 @@ function validProductIds(
     );
 
     $stmt = $conn->prepare("
-        SELECT id
+        SELECT id, status
         FROM {$table}
-        WHERE status = 'active'
-        AND id IN ({$placeholders})
+        WHERE id IN ({$placeholders})
     ");
 
     $types = str_repeat('i', count($ids));
@@ -102,13 +118,12 @@ function validProductIds(
     $stmt->bind_param($types, ...$ids);
     $stmt->execute();
 
-    $found = array_map(
-        'intval',
-        array_column(
-            $stmt->get_result()->fetch_all(MYSQLI_ASSOC),
-            'id'
-        )
-    );
+    $found = [];
+    foreach ($stmt->get_result() as $row) {
+        if ($row['status'] === 'active' || in_array((int) $row['id'], $existingIds, true)) {
+            $found[] = (int) $row['id'];
+        }
+    }
 
     $stmt->close();
 
@@ -125,10 +140,25 @@ function validProductIds(
 
 $savedFiles = [];
 $transactionStarted = false;
+$saveErrorStatus = 400;
 
 try {
 
     /* PRODUCT INFORMATION */
+
+    foreach (['product_name', 'product_code', 'status', 'description', 'key_benefits', 'product_id', 'product_revision'] as $field) {
+        if (isset($_POST[$field]) && !is_string($_POST[$field])) {
+            throw new RuntimeException('Invalid product details.');
+        }
+    }
+    $rawProductId = $_POST['product_id'] ?? '';
+    $isEditing = $rawProductId !== '';
+    if (($requireProductEdit ?? false) && !$isEditing) {
+        throw new RuntimeException('Select a product to edit.');
+    }
+    $productId = $isEditing ? filter_var($rawProductId, FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]) : 0;
+    if ($productId === false) throw new RuntimeException('Invalid product.');
 
     $productName = trim(
         (string) ($_POST['product_name'] ?? '')
@@ -158,8 +188,8 @@ try {
         mb_strlen($productName) > 200 ||
         $productCode === '' ||
         strlen($productCode) > 100 ||
-        !$categoryId ||
-        !in_array($status, ['active', 'inactive'], true) ||
+        !$categoryId || $categoryId < 1 ||
+        !in_array($status, ['active', 'inactive', 'out_of_stock'], true) ||
         mb_strlen($description) > 10000 ||
         mb_strlen($benefitsText) > 5000
     ) {
@@ -168,20 +198,36 @@ try {
         );
     }
 
+    $conn->begin_transaction();
+    $transactionStarted = true;
+    $existingProduct = $isEditing ? productEditData($conn, $productId, true) : null;
+    if ($isEditing) {
+        if ($existingProduct === null) {
+            $saveErrorStatus = 404;
+            throw new RuntimeException('This product no longer exists.');
+        }
+        $revision = $_POST['product_revision'] ?? '';
+        if (!hash_equals($existingProduct['revision'], $revision)) {
+            $saveErrorStatus = 409;
+            throw new RuntimeException('This product changed after you opened the form. Close and reopen Edit to load the latest details before saving.');
+        }
+    }
+
     /* VALIDATE CATEGORY */
 
     $stmt = $conn->prepare("
-        SELECT id
+        SELECT id, status
         FROM categories
         WHERE id = ?
-        AND status = 'active'
         LIMIT 1
     ");
 
     $stmt->bind_param('i', $categoryId);
     $stmt->execute();
 
-    $categoryExists = $stmt->get_result()->num_rows > 0;
+    $category = $stmt->get_result()->fetch_assoc();
+    $categoryExists = $category && ($category['status'] === 'active'
+        || ($existingProduct && (int) $existingProduct['category_id'] === $categoryId));
 
     $stmt->close();
 
@@ -195,10 +241,11 @@ try {
         SELECT id
         FROM products
         WHERE product_code = ?
+        AND id <> ?
         LIMIT 1
     ");
 
-    $stmt->bind_param('s', $productCode);
+    $stmt->bind_param('si', $productCode, $productId);
     $stmt->execute();
 
     $skuExists = $stmt->get_result()->num_rows > 0;
@@ -216,6 +263,7 @@ try {
     $prices = $_POST['variant_price'] ?? [];
     $stocks = $_POST['variant_stock'] ?? [];
     $thresholds = $_POST['variant_threshold'] ?? [];
+    $variantIds = $_POST['variant_id'] ?? [];
 
     if (
         !is_array($sizes) ||
@@ -224,7 +272,12 @@ try {
         !is_array($labels) ||
         !is_array($prices) ||
         !is_array($stocks) ||
-        !is_array($thresholds)
+        !is_array($thresholds) || !is_array($variantIds) ||
+        array_keys($sizes) !== array_keys($labels) ||
+        array_keys($sizes) !== array_keys($prices) ||
+        array_keys($sizes) !== array_keys($stocks) ||
+        array_keys($sizes) !== array_keys($thresholds) ||
+        ($isEditing && array_keys($sizes) !== array_keys($variantIds))
     ) {
         throw new RuntimeException(
             'At least one valid product size is required.'
@@ -234,8 +287,19 @@ try {
     $variants = [];
     $variantKeys = [];
     $totalStock = 0;
+    $existingVariantIds = array_map('intval', array_column($existingProduct['variants'] ?? [], 'id'));
+    $retainedVariantIds = [];
 
     foreach ($sizes as $index => $rawSize) {
+
+        $rawVariantId = $variantIds[$index] ?? '';
+        $variantId = $rawVariantId === '' ? 0 : filter_var($rawVariantId,
+            FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($variantId === false || ($variantId &&
+            (!in_array($variantId, $existingVariantIds, true) || in_array($variantId, $retainedVariantIds, true)))) {
+            throw new RuntimeException('Invalid product size. Reload the product and try again.');
+        }
+        if ($variantId) $retainedVariantIds[] = $variantId;
 
         if (!is_string($rawSize)) {
             throw new RuntimeException('Invalid size.');
@@ -289,6 +353,7 @@ try {
         $variantKeys[$key] = true;
 
         $variants[] = [
+            'id' => $variantId,
             'size' => $size,
             'label' => $label === '' ? null : $label,
             'price' => (float) $price,
@@ -305,18 +370,24 @@ try {
 
     $basePrice = $variants[0]['price'];
 
-    $finalStatus = $totalStock === 0
-        ? 'out_of_stock'
-        : $status;
+    $finalStatus = $status === 'inactive' ? 'inactive'
+        : ($totalStock === 0 ? 'out_of_stock' : $status);
 
     /* SKIN MATCHING */
+
+    foreach (['skin_type_ids', 'concern_ids', 'ingredient_ids'] as $field) {
+        if (isset($_POST[$field]) && !is_array($_POST[$field])) {
+            throw new RuntimeException('Invalid product selections.');
+        }
+    }
 
     $skinTypeIds = validProductIds(
         $conn,
         'skin_types',
         is_array($_POST['skin_type_ids'] ?? null)
             ? $_POST['skin_type_ids']
-            : []
+            : [],
+        array_map('intval', array_column($existingProduct['skin_types'] ?? [], 'id'))
     );
 
     $concernIds = validProductIds(
@@ -324,7 +395,8 @@ try {
         'skin_concerns',
         is_array($_POST['concern_ids'] ?? null)
             ? $_POST['concern_ids']
-            : []
+            : [],
+        array_map('intval', array_column($existingProduct['concerns'] ?? [], 'id'))
     );
 
     $ingredientIds = validProductIds(
@@ -332,10 +404,33 @@ try {
         'ingredients',
         is_array($_POST['ingredient_ids'] ?? null)
             ? $_POST['ingredient_ids']
-            : []
+            : [],
+        array_map('intval', array_column($existingProduct['ingredients'] ?? [], 'id'))
     );
 
     /* IMAGE URLS */
+
+    $retainedImages = $_POST['existing_image_ids'] ?? [];
+    if (!is_array($retainedImages) || count($retainedImages) > 10) {
+        throw new RuntimeException('Invalid existing image list.');
+    }
+    $resolvedByKey = [];
+    $existingImages = array_column($existingProduct['images'] ?? [], 'image_path', 'id');
+    foreach ($retainedImages as $rawImageId) {
+        $imageId = filter_var($rawImageId, FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]);
+        if ($imageId === false || !isset($existingImages[$imageId])
+            || isset($resolvedByKey['existing:' . $imageId])) {
+            throw new RuntimeException('Invalid existing product image.');
+        }
+        $resolvedByKey['existing:' . $imageId] = $existingImages[$imageId];
+    }
+    if (isset($_POST['keep_primary_image'])) {
+        if (!$existingProduct || $existingProduct['images'] || !$existingProduct['image']) {
+            throw new RuntimeException('Invalid primary product image.');
+        }
+        $resolvedByKey['legacy'] = $existingProduct['image'];
+    }
 
     $imageUrls = $_POST['image_urls'] ?? [];
 
@@ -345,7 +440,7 @@ try {
 
     $images = [];
 
-    foreach ($imageUrls as $url) {
+    foreach ($imageUrls as $urlIndex => $url) {
 
         if (!is_string($url)) {
             throw new RuntimeException('Invalid image URL.');
@@ -367,6 +462,7 @@ try {
 
         $images[] = [
             'type' => 'url',
+            'key' => 'url:' . $urlIndex,
             'value' => $url
         ];
     }
@@ -393,12 +489,13 @@ try {
 
             $images[] = [
                 'type' => 'file',
+                'key' => 'file:' . $index,
                 'value' => $index
             ];
         }
     }
 
-    if (count($images) > 10) {
+    if (count($images) + count($resolvedByKey) > 10) {
         throw new RuntimeException(
             'A maximum of 10 product images is allowed.'
         );
@@ -417,13 +514,12 @@ try {
         );
     }
 
-    $resolvedImages = [];
     $fileInfo = new finfo(FILEINFO_MIME_TYPE);
 
     foreach ($images as $image) {
 
         if ($image['type'] === 'url') {
-            $resolvedImages[] = $image['value'];
+            $resolvedByKey[$image['key']] = $image['value'];
             continue;
         }
 
@@ -471,51 +567,83 @@ try {
 
         $savedFiles[] = $destination;
 
-        $resolvedImages[] = 'uploads/products/' . $filename;
+        $resolvedByKey[$image['key']] = 'uploads/products/' . $filename;
     }
 
-    /* DATABASE TRANSACTION */
+    // Keep the thumbnail order (including mixed existing images, URLs, and uploads).
+    $imageOrder = $_POST['image_order'] ?? array_keys($resolvedByKey);
+    if (!is_array($imageOrder) || count($imageOrder) !== count($resolvedByKey)) {
+        throw new RuntimeException('Invalid product image order.');
+    }
+    $resolvedImages = [];
+    foreach ($imageOrder as $key) {
+        if (!is_string($key) || !array_key_exists($key, $resolvedByKey)) {
+            throw new RuntimeException('Invalid product image order.');
+        }
+        $resolvedImages[] = $resolvedByKey[$key];
+        unset($resolvedByKey[$key]);
+    }
 
-    $conn->begin_transaction();
-    $transactionStarted = true;
+    // The legacy products.image column can hold at most 255 characters.
+    if (isset($resolvedImages[0]) && mb_strlen($resolvedImages[0]) > 255) {
+        throw new RuntimeException('The primary image URL must be 255 characters or less.');
+    }
 
-    /* INSERT PRODUCT */
+    /* SAVE PRODUCT */
 
     $mainImage = $resolvedImages[0] ?? null;
 
-    $stmt = $conn->prepare("
-        INSERT INTO products (
-            category_id,
-            product_name,
-            product_code,
-            description,
-            price,
-            stock_quantity,
-            image,
-            status
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    if ($isEditing) {
+        $stmt = $conn->prepare("
+            UPDATE products SET category_id = ?, product_name = ?, product_code = ?,
+                description = ?, price = ?, stock_quantity = ?, image = ?, status = ?
+            WHERE id = ?
+        ");
+        $stmt->bind_param('isssdissi', $categoryId, $productName, $productCode,
+            $description, $basePrice, $totalStock, $mainImage, $finalStatus, $productId);
+        $stmt->execute();
+        $stmt->close();
+    } else {
+        $stmt = $conn->prepare("
+            INSERT INTO products (
+                category_id,
+                product_name,
+                product_code,
+                description,
+                price,
+                stock_quantity,
+                image,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+
+        $stmt->bind_param(
+            'isssdiss',
+            $categoryId,
+            $productName,
+            $productCode,
+            $description,
+            $basePrice,
+            $totalStock,
+            $mainImage,
+            $finalStatus
+        );
+
+        $stmt->execute();
+
+        $productId = (int) $conn->insert_id;
+
+        $stmt->close();
+    }
+
+    /* SAVE VARIANTS WITHOUT REPLACING EXISTING IDS */
+
+    $updateVariant = $conn->prepare("
+        UPDATE product_variants SET size_capacity = ?, variant_label = ?, price = ?,
+            stock_quantity = ?, low_stock_threshold = ?
+        WHERE id = ? AND product_id = ?
     ");
-
-    $stmt->bind_param(
-        'isssdiss',
-        $categoryId,
-        $productName,
-        $productCode,
-        $description,
-        $basePrice,
-        $totalStock,
-        $mainImage,
-        $finalStatus
-    );
-
-    $stmt->execute();
-
-    $productId = (int) $conn->insert_id;
-
-    $stmt->close();
-
-    /* INSERT VARIANTS */
 
     $stmt = $conn->prepare("
         INSERT INTO product_variants (
@@ -537,6 +665,14 @@ try {
         $stock = $variant['stock'];
         $threshold = $variant['threshold'];
 
+        if ($variant['id']) {
+            $variantId = $variant['id'];
+            $updateVariant->bind_param('ssdiiii', $size, $label, $price, $stock,
+                $threshold, $variantId, $productId);
+            $updateVariant->execute();
+            continue;
+        }
+
         $stmt->bind_param(
             'issdii',
             $productId,
@@ -551,6 +687,39 @@ try {
     }
 
     $stmt->close();
+    $updateVariant->close();
+
+    // Only sizes explicitly removed from the form are deleted.
+    $deleteVariant = $conn->prepare('DELETE FROM product_variants WHERE id = ? AND product_id = ?');
+    foreach (array_diff($existingVariantIds, $retainedVariantIds) as $variantId) {
+        $deleteVariant->bind_param('ii', $variantId, $productId);
+        $deleteVariant->execute();
+    }
+    $deleteVariant->close();
+
+    if ($isEditing) {
+        // Keep unchanged associations in place; only remove selections unchecked in the form.
+        $relations = [
+            'product_skin_types' => ['skin_type_id', $skinTypeIds, $existingProduct['skin_types']],
+            'product_concerns' => ['concern_id', $concernIds, $existingProduct['concerns']],
+            'product_ingredients' => ['ingredient_id', $ingredientIds, $existingProduct['ingredients']]
+        ];
+        foreach ($relations as $table => [$column, $selectedIds, $oldItems]) {
+            $oldIds = array_map('intval', array_column($oldItems, 'id'));
+            $delete = $conn->prepare("DELETE FROM {$table} WHERE product_id = ? AND {$column} = ?");
+            foreach (array_diff($oldIds, $selectedIds) as $removedId) {
+                $delete->bind_param('ii', $productId, $removedId);
+                $delete->execute();
+            }
+            $delete->close();
+        }
+        foreach (['product_images', 'product_benefits'] as $table) {
+            $delete = $conn->prepare("DELETE FROM {$table} WHERE product_id = ?");
+            $delete->bind_param('i', $productId);
+            $delete->execute();
+            $delete->close();
+        }
+    }
 
     /* SAVE SKIN TYPES */
 
@@ -563,6 +732,7 @@ try {
     ");
 
     foreach ($skinTypeIds as $skinTypeId) {
+        if (in_array($skinTypeId, array_map('intval', array_column($existingProduct['skin_types'] ?? [], 'id')), true)) continue;
         $stmt->bind_param(
             'ii',
             $productId,
@@ -585,6 +755,7 @@ try {
     ");
 
     foreach ($concernIds as $concernId) {
+        if (in_array($concernId, array_map('intval', array_column($existingProduct['concerns'] ?? [], 'id')), true)) continue;
         $stmt->bind_param(
             'ii',
             $productId,
@@ -607,6 +778,7 @@ try {
     ");
 
     foreach ($ingredientIds as $ingredientId) {
+        if (in_array($ingredientId, array_map('intval', array_column($existingProduct['ingredients'] ?? [], 'id')), true)) continue;
         $stmt->bind_param(
             'ii',
             $productId,
@@ -695,12 +867,12 @@ try {
 
     $adminId = (int) $_SESSION['user_id'];
 
-    $auditAction = 'CREATE';
+    $auditAction = $isEditing ? 'UPDATE' : 'CREATE';
     $auditModule = 'Products';
     $recordId = (string) $productId;
 
     $auditDescription = sprintf(
-        'Created product "%s" (%s).',
+        ($isEditing ? 'Updated' : 'Created') . ' product "%s" (%s).',
         $productName,
         $productCode
     );
@@ -738,9 +910,7 @@ try {
     $transactionStarted = false;
 
     $_SESSION['product_success'] =
-        'Product added successfully.';
-
-    unset($_SESSION['csrf_product']);
+        $isEditing ? 'Product updated successfully.' : 'Product added successfully.';
 
 } catch (Throwable $exception) {
 
@@ -755,13 +925,28 @@ try {
     }
 
     error_log(
-        'Add Product Error: ' . $exception->getMessage()
+        'Save Product Error: ' . $exception->getMessage()
     );
 
-    $_SESSION['product_error'] =
-        $exception instanceof RuntimeException
+    $message =
+        $exception instanceof RuntimeException && !($exception instanceof mysqli_sql_exception)
             ? $exception->getMessage()
-            : 'Unable to add the product. Please try again.';
+            : 'Unable to save the product. Please try again.';
+    if ($exception instanceof mysqli_sql_exception) {
+        $saveErrorStatus = 500;
+        if ((int) $exception->getCode() === 1062) {
+            $saveErrorStatus = 409;
+            $message = 'Product SKU already exists.';
+        }
+    }
+    failProduct($message, $saveErrorStatus);
+}
+
+if (productJsonRequest()) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode(['success' => true, 'message' => $_SESSION['product_success']]);
+    exit;
 }
 
 header('Location: ./products.php');

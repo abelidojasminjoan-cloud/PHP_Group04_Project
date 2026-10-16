@@ -79,9 +79,9 @@ body {
 
     padding: 0 30px;
 
-    background: #fbfaf7;
+    background: var(--sidebar-bg, #31382c);
 
-    border-bottom: 1px solid #e8e5de;
+    border-bottom: 1px solid var(--sidebar-border, #4a5144);
 }
 
 
@@ -89,7 +89,7 @@ body {
 
     margin: 0;
 
-    color: #5f665a;
+    color: var(--sidebar-text, #f8f6f0);
 
     font-size: 14px;
     font-weight: 500;
@@ -580,7 +580,8 @@ body {
    PAYMENT STATUS
 ========================================================= */
 
-.payment-verified {
+.payment-verified,
+.payment-paid {
 
     background: #e3f5eb;
     color: #139b54;
@@ -598,6 +599,11 @@ body {
 
     background: #f9e5e4;
     color: #c43c32;
+}
+
+.payment-refunded {
+    background: #efeffd;
+    color: #6265c7;
 }
 
 

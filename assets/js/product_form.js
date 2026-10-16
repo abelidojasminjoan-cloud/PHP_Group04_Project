@@ -12,6 +12,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const closeButtons = modal.querySelectorAll("[data-close-form-modal]");
 
     let lastFocusedElement = null;
+    let loadController = null;
+    let editingProduct = false;
+    let savingProduct = false;
+    const formBody = modal.querySelector('.form-modal-body');
+    const title = document.getElementById('addProductTitle');
+    const subtitle = title.nextElementSibling;
+    const formError = document.createElement('p');
+    formError.className = 'form-alert form-alert-error';
+    formError.setAttribute('role', 'alert');
+    formError.tabIndex = -1;
+
+    function showFormError(message) {
+        formError.textContent = message;
+        formBody.prepend(formError);
+        formError.focus();
+    }
 
     /* OPEN MODAL */
 
@@ -29,6 +45,9 @@ document.addEventListener("DOMContentLoaded", function () {
     /* CLOSE MODAL */
 
     function closeModal() {
+        if (savingProduct) return;
+        loadController?.abort();
+        loadController = null;
         modal.classList.remove("is-open");
         modal.setAttribute("aria-hidden", "true");
 
@@ -39,7 +58,52 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    openButton.addEventListener("click", openModal);
+    openButton.addEventListener('click', function () {
+        resetProductForm(false);
+        openModal();
+    });
+
+    document.querySelectorAll('.edit-product-button').forEach(button => {
+        button.addEventListener('click', async function () {
+            resetProductForm(true);
+            const controller = new AbortController();
+            loadController = controller;
+            openModal();
+            formBody.inert = true;
+            form.setAttribute('aria-busy', 'true');
+            submitButton.disabled = true;
+            subtitle.textContent = 'Loading product details...';
+            let loaded = false;
+            try {
+                const url = new URL(form.dataset.editAction, document.baseURI);
+                url.searchParams.set('id', button.dataset.productId);
+                const response = await fetch(url, {
+                    credentials: 'same-origin', cache: 'no-store',
+                    headers: { Accept: 'application/json' }, signal: controller.signal
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || 'Unable to load this product.');
+                if (controller.signal.aborted) return;
+                populateProductForm(data.product);
+                subtitle.textContent = 'Update the details and save your changes';
+                loaded = true;
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    formBody.inert = false;
+                    subtitle.textContent = 'Close and reopen Edit to try again';
+                    showFormError(error.message || 'Unable to load this product. Please try again.');
+                }
+            } finally {
+                if (loadController === controller) {
+                    loadController = null;
+                    formBody.inert = false;
+                    form.removeAttribute('aria-busy');
+                    submitButton.disabled = !loaded;
+                    if (loaded) document.getElementById('productName').focus();
+                }
+            }
+        });
+    });
 
     closeButtons.forEach(button => {
         button.addEventListener("click", closeModal);
@@ -91,15 +155,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const options = list.querySelectorAll(".product-checkbox");
-
         searchInput.addEventListener("input", function () {
 
             const query = searchInput.value
                 .trim()
                 .toLowerCase();
 
-            options.forEach(option => {
+            list.querySelectorAll('.product-checkbox').forEach(option => {
 
                 const text = option.textContent.toLowerCase();
 
@@ -115,6 +177,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const variantRows = document.getElementById("variantRows");
     const addSizeButton = document.getElementById("addSizeButton");
+    const variantTemplate = variantRows.querySelector('.variant-row').cloneNode(true);
+
+    function createVariantRow(variant = {}) {
+        const row = variantTemplate.cloneNode(true);
+        const values = {
+            'variant_id[]': variant.id ?? '',
+            'size_capacity[]': variant.size_capacity ?? '',
+            'variant_label[]': variant.variant_label ?? '',
+            'variant_price[]': variant.price ?? '',
+            'variant_stock[]': variant.stock_quantity ?? '0',
+            'variant_threshold[]': variant.low_stock_threshold ?? '15'
+        };
+        row.querySelectorAll('input').forEach(input => { input.value = values[input.name]; });
+        return row;
+    }
 
     function updateRemoveButtons() {
 
@@ -135,19 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const firstRow = variantRows.querySelector(".variant-row");
-        const newRow = firstRow.cloneNode(true);
-
-        newRow.querySelectorAll("input").forEach(input => {
-
-            if (input.name === "variant_stock[]") {
-                input.value = "0";
-            } else if (input.name === "variant_threshold[]") {
-                input.value = "15";
-            } else {
-                input.value = "";
-            }
-        });
+        const newRow = createVariantRow();
 
         variantRows.appendChild(newRow);
 
@@ -192,6 +257,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let imageEntries = [];
 
+    function resetProductForm(editing) {
+        loadController?.abort();
+        loadController = null;
+        editingProduct = editing;
+        form.querySelectorAll('[data-edit-option]').forEach(option => option.remove());
+        form.reset();
+        form.elements.namedItem('product_id').value = '';
+        form.elements.namedItem('product_revision').value = '';
+        form.action = editing ? form.dataset.editAction : form.dataset.addAction;
+        formBody.inert = false;
+        form.removeAttribute('aria-busy');
+        formError.remove();
+        form.querySelectorAll('.product-checkbox').forEach(option => { option.hidden = false; });
+        title.textContent = editing ? 'Edit Product' : 'Add New Product';
+        subtitle.textContent = 'Fill in the details and add all available sizes';
+        submitButton.textContent = editing ? 'Save Changes' : 'Add Product';
+        submitButton.disabled = false;
+        variantRows.replaceChildren(createVariantRow());
+        updateRemoveButtons();
+        imageEntries.forEach(entry => { if (entry.type === 'file') URL.revokeObjectURL(entry.preview); });
+        imageEntries = [];
+        refreshImages();
+        formBody.scrollTop = 0;
+    }
+
+    function populateProductForm(product) {
+        form.elements.namedItem('product_id').value = product.id;
+        form.elements.namedItem('product_revision').value = product.revision;
+        const fields = {
+            productName: product.product_name, productCode: product.product_code,
+            productCategory: product.category_id, productStatus: product.status,
+            productDescription: product.description ?? '', keyBenefits: product.benefits.join('\n')
+        };
+        const category = document.getElementById('productCategory');
+        if (![...category.options].some(option => option.value === String(product.category_id))) {
+            const option = new Option(product.category_name + ' (inactive)', product.category_id);
+            option.dataset.editOption = '';
+            category.add(option);
+        }
+        Object.entries(fields).forEach(([id, value]) => { document.getElementById(id).value = value; });
+        const selections = [
+            ['skin_type_ids[]', '.skin-type-options', product.skin_types],
+            ['concern_ids[]', '#concernOptions', product.concerns],
+            ['ingredient_ids[]', '#ingredientOptions', product.ingredients]
+        ];
+        selections.forEach(([name, selector, items]) => {
+            items.forEach(item => {
+                let input = [...form.querySelectorAll('input')].find(input => input.name === name && input.value === String(item.id));
+                if (!input) {
+                    const label = document.createElement('label');
+                    label.className = 'product-checkbox';
+                    label.dataset.editOption = '';
+                    input = document.createElement('input');
+                    input.type = 'checkbox'; input.name = name; input.value = item.id;
+                    const text = document.createElement('span');
+                    text.textContent = item.label + ' (inactive)';
+                    label.append(input, text);
+                    form.querySelector(selector).appendChild(label);
+                }
+                input.checked = true;
+            });
+        });
+        variantRows.replaceChildren(...(product.variants.length ? product.variants.map(createVariantRow) : [createVariantRow()]));
+        updateRemoveButtons();
+        const preview = path => new URL(path, new URL(form.dataset.baseUrl + '/', document.baseURI)).href;
+        imageEntries = product.images.map(image => ({
+            type: 'existing', value: image.id, preview: preview(image.image_path)
+        }));
+        if (!imageEntries.length && product.image) {
+            imageEntries.push({ type: 'legacy', preview: preview(product.image) });
+        }
+        refreshImages();
+    }
+
     /* COUNT IMAGES */
 
     function imageCount() {
@@ -204,19 +343,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
         imageUrlFields.replaceChildren();
 
-        imageEntries.forEach(entry => {
-
-            if (entry.type !== "url") {
-                return;
-            }
-
-            const input = document.createElement("input");
-
-            input.type = "hidden";
-            input.name = "image_urls[]";
-            input.value = entry.value;
-
+        function hiddenField(name, value) {
+            const input = document.createElement('input');
+            input.type = 'hidden'; input.name = name; input.value = value;
             imageUrlFields.appendChild(input);
+        }
+        let urlIndex = 0;
+        let fileIndex = 0;
+
+        imageEntries.forEach(entry => {
+            let key;
+            if (entry.type === 'url') {
+                hiddenField('image_urls[]', entry.value);
+                key = 'url:' + urlIndex++;
+            } else if (entry.type === 'file') {
+                key = 'file:' + fileIndex++;
+            } else if (entry.type === 'existing') {
+                hiddenField('existing_image_ids[]', entry.value);
+                key = 'existing:' + entry.value;
+            } else {
+                hiddenField('keep_primary_image', '1');
+                key = 'legacy';
+            }
+            hiddenField('image_order[]', key);
         });
 
         const transfer = new DataTransfer();
@@ -427,7 +576,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* SUBMIT VALIDATION */
 
-    form.addEventListener("submit", function (event) {
+    form.addEventListener("submit", async function (event) {
+
+        if (savingProduct || loadController || (editingProduct && !form.elements.namedItem('product_id').value)) {
+            event.preventDefault();
+            return;
+        }
 
         const rows = variantRows.querySelectorAll(".variant-row");
 
@@ -471,7 +625,33 @@ document.addEventListener("DOMContentLoaded", function () {
         syncImageFields();
 
         submitButton.disabled = true;
-        submitButton.textContent = "Adding Product...";
+        submitButton.textContent = editingProduct ? 'Saving Changes...' : 'Adding Product...';
+
+        if (editingProduct) {
+            event.preventDefault();
+            savingProduct = true;
+            formBody.inert = true;
+            formError.remove();
+            form.setAttribute('aria-busy', 'true');
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST', body: new FormData(form), credentials: 'same-origin',
+                    headers: { Accept: 'application/json' }
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || 'Unable to save this product.');
+                window.location.reload();
+            } catch (error) {
+                formBody.inert = false;
+                showFormError(error.message || 'Unable to save this product. Please try again.');
+            } finally {
+                savingProduct = false;
+                formBody.inert = false;
+                form.removeAttribute('aria-busy');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Save Changes';
+            }
+        }
     });
 
 });
