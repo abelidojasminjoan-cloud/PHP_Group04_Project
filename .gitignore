@@ -11,6 +11,8 @@
 # Composer installed dependencies
 /vendor/
 
+/database/purevia_db.sql
+
 # Composer temporary files
 composer.phar
 
