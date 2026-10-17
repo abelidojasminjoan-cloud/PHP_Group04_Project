@@ -48,56 +48,43 @@ if (
 
 $userId = (int) $_SESSION['user_id'];
 
-$firstName = trim((string) ($_POST['first_name'] ?? ''));
-$lastName = trim((string) ($_POST['last_name'] ?? ''));
-$phone = trim((string) ($_POST['phone'] ?? ''));
-$gender = trim((string) ($_POST['gender'] ?? ''));
-$birthDate = trim((string) ($_POST['birth_date'] ?? ''));
-
-if ($firstName === '' || $lastName === '') {
-    profileError('First and last name are required.', $editUrl);
+$values = [];
+$fieldErrors = [];
+foreach (['first_name','last_name','phone','gender','birth_date'] as $field) {
+    $value = $_POST[$field] ?? '';
+    if (!is_string($value)) {
+        $fieldErrors[$field] = 'Invalid form value.';
+        $value = '';
+    }
+    $values[$field] = trim($value);
 }
+$firstName = $values['first_name'];
+$lastName = $values['last_name'];
+$phone = $values['phone'];
+$gender = $values['gender'];
+$birthDate = $values['birth_date'];
 
-if (
-    mb_strlen($firstName) > 100 ||
-    mb_strlen($lastName) > 100
-) {
-    profileError('Name is too long.', $editUrl);
+foreach (['first_name' => 'first name', 'last_name' => 'last name'] as $field => $label) {
+    if ($values[$field] === '') $fieldErrors[$field] = 'Please enter your ' . $label . '.';
+    elseif (mb_strlen($values[$field]) > 100) $fieldErrors[$field] = 'Use no more than 100 characters.';
 }
-
-if (
-    $phone !== '' &&
-    (
-        strlen($phone) > 30 ||
-        !preg_match('/^[0-9+\s()\-]+$/', $phone)
-    )
-) {
-    profileError('Enter a valid phone number.', $editUrl);
+if ($phone !== '' && (strlen($phone) > 30 || !preg_match('/^[0-9+\\s()\\-]+$/', $phone))) {
+    $fieldErrors['phone'] = 'Please enter a valid phone number.';
 }
-
-$allowedGenders = [
-    '',
-    'Female',
-    'Male',
-    'Non-binary',
-    'Prefer not to say'
-];
-
-if (!in_array($gender, $allowedGenders, true)) {
-    profileError('Please select a valid gender option.', $editUrl);
+if (!in_array($gender, ['', 'Female', 'Male', 'Non-binary', 'Prefer not to say'], true)) {
+    $fieldErrors['gender'] = 'Please select a valid gender option.';
 }
-
 if ($birthDate !== '') {
     $date = DateTimeImmutable::createFromFormat('!Y-m-d', $birthDate);
-
-    if (
-        !$date ||
-        $date->format('Y-m-d') !== $birthDate ||
-        $date > new DateTimeImmutable('today') ||
-        $date < new DateTimeImmutable('1900-01-01')
-    ) {
-        profileError('Please enter a valid birth date.', $editUrl);
+    if (!$date || $date->format('Y-m-d') !== $birthDate ||
+        $date > new DateTimeImmutable('today') || $date < new DateTimeImmutable('1900-01-01')) {
+        $fieldErrors['birth_date'] = 'Please enter a valid birth date.';
     }
+}
+if ($fieldErrors) {
+    $_SESSION['profile_field_errors'] = $fieldErrors;
+    $_SESSION['profile_old'] = $values;
+    profileError('Please check the highlighted fields.', $editUrl);
 }
 
 $genderValue = $gender === '' ? null : $gender;

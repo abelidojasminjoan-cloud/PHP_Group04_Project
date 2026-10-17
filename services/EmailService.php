@@ -6,10 +6,12 @@ require_once __DIR__ . '/../config/app.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-function sendVerificationEmail(
-    string $recipientEmail,
-    string $recipientName,
-    string $token
+function sendPureViaMail(
+    string $email,
+    string $name,
+    string $subject,
+    string $html,
+    string $plain
 ): bool {
     $config = require __DIR__ . '/../config/mail.php';
 
@@ -18,38 +20,20 @@ function sendVerificationEmail(
         empty($config['password']) ||
         empty($config['from_email'])
     ) {
-        error_log('PureVia SMTP configuration is incomplete.');
+        error_log('PureVia SMTP settings are incomplete.');
         return false;
     }
 
-    $verificationUrl = APP_URL
-        . '/verify-email.php?token='
-        . urlencode($token);
-
-    $safeName = htmlspecialchars(
-        $recipientName,
-        ENT_QUOTES | ENT_SUBSTITUTE,
-        'UTF-8'
-    );
-
-    $safeUrl = htmlspecialchars(
-        $verificationUrl,
-        ENT_QUOTES | ENT_SUBSTITUTE,
-        'UTF-8'
-    );
-
-    $mail = new PHPMailer(true);
-
     try {
+        $mail = new PHPMailer(true);
+
         $mail->isSMTP();
         $mail->Host = $config['host'];
         $mail->SMTPAuth = true;
         $mail->Username = $config['username'];
         $mail->Password = $config['password'];
-        $mail->Port = $config['port'];
-
-        $mail->SMTPSecure =
-            PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = (int) $config['port'];
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
         $mail->CharSet = 'UTF-8';
 
@@ -58,73 +42,131 @@ function sendVerificationEmail(
             $config['from_name']
         );
 
-        $mail->addAddress(
-            $recipientEmail,
-            $recipientName
-        );
-
+        $mail->addAddress($email, $name);
         $mail->isHTML(true);
-
-        $mail->Subject = 'Verify Your PureVia Account';
-
-        $mail->Body = '
-            <div style="
-                font-family: Arial, sans-serif;
-                max-width: 560px;
-                margin: auto;
-                padding: 24px;
-            ">
-                <h2>Welcome to PureVia!</h2>
-
-                <p>Hello ' . $safeName . ',</p>
-
-                <p>
-                    Thank you for creating your PureVia account.
-                    Please verify your email address to activate
-                    your account.
-                </p>
-
-                <p>
-                    <a href="' . $safeUrl . '"
-                       style="
-                           display:inline-block;
-                           padding:12px 20px;
-                           background:#426b58;
-                           color:#ffffff;
-                           text-decoration:none;
-                           border-radius:6px;
-                       ">
-                        Verify Email Address
-                    </a>
-                </p>
-
-                <p>
-                    This verification link expires in 30 minutes.
-                </p>
-
-                <p>
-                    If you did not create this account,
-                    you can ignore this email.
-                </p>
-
-                <p>PureVia Team</p>
-            </div>
-        ';
-
-        $mail->AltBody =
-            "Welcome to PureVia, {$recipientName}!\n\n"
-            . "Verify your email address:\n"
-            . $verificationUrl
-            . "\n\nThis link expires in 30 minutes.";
+        $mail->Subject = $subject;
+        $mail->Body = $html;
+        $mail->AltBody = $plain;
 
         return $mail->send();
 
     } catch (Exception $e) {
-        error_log(
-            'PureVia verification email failed: '
-            . $e->getMessage()
-        );
-
+        error_log('PureVia mail error: ' . $e->getMessage());
         return false;
     }
+}
+
+function sendOtpEmail(
+    string $email,
+    string $name,
+    string $otp
+): bool {
+    $safeName = htmlspecialchars(
+        $name,
+        ENT_QUOTES,
+        'UTF-8'
+    );
+
+    $html = '
+    <div style="font-family:Arial,sans-serif;
+                max-width:540px;margin:auto;padding:30px;">
+        <h2 style="color:#426b58;">Welcome to PureVia!</h2>
+
+        <p>Hello ' . $safeName . ',</p>
+
+        <p>Thank you for registering. Enter this
+        one-time password to activate your account:</p>
+
+        <div style="background:#f0f5f1;padding:22px;
+                    text-align:center;border-radius:10px;">
+            <strong style="font-size:34px;
+                           letter-spacing:8px;color:#426b58;">'
+                . $otp .
+            '</strong>
+        </div>
+
+        <p>This code expires in <b>10 minutes</b>.</p>
+
+        <p>Do not share this code with anyone.</p>
+
+        <p>If you did not register, ignore this email.</p>
+
+        <p>PureVia Team</p>
+    </div>';
+
+    $plain = "Hello {$name},\n\n"
+        . "Your PureVia verification code is: {$otp}\n"
+        . "This code expires in 10 minutes.\n"
+        . "Do not share it with anyone.";
+
+    return sendPureViaMail(
+        $email,
+        $name,
+        'Your PureVia Account Verification Code',
+        $html,
+        $plain
+    );
+}
+
+function sendActivationEmail(
+    string $email,
+    string $name
+): bool {
+    $safeName = htmlspecialchars(
+        $name,
+        ENT_QUOTES,
+        'UTF-8'
+    );
+
+    $loginUrl = APP_URL . '/login.php';
+
+    $safeUrl = htmlspecialchars(
+        $loginUrl,
+        ENT_QUOTES,
+        'UTF-8'
+    );
+
+    $html = '
+    <div style="font-family:Arial,sans-serif;
+                max-width:540px;margin:auto;padding:30px;">
+
+        <h2 style="color:#426b58;">
+            Your PureVia Account Is Activated!
+        </h2>
+
+        <p>Hello ' . $safeName . ',</p>
+
+        <p>Your email address has been verified
+        successfully.</p>
+
+        <p>Your PureVia account is now active.
+        You can sign in using your registered
+        email address and password.</p>
+
+        <p style="margin:30px 0;">
+            <a href="' . $safeUrl . '"
+               style="background:#426b58;color:white;
+                      padding:14px 24px;border-radius:6px;
+                      text-decoration:none;">
+                Login to PureVia
+            </a>
+        </p>
+
+        <p>Thank you for joining PureVia!</p>
+
+        <p>PureVia Team</p>
+    </div>';
+
+    $plain = "Hello {$name},\n\n"
+        . "Your PureVia account is now active.\n"
+        . "Login here: {$loginUrl}\n\n"
+        . "Use your registered email and password.";
+
+    return sendPureViaMail(
+        $email,
+        $name,
+        'PureVia Account Successfully Activated',
+        $html,
+        $plain
+    );
 }

@@ -22,8 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const noResultsRow =
         document.getElementById('noSkinConcernsFound');
 
-    const deleteButtons =
-        document.querySelectorAll('.delete-concern-button');
 
 
     /* =====================================================
@@ -144,61 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    /* =====================================================
-       DELETE BUTTONS
-    ===================================================== */
-
-    deleteButtons.forEach(function (button) {
-
-        button.addEventListener(
-            'click',
-            function () {
-
-
-                const concernId =
-                    button.dataset.concernId;
-
-
-                const concernName =
-                    button.dataset.concernName;
-
-
-                if (!concernId) {
-                    return;
-                }
-
-
-                /* =========================================
-                   CONFIRM DELETE
-                ========================================= */
-
-                const confirmed =
-                    confirm(
-                        'Are you sure you want to delete "' +
-                        concernName +
-                        '"?'
-                    );
-
-
-                if (!confirmed) {
-                    return;
-                }
-
-
-                /* =========================================
-                   DELETE PROCESSOR
-                ========================================= */
-
-                window.location.href =
-                    './delete_concern.php?id=' +
-                    encodeURIComponent(
-                        concernId
-                    );
-
-            }
-        );
-
-    });
+    // Admin deletion confirmations are handled by admin_delete.js.
 
 
     /* =====================================================

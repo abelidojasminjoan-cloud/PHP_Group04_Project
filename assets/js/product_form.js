@@ -235,9 +235,20 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        removeButton.closest(".variant-row").remove();
-
-        updateRemoveButtons();
+        const row = removeButton.closest('.variant-row');
+        const size = row.querySelector('input[name="size_capacity[]"]').value.trim();
+        window.PureViaAdminDelete?.open({
+            trigger: removeButton,
+            title: 'Remove Size?',
+            name: size || 'this product size',
+            message: 'This size will be removed from the form. Save the product to apply the change.',
+            confirmLabel: 'Remove Size',
+            pendingLabel: 'Removing…',
+            onConfirm() {
+                row.remove();
+                updateRemoveButtons();
+            }
+        });
     });
 
     updateRemoveButtons();
@@ -435,13 +446,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
             removeButton.addEventListener("click", function () {
 
-                const removed = imageEntries.splice(index, 1)[0];
-
-                if (removed.type === "file") {
-                    URL.revokeObjectURL(removed.preview);
-                }
-
-                refreshImages();
+                const entry = imageEntries[index];
+                window.PureViaAdminDelete?.open({
+                    trigger: removeButton,
+                    title: 'Remove Image?',
+                    name: 'product image ' + (index + 1),
+                    message: 'This image will be removed from the form. Save the product to apply the change.',
+                    confirmLabel: 'Remove Image',
+                    pendingLabel: 'Removing…',
+                    onConfirm() {
+                        const entryIndex = imageEntries.indexOf(entry);
+                        if (entryIndex === -1) return;
+                        const removed = imageEntries.splice(entryIndex, 1)[0];
+                        if (removed.type === 'file') URL.revokeObjectURL(removed.preview);
+                        refreshImages();
+                    }
+                });
             });
 
             item.appendChild(removeButton);

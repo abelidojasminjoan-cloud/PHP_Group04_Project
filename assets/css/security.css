@@ -9,6 +9,8 @@
     --sec-green-dark: #284b39;
     --sec-active: #e8eeea;
     --sec-radius: 12px;
+    --sec-error: #cf292e;
+    --sec-password-met: #267347;
 }
 
 * {
@@ -24,6 +26,133 @@ body {
     background: var(--sec-bg);
     padding: 42px 24px 80px;
     color: var(--sec-text);
+    font-family: 'Poppins', sans-serif;
+}
+
+.sec-page input,
+.sec-page button,
+.sec-page select,
+.sec-page textarea {
+    font-family: 'Poppins', sans-serif;
+}
+
+.sec-field-error {
+    display: block;
+    margin: 6px 0 0;
+    color: var(--sec-error);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+#secFormError {
+    margin-bottom: 16px;
+}
+
+.sec-field-error[hidden] {
+    display: none;
+}
+
+.sec-password-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sec-password-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.sec-password-feedback[hidden] {
+    display: none;
+}
+
+.sec-password-feedback {
+    margin-top: 8px;
+    padding: 14px;
+    border: 1px solid #d5e0d8;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.sec-password-strength {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 12px;
+    color: #244d41;
+}
+
+.sec-password-strength strong {
+    color: var(--sec-error);
+    font-weight: 600;
+}
+
+.sec-password-strength strong[data-level="medium"] {
+    color: #91630b;
+}
+
+.sec-password-strength strong[data-level="strong"] {
+    color: var(--sec-password-met);
+}
+
+.sec-password-checklist {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sec-password-checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+    color: var(--sec-error);
+}
+
+.sec-password-checklist li[data-met="true"] {
+    color: var(--sec-password-met);
+}
+
+.sec-rule-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 12px;
+    height: 19.5px;
+}
+
+.sec-rule-icon svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+}
+
+.sec-rule-icon .sec-rule-check {
+    display: none;
+}
+
+.sec-password-checklist li[data-met="true"] .sec-rule-check {
+    display: block;
+}
+
+.sec-password-checklist li[data-met="true"] .sec-rule-x {
+    display: none;
+}
+
+/* FORGOT PASSWORD */
+
+@media (max-width: 480px) {
+    .sec-password-checklist {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .sec-container {
@@ -197,6 +326,7 @@ body {
     margin-bottom: 10px;
     font-size: 14px;
     font-weight: 600;
+    color: #244d41;
 }
 
 .sec-input-wrap {
@@ -207,11 +337,11 @@ body {
     display: block;
     width: 100%;
     height: 55px;
-    padding: 0 48px 0 17px;
-    border: 1px solid var(--sec-border);
-    border-radius: 9px;
+    padding: 0 52px 0 17px;
+    border: 1px solid #cfddd5;
+    border-radius: 13px;
     background: var(--sec-white);
-    color: var(--sec-text);
+    color: #173e33;
     font-family: inherit;
     font-size: 14px;
     outline: none;
@@ -219,12 +349,18 @@ body {
 }
 
 .sec-input-wrap input::placeholder {
-    color: #a79589;
+    color: #acb8b2;
 }
 
 .sec-input-wrap input:focus {
-    border-color: var(--sec-green);
-    box-shadow: 0 0 0 2px rgba(56, 101, 77, 0.08);
+    border-color: #537b6b;
+    box-shadow: 0 0 0 3px rgba(83, 123, 107, 0.11);
+}
+
+/* Invalid fields retain their red border while focused, like signup. */
+.sec-input-wrap input[aria-invalid="true"],
+.sec-input-wrap input[aria-invalid="true"]:focus {
+    border-color: var(--sec-error);
 }
 
 .sec-input-wrap input.sec-invalid {
@@ -239,22 +375,29 @@ body {
 
 .sec-toggle-password {
     position: absolute;
-    right: 12px;
+    right: 13px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
+    padding: 5px;
     border: none;
+    border-radius: 50%;
     background: transparent;
-    color: #897d71;
+    color: #9aaba2;
     cursor: pointer;
 }
 
 .sec-toggle-password:hover {
-    color: var(--sec-green);
+    color: #173e33;
+}
+
+.sec-toggle-password:focus-visible {
+    outline: 2px solid #537b6b;
+    outline-offset: 2px;
 }
 
 .sec-toggle-password[hidden] {

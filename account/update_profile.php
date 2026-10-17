@@ -60,7 +60,13 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$error = $_SESSION['profile_error'] ?? '';
+$fieldErrors = $_SESSION['profile_field_errors'] ?? [];
+$oldProfile = $_SESSION['profile_old'] ?? [];
+unset($_SESSION['profile_field_errors'], $_SESSION['profile_old']);
+foreach (['first_name','last_name','phone'] as $field) {
+    if (isset($oldProfile[$field]) && is_string($oldProfile[$field])) $user[$field] = $oldProfile[$field];
+}
+$error = $fieldErrors ? '' : (string) ($_SESSION['profile_error'] ?? '');
 unset($_SESSION['profile_error']);
 ?>
 
@@ -178,16 +184,17 @@ unset($_SESSION['profile_error']);
             </div>
 
             <?php if ($error): ?>
-                <div class="account-alert error">
+                <div class="account-form-error">
                     <?= e($error) ?>
                 </div>
             <?php endif; ?>
 
             <div class="account-edit-card">
 
-                <form method="POST"
+                <form novalidate method="POST"
                       action="<?= BASE_URL ?>/actions/account/update_profile.php"
-                      id="profileEditForm">
+                      id="profileEditForm"
+                      data-field-errors="<?= e(json_encode($fieldErrors, JSON_THROW_ON_ERROR)) ?>">
 
                     <input type="hidden"
                            name="csrf_token"
@@ -208,7 +215,7 @@ unset($_SESSION['profile_error']);
                                        placeholder="First Name"
                                        maxlength="100"
                                        aria-label="First Name"
-                                       required>
+                                       aria-required="true">
 
                                 <input type="text"
                                        name="last_name"
@@ -217,7 +224,7 @@ unset($_SESSION['profile_error']);
                                        placeholder="Last Name"
                                        maxlength="100"
                                        aria-label="Last Name"
-                                       required>
+                                       aria-required="true">
 
                             </div>
 

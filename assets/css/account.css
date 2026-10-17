@@ -14,6 +14,42 @@
     box-sizing: border-box;
 }
 
+.account-page input,
+.account-page select,
+.account-page textarea,
+.account-page button,
+.pv-address-overlay input,
+.pv-address-overlay select,
+.pv-address-overlay textarea,
+.pv-address-overlay button {
+    font-family: 'Poppins', sans-serif;
+}
+
+.account-input-group {
+    min-width: 0;
+}
+
+.account-field-error,
+.account-form-error {
+    display: block;
+    margin: 7px 0 0;
+    color: #a43d3d;
+    font: 400 12px/1.5 'Poppins', sans-serif;
+}
+
+.account-field-error[hidden] {
+    display: none;
+}
+
+.account-page input[aria-invalid="true"],
+.account-page select[aria-invalid="true"],
+.account-page textarea[aria-invalid="true"],
+.pv-address-overlay input[aria-invalid="true"],
+.pv-address-overlay select[aria-invalid="true"],
+.pv-address-overlay textarea[aria-invalid="true"] {
+    border-color: #a43d3d;
+}
+
 /* =========================================
    PAGE INTRODUCTION
 ========================================= */
