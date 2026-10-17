@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -19,7 +19,7 @@ $orderId = filter_input(
 );
 
 if (!$orderId) {
-    header('Location: ' . BASE_URL . '/my-orders.php');
+    header('Location: ' . BASE_URL . '/public/my-orders.php');
     exit;
 }
 
@@ -60,7 +60,7 @@ function odImage(?string $path): string
         $filename === '' ||
         $filename === '.' ||
         $filename === '..' ||
-        !is_file(__DIR__ . '/uploads/products/' . $filename)
+        !is_file(__DIR__ . '/../uploads/products/' . $filename)
     ) {
         return $fallback;
     }
@@ -224,7 +224,7 @@ if (empty($_SESSION['csrf_token'])) {
 
 <body>
 
-<?php include __DIR__ . '/includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="od-page">
 
@@ -232,7 +232,7 @@ if (empty($_SESSION['csrf_token'])) {
 
         <!-- BACK -->
 
-        <a href="<?= BASE_URL ?>/my-orders.php" class="od-back">
+        <a href="<?= BASE_URL ?>/public/my-orders.php" class="od-back">
             <span>←</span>
             Back to Orders
         </a>

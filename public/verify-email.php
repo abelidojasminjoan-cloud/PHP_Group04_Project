@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 $userId = (int) ($_SESSION['pending_verification_user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/register.php');
+    header('Location: ' . BASE_URL . '/public/register.php');
     exit;
 }
 
@@ -20,7 +20,7 @@ $stmt->close();
 
 if (!$user || $user['status'] !== 'pending') {
     unset($_SESSION['pending_verification_user_id']);
-    header('Location: ' . BASE_URL . '/login.php');
+    header('Location: ' . BASE_URL . '/public/login.php');
     exit;
 }
 
@@ -107,7 +107,7 @@ function otpEscape(string $value): string {
 
     <section class="auth-visual">
         <a class="auth-brand"
-           href="<?= BASE_URL ?>/index.php">
+           href="<?= BASE_URL ?>/public/index.php">
             <img
                 src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png"
                 alt="PureVia"
@@ -209,7 +209,7 @@ function otpEscape(string $value): string {
 
             <p class="auth-bottom-link">
                 Already activated?
-                <a href="<?= BASE_URL ?>/login.php">
+                <a href="<?= BASE_URL ?>/public/login.php">
                     Sign in
                 </a>
             </p>

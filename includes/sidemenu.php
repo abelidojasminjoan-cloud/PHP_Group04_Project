@@ -40,7 +40,7 @@ require_once __DIR__ . '/../config/db.php';
 
 if (empty($_SESSION['user_id'])) {
 
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -83,7 +83,7 @@ if (!$stmt) {
         $conn->error
     );
 
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -116,7 +116,7 @@ if (!$currentUser) {
 
     session_destroy();
 
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -133,7 +133,7 @@ if (
 
     session_destroy();
 
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -158,7 +158,7 @@ $isStaff = ($currentRole === 'staff');
 
 if (!$isAdmin && !$isStaff) {
 
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 

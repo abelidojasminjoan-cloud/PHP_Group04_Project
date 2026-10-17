@@ -118,7 +118,7 @@ function sendActivationEmail(
         'UTF-8'
     );
 
-    $loginUrl = APP_URL . '/login.php';
+    $loginUrl = APP_URL . '/public/login.php';
 
     $safeUrl = htmlspecialchars(
         $loginUrl,

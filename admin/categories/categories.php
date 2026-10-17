@@ -22,7 +22,7 @@ $categoryAdminAllowed = $stmt->get_result()->num_rows === 1;
 $stmt->close();
 
 if (!$categoryAdminAllowed) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 

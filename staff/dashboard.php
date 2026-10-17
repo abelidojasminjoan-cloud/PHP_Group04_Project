@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/db.php';
 ========================================================= */
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -51,7 +51,7 @@ if (
     strtolower($staffUser['status']) !== 'active' ||
     strtolower($staffUser['role_name']) !== 'staff'
 ) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 

@@ -1,8 +1,8 @@
 
 <?php
 
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 function cartEsc(?string $value): string
 {
@@ -30,7 +30,7 @@ function cartImage(?string $path): string
         return $fallback;
     }
 
-    return is_file(__DIR__ . '/uploads/products/' . $filename)
+    return is_file(__DIR__ . '/../uploads/products/' . $filename)
         ? BASE_URL . '/uploads/products/' . rawurlencode($filename)
         : $fallback;
 }
@@ -156,7 +156,7 @@ $pageTitle = 'Shopping Bag | PureVia';
 
 <body>
 
-<?php include __DIR__ . '/includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="pv-cart-page">
 
@@ -180,7 +180,7 @@ $pageTitle = 'Shopping Bag | PureVia';
                 <i class="fa-solid fa-bag-shopping"></i>
                 <h2>Sign in to view your shopping bag</h2>
                 <p>Your saved skincare products will appear here.</p>
-                <a href="<?= BASE_URL ?>/index.php">
+                <a href="<?= BASE_URL ?>/public/index.php">
                     Return to PureVia
                 </a>
             </section>
@@ -279,7 +279,7 @@ $pageTitle = 'Shopping Bag | PureVia';
 
                                 <a
                                     class="pv-cart-image"
-                                    href="<?= BASE_URL ?>/product.php?id=<?= $productId ?>"
+                                    href="<?= BASE_URL ?>/public/product.php?id=<?= $productId ?>"
                                 >
                                     <img
                                         src="<?= cartEsc($image) ?>"
@@ -297,7 +297,7 @@ $pageTitle = 'Shopping Bag | PureVia';
 
                                     <a
                                         class="pv-cart-product-name"
-                                        href="<?= BASE_URL ?>/product.php?id=<?= $productId ?>"
+                                        href="<?= BASE_URL ?>/public/product.php?id=<?= $productId ?>"
                                     >
                                         <?= cartEsc($item['product_name']) ?>
                                     </a>
@@ -395,13 +395,13 @@ $pageTitle = 'Shopping Bag | PureVia';
                         <i class="fa-solid fa-bag-shopping"></i>
                         <h2>Your shopping bag is empty</h2>
                         <p>Explore skincare essentials made for your routine.</p>
-                        <a href="<?= BASE_URL ?>/shop.php">
+                        <a href="<?= BASE_URL ?>/public/shop.php">
                             Shop Products
                         </a>
                     </div>
 
                     <a
-                        href="<?= BASE_URL ?>/shop.php"
+                        href="<?= BASE_URL ?>/public/shop.php"
                         class="pv-cart-continue"
                     >
                         <i class="fa-solid fa-chevron-left"></i>
@@ -467,7 +467,7 @@ $pageTitle = 'Shopping Bag | PureVia';
 
 </main>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
 
 <script>
 window.PUREVIA_CART = <?= json_encode([
