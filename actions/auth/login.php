@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
-    header('Location: ' . BASE_URL . '/login.php');
+    header('Location: ' . BASE_URL . '/public/login.php');
 
     exit;
 }
@@ -75,7 +75,7 @@ if ($fieldErrors) {
         $email;
 
     header(
-        'Location: ' . BASE_URL . '/login.php'
+        'Location: ' . BASE_URL . '/public/login.php'
     );
 
     exit;
@@ -122,7 +122,7 @@ function rejectLogin(string $email, string $message): never
 {
     $_SESSION['login_email'] = $email;
     $_SESSION['login_error'] = $message;
-    header('Location: ' . BASE_URL . '/login.php');
+    header('Location: ' . BASE_URL . '/public/login.php');
     exit;
 }
 
@@ -304,7 +304,7 @@ if ($_SESSION['role'] === 'staff') {
 header(
     'Location: '
     . BASE_URL
-    . '/index.php'
+    . '/public/index.php'
 );
 
 exit;

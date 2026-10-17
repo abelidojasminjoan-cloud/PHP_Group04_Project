@@ -13,7 +13,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 ========================================= */
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -294,7 +294,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                 <div class="account-sidebar-divider"></div>
 
                 <a
-                    href="<?= BASE_URL ?>/my-orders.php"
+                    href="<?= BASE_URL ?>/public/my-orders.php"
                     class="account-nav-item"
                 >
                     <span>📦</span>
@@ -302,7 +302,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                 </a>
 
                 <a
-                    href="<?= BASE_URL ?>/shop.php"
+                    href="<?= BASE_URL ?>/public/shop.php"
                     class="account-nav-item"
                 >
                     <span>🛒</span>

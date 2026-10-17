@@ -8,7 +8,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 if (!productAdminAllowed($conn)) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 

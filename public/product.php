@@ -1,7 +1,7 @@
 
 <?php
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 function pdEsc(?string $value): string
 {
@@ -28,7 +28,7 @@ function pdImage(?string $path): string
         return $fallback;
     }
 
-    return is_file(__DIR__ . '/uploads/products/' . $filename)
+    return is_file(__DIR__ . '/../uploads/products/' . $filename)
         ? BASE_URL . '/uploads/products/' . rawurlencode($filename)
         : $fallback;
 }
@@ -329,7 +329,7 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <body>
 
-<?php include __DIR__ . '/includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="pd-page">
 
@@ -338,10 +338,10 @@ $csrfToken = $_SESSION['csrf_token'];
     <!-- BREADCRUMB -->
 
     <nav class="pd-breadcrumb">
-        <a href="<?= BASE_URL ?>/index.php">Home</a>
+        <a href="<?= BASE_URL ?>/public/index.php">Home</a>
         <span>/</span>
 
-        <a href="<?= BASE_URL ?>/shop.php">Products</a>
+        <a href="<?= BASE_URL ?>/public/shop.php">Products</a>
         <span>/</span>
 
         <strong><?= pdEsc($product['product_name']) ?></strong>
@@ -1092,7 +1092,7 @@ $csrfToken = $_SESSION['csrf_token'];
 
 </main>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
 
 <script>
 window.PUREVIA_PRODUCT = <?= json_encode([

@@ -1,13 +1,13 @@
 
 <?php
 
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -48,7 +48,7 @@ function moImage(?string $path): string
         return $fallback;
     }
 
-    if (!is_file(__DIR__ . '/uploads/products/' . $filename)) {
+    if (!is_file(__DIR__ . '/../uploads/products/' . $filename)) {
         return $fallback;
     }
 
@@ -342,7 +342,7 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <body>
 
-<?php include __DIR__ . '/includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="mo-page">
 
@@ -569,7 +569,7 @@ $csrfToken = $_SESSION['csrf_token'];
                                     <?php if ($productId > 0): ?>
 
                                         <a
-                                            href="<?= BASE_URL ?>/product.php?id=<?= $productId ?>"
+                                            href="<?= BASE_URL ?>/public/product.php?id=<?= $productId ?>"
                                             class="mo-product-name"
                                         >
                                             <?= moEsc($item['product_name']) ?>
@@ -650,7 +650,7 @@ $csrfToken = $_SESSION['csrf_token'];
                             <?php elseif ($order['order_status'] === 'cancelled'): ?>
 
                                 <a
-                                    href="<?= BASE_URL ?>/order-details.php?id=<?= $orderId ?>#cancellation-details"
+                                    href="<?= BASE_URL ?>/public/order-details.php?id=<?= $orderId ?>#cancellation-details"
                                     class="mo-cancellation-details-button"
                                 >
                                     Cancellation Details
@@ -678,7 +678,7 @@ $csrfToken = $_SESSION['csrf_token'];
                                 <?php if ($reviewProductId > 0): ?>
 
                                     <a
-                                        href="<?= BASE_URL ?>/product.php?id=<?= $reviewProductId ?>#customerReviews"
+                                        href="<?= BASE_URL ?>/public/product.php?id=<?= $reviewProductId ?>#customerReviews"
                                         class="mo-review-button"
                                     >
                                         Review Products
@@ -691,7 +691,7 @@ $csrfToken = $_SESSION['csrf_token'];
                             <!-- VIEW DETAILS PAGE -->
 
                             <a
-                                href="<?= BASE_URL ?>/order-details.php?id=<?= $orderId ?>"
+                                href="<?= BASE_URL ?>/public/order-details.php?id=<?= $orderId ?>"
                                 class="mo-details-button"
                             >
                                 View Details

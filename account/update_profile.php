@@ -8,7 +8,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -162,12 +162,12 @@ unset($_SESSION['profile_error']);
 
                 <div class="account-sidebar-divider"></div>
 
-                <a href="<?= BASE_URL ?>/my-orders.php"
+                <a href="<?= BASE_URL ?>/public/my-orders.php"
                    class="account-nav-item">
                     <span>📦</span> My Orders
                 </a>
 
-                <a href="<?= BASE_URL ?>/shop.php"
+                <a href="<?= BASE_URL ?>/public/shop.php"
                    class="account-nav-item">
                     <span>🛒</span> Shop
                 </a>

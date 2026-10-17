@@ -20,13 +20,13 @@ require_once __DIR__ . '/../../services/EmailService.php';
 
 function redirectToOtp(): never
 {
-    header('Location: ' . BASE_URL . '/verify-email.php');
+    header('Location: ' . BASE_URL . '/public/verify-email.php');
     exit;
 }
 
 function redirectToLogin(): never
 {
-    header('Location: ' . BASE_URL . '/login.php');
+    header('Location: ' . BASE_URL . '/public/login.php');
     exit;
 }
 
@@ -70,7 +70,7 @@ $userId = (int) (
 );
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/register.php');
+    header('Location: ' . BASE_URL . '/public/register.php');
     exit;
 }
 

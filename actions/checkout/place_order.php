@@ -89,7 +89,7 @@ try {
             200,
             true,
             'Order already placed.',
-            ['redirect_url' => BASE_URL . '/order-success.php']
+            ['redirect_url' => BASE_URL . '/public/order-success.php']
         );
     }
 
@@ -636,7 +636,7 @@ try {
             'Your Cash on Delivery order has been placed.',
             [
                 'order_number' => $orderNumber,
-                'redirect_url' => BASE_URL . '/order-success.php'
+                'redirect_url' => BASE_URL . '/public/order-success.php'
             ]
         );
 

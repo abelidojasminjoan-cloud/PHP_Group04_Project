@@ -54,5 +54,5 @@ session_destroy();
    REDIRECT TO PUREVIA HOMEPAGE
 ========================================================= */
 
-header('Location: ' . BASE_URL . '/index.php');
+header('Location: ' . BASE_URL . '/public/index.php');
 exit;

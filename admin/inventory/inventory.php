@@ -13,7 +13,7 @@ if (
     empty($_SESSION['user_id']) ||
     !in_array((int) ($_SESSION['role_id'] ?? 0), [1, 2], true)
 ) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 

@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -268,12 +268,12 @@ $initials = secInitials($name);
 
                     <div class="sec-nav-divider"></div>
 
-                    <a href="<?= BASE_URL ?>/my-orders.php">
+                    <a href="<?= BASE_URL ?>/public/my-orders.php">
                         <span>📦</span>
                         My Orders
                     </a>
 
-                    <a href="<?= BASE_URL ?>/shop.php">
+                    <a href="<?= BASE_URL ?>/public/shop.php">
                         <span>🛒</span>
                         Shop
                     </a>

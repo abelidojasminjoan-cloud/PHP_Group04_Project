@@ -318,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const form = document.createElement("form");
         form.method = "POST";
-        form.action = `${config.baseUrl}/checkout.php`;
+        form.action = `${config.baseUrl}/public/checkout.php`;
 
         const appendField = (name, value) => {
             const input = document.createElement("input");

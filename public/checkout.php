@@ -1,8 +1,8 @@
 
 <?php
 
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 function checkoutEsc(string|int|float|bool|null $value): string {
     return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
@@ -22,7 +22,7 @@ function checkoutImage(?string $path): string {
 
     $filename = basename(str_replace('\\', '/', $path));
 
-    return is_file(__DIR__ . '/uploads/products/' . $filename)
+    return is_file(__DIR__ . '/../uploads/products/' . $filename)
         ? BASE_URL . '/uploads/products/' . rawurlencode($filename)
         : $fallback;
 }
@@ -34,7 +34,7 @@ if (empty($_SESSION['csrf_token'])) {
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -61,14 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     )));
 
     if (!$ids || count($ids) > 100) {
-        header('Location: ' . BASE_URL . '/cart.php');
+        header('Location: ' . BASE_URL . '/public/cart.php');
         exit;
     }
 
     $_SESSION['checkout_selected_items'] = $ids;
     $_SESSION['checkout_token'] = bin2hex(random_bytes(32));
 
-    header('Location: ' . BASE_URL . '/checkout.php', true, 303);
+    header('Location: ' . BASE_URL . '/public/checkout.php', true, 303);
     exit;
 }
 
@@ -78,7 +78,7 @@ if (empty($_SESSION['checkout_token'])) {
 }
 
 if (!$selectedIds || !is_array($selectedIds)) {
-    header('Location: ' . BASE_URL . '/cart.php');
+    header('Location: ' . BASE_URL . '/public/cart.php');
     exit;
 }
 
@@ -235,7 +235,7 @@ function peso(float $amount): string {
 
 <body>
 
-<?php include __DIR__ . '/includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="pv-checkout">
 
@@ -247,7 +247,7 @@ function peso(float $amount): string {
                 <h1>Complete your order</h1>
             </div>
 
-            <a href="<?= BASE_URL ?>/cart.php"
+            <a href="<?= BASE_URL ?>/public/cart.php"
                class="pv-checkout-back">
                 <i class="fa-solid fa-chevron-left"></i>
                 Back to bag
@@ -609,7 +609,7 @@ function peso(float $amount): string {
 
 </main>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
 
 <script>
 window.PUREVIA_CHECKOUT = <?= json_encode([
@@ -621,7 +621,7 @@ window.PUREVIA_CHECKOUT = <?= json_encode([
 
 <script src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/assets/js/checkout.js') ?>"></script>
+<script src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
