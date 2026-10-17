@@ -1,134 +1,160 @@
 <?php
-
-session_start();
 require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/db.php';
 
-$pageTitle = "Ingredients";
+$pageTitle = 'Ingredients';
 
+function ingredientEscape(?string $value): string
+{
+    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+}
 
-/* =========================================
-   TEMPORARY ADMIN SESSION
-   Remove when login is connected
-========================================= */
+$adminId = (int) ($_SESSION['user_id'] ?? 0);
+$stmt = $conn->prepare("
+    SELECT u.id FROM users u
+    INNER JOIN roles r ON r.id = u.role_id
+    WHERE u.id = ? AND u.status = 'active' AND LOWER(r.role_name) = 'admin'
+    LIMIT 1
+");
+$stmt->bind_param('i', $adminId);
+$stmt->execute();
+$ingredientAdminAllowed = $stmt->get_result()->num_rows === 1;
+$stmt->close();
 
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
+if (!$ingredientAdminAllowed) {
+    header('Location: ' . BASE_URL . '/public/index.php');
+    exit;
+}
 
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
+header('Cache-Control: no-store');
+if (empty($_SESSION['csrf_ingredient'])) {
+    $_SESSION['csrf_ingredient'] = bin2hex(random_bytes(32));
+}
 
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
+$ingredientErrors = [];
+$ingredientFormError = '';
+$ingredientName = '';
+$ingredientDescription = '';
+$ingredientCommonIn = '';
+$ingredientId = 0;
+$ingredientEditing = false;
+$ingredientSuccess = $_SESSION['ingredient_success'] ?? '';
+unset($_SESSION['ingredient_success']);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $ingredientName = is_string($_POST['ingredient_name'] ?? null)
+        ? trim($_POST['ingredient_name']) : '';
+    $ingredientDescription = is_string($_POST['description'] ?? null)
+        ? trim($_POST['description']) : '';
+    $ingredientCommonIn = is_string($_POST['common_in'] ?? null)
+        ? trim($_POST['common_in']) : '';
+    $token = $_POST['csrf_token'] ?? null;
+    $ingredientAction = $_POST['ingredient_action'] ?? 'create';
+    $ingredientEditing = $ingredientAction === 'update';
+    $submittedIngredientId = $_POST['ingredient_id'] ?? '';
+    if ($ingredientEditing) {
+        $ingredientId = is_string($submittedIngredientId)
+            ? (filter_var($submittedIngredientId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0)
+            : 0;
+    }
 
-/* =========================================
-   SAMPLE INGREDIENT DATA
-   Replace with MySQL query later
-========================================= */
+    if (!is_string($token) || !hash_equals($_SESSION['csrf_ingredient'], $token)) {
+        http_response_code(403);
+        $ingredientFormError = 'Your session has expired. Refresh the page and try again.';
+    } elseif (!in_array($ingredientAction, ['create', 'update'], true)
+        || ($ingredientEditing && !$ingredientId)
+        || (!$ingredientEditing && $submittedIngredientId !== '')) {
+        http_response_code(400);
+        $ingredientFormError = 'Invalid ingredient. Close this form and select the ingredient again.';
+    } else {
+        if ($ingredientName === '') {
+            $ingredientErrors['ingredient_name'] = 'Please enter an ingredient name.';
+        } elseif (mb_strlen($ingredientName, 'UTF-8') > 150) {
+            $ingredientErrors['ingredient_name'] = 'Use no more than 150 characters.';
+        }
+        if (!is_string($_POST['description'] ?? '')
+            || mb_strlen($ingredientDescription, 'UTF-8') > 5000) {
+            $ingredientErrors['description'] = 'Use no more than 5,000 characters.';
+        }
 
-$ingredients = [
+        if (!is_string($_POST['common_in'] ?? '')
+            || mb_strlen($ingredientCommonIn, 'UTF-8') > 255) {
+            $ingredientErrors['common_in'] = 'Use no more than 255 characters.';
+        }
 
-    [
-        'id' => 1,
-        'name' => 'Niacinamide',
-        'description' => 'Vitamin B3 that minimizes pores and evens skin tone',
-        'common_in' => 'Serums, Toners',
-        'status' => 'active'
-    ],
+        if (!$ingredientErrors) {
+            $ingredientTransactionStarted = false;
+            try {
+                $conn->begin_transaction();
+                $ingredientTransactionStarted = true;
+                if ($ingredientEditing) {
+                    $stmt = $conn->prepare('SELECT id FROM ingredients WHERE id = ? FOR UPDATE');
+                    $stmt->bind_param('i', $ingredientId);
+                    $stmt->execute();
+                    $ingredientExists = $stmt->get_result()->num_rows === 1;
+                    $stmt->close();
+                    if (!$ingredientExists) {
+                        throw new DomainException('This ingredient no longer exists. Refresh the list.');
+                    }
+                    $stmt = $conn->prepare('UPDATE ingredients SET ingredient_name = ?, description = ?, common_in = ? WHERE id = ?');
+                    $stmt->bind_param('sssi', $ingredientName, $ingredientDescription, $ingredientCommonIn, $ingredientId);
+                    $stmt->execute();
+                    $recordId = (string) $ingredientId;
+                    $stmt->close();
+                } else {
+                    $stmt = $conn->prepare("
+                        INSERT INTO ingredients (ingredient_name, description, common_in, status)
+                        VALUES (?, ?, ?, 'active')
+                    ");
+                    $stmt->bind_param('sss', $ingredientName, $ingredientDescription, $ingredientCommonIn);
+                    $stmt->execute();
+                    $recordId = (string) $conn->insert_id;
+                    $stmt->close();
+                }
 
-    [
-        'id' => 2,
-        'name' => 'Hyaluronic Acid',
-        'description' => 'Powerful humectant that attracts moisture',
-        'common_in' => 'Serums, Moisturizers',
-        'status' => 'active'
-    ],
+                $auditAction = $ingredientEditing ? 'UPDATE' : 'CREATE';
+                $auditDescription = ($ingredientEditing ? 'Updated' : 'Added') . ' ingredient "' . $ingredientName . '".';
+                $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+                $stmt = $conn->prepare("
+                    INSERT INTO audit_logs (user_id, action, module, record_id, description, ip_address)
+                    VALUES (?, ?, 'Ingredients', ?, ?, ?)
+                ");
+                $stmt->bind_param('issss', $adminId, $auditAction, $recordId, $auditDescription, $ipAddress);
+                $stmt->execute();
+                $stmt->close();
+                $conn->commit();
+                $ingredientTransactionStarted = false;
 
-    [
-        'id' => 3,
-        'name' => 'Retinol',
-        'description' => 'Vitamin A derivative for anti-aging',
-        'common_in' => 'Serums, Night Creams',
-        'status' => 'active'
-    ],
+                $_SESSION['ingredient_success'] = $ingredientEditing
+                    ? 'Ingredient updated successfully.' : 'Ingredient added successfully.';
+                header('Location: ' . BASE_URL . '/admin/ingredients/ingredients.php', true, 303);
+                exit;
+            } catch (Throwable $error) {
+                if ($ingredientTransactionStarted) {
+                    $conn->rollback();
+                }
+                if ($error instanceof mysqli_sql_exception && $error->getCode() === 1062) {
+                    $ingredientErrors['ingredient_name'] = 'An ingredient with this name already exists.';
+                } elseif ($error instanceof DomainException) {
+                    http_response_code(404);
+                    $ingredientFormError = $error->getMessage();
+                } else {
+                    error_log('Save Ingredient Error: ' . $error->getMessage());
+                    $ingredientFormError = 'Unable to save this ingredient. Please try again.';
+                }
+            }
+        }
+    }
+}
 
-    [
-        'id' => 4,
-        'name' => 'Vitamin C',
-        'description' => 'Antioxidant brightener',
-        'common_in' => 'Serums, Toners',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 5,
-        'name' => 'Salicylic Acid',
-        'description' => 'BHA that exfoliates inside pores',
-        'common_in' => 'Cleansers, Toners',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 6,
-        'name' => 'Glycolic Acid',
-        'description' => 'AHA that resurfaces skin texture',
-        'common_in' => 'Toners, Exfoliants',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 7,
-        'name' => 'Ceramides',
-        'description' => 'Lipids that strengthen skin barrier',
-        'common_in' => 'Moisturizers, Cleansers',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 8,
-        'name' => 'Peptides',
-        'description' => 'Amino acid chains that support skin firmness',
-        'common_in' => 'Serums, Moisturizers',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 9,
-        'name' => 'Azelaic Acid',
-        'description' => 'Helps improve uneven tone and blemishes',
-        'common_in' => 'Serums, Treatments',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 10,
-        'name' => 'Lactic Acid',
-        'description' => 'Gentle AHA that exfoliates and hydrates skin',
-        'common_in' => 'Toners, Exfoliants',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 11,
-        'name' => 'Benzoyl Peroxide',
-        'description' => 'Ingredient commonly used for acne treatment',
-        'common_in' => 'Cleansers, Treatments',
-        'status' => 'inactive'
-    ],
-
-    [
-        'id' => 12,
-        'name' => 'Centella Asiatica',
-        'description' => 'Soothing botanical ingredient for sensitive skin',
-        'common_in' => 'Serums, Moisturizers',
-        'status' => 'active'
-    ]
-
-];
-
-
+$ingredients = $conn->query("
+    SELECT id, ingredient_name AS name, COALESCE(description, '') AS description,
+        COALESCE(common_in, '') AS common_in, status
+    FROM ingredients
+    ORDER BY ingredient_name
+")->fetch_all(MYSQLI_ASSOC);
 $totalIngredients = count($ingredients);
-
+$ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
 ?>
 
 <!DOCTYPE html>
@@ -197,7 +223,7 @@ $totalIngredients = count($ingredients);
          SIDEBAR
     ====================================== -->
 
-    <?php include("../../includes/sidemenu.php"); ?>
+    <?php include __DIR__ . '/../../includes/sidemenu.php'; ?>
 
 
     <!-- =====================================
@@ -250,9 +276,12 @@ $totalIngredients = count($ingredients);
 
                 <!-- ADD INGREDIENT -->
 
-                <a
-                    href="./add_ingredient.php"
+                <button
+                    type="button"
+                    id="openAddIngredientModal"
                     class="add-ingredient-button"
+                    aria-haspopup="dialog"
+                    aria-controls="addIngredientModal"
                 >
 
                     <i class="fa-solid fa-plus"></i>
@@ -261,7 +290,7 @@ $totalIngredients = count($ingredients);
                         Add Ingredient
                     </span>
 
-                </a>
+                </button>
 
 
             </section>
@@ -270,6 +299,10 @@ $totalIngredients = count($ingredients);
             <!-- =================================
                  INGREDIENT CARD
             ================================== -->
+
+            <?php if ($ingredientSuccess): ?>
+                <p class="form-alert form-alert-success" role="status"><?= ingredientEscape($ingredientSuccess) ?></p>
+            <?php endif; ?>
 
             <section class="ingredients-card">
 
@@ -484,11 +517,15 @@ $totalIngredients = count($ingredients);
 
                                             <!-- EDIT -->
 
-                                            <a
-                                                href="./edit_ingredient.php?id=<?= urlencode(
-                                                    $ingredient['id']
-                                                ) ?>"
+                                            <button
+                                                type="button"
                                                 class="ingredient-action-button edit-ingredient-button"
+                                                data-ingredient-id="<?= (int) $ingredient['id'] ?>"
+                                                data-ingredient-name="<?= ingredientEscape($ingredient['name']) ?>"
+                                                data-ingredient-description="<?= ingredientEscape($ingredient['description']) ?>"
+                                                data-ingredient-common-in="<?= ingredientEscape($ingredient['common_in']) ?>"
+                                                aria-haspopup="dialog"
+                                                aria-controls="addIngredientModal"
                                                 title="Edit ingredient"
                                                 aria-label="Edit <?= htmlspecialchars(
                                                     $ingredient['name']
@@ -497,7 +534,7 @@ $totalIngredients = count($ingredients);
 
                                                 <i class="fa-regular fa-pen-to-square"></i>
 
-                                            </a>
+                                            </button>
 
 
                                             <!-- DELETE -->
@@ -579,6 +616,59 @@ $totalIngredients = count($ingredients);
 
     </div>
 
+
+    <!-- Ingredient-only IDs and overrides leave the product modal unchanged. -->
+    <div
+        id="addIngredientModal"
+        class="form-modal<?= $ingredientModalOpen ? ' is-open' : '' ?>"
+        aria-hidden="<?= $ingredientModalOpen ? 'false' : 'true' ?>"
+    >
+        <div class="form-modal-backdrop" data-close-ingredient-modal></div>
+        <div class="form-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="addIngredientTitle" tabindex="-1">
+            <form action="./ingredients.php" method="POST" id="addIngredientForm" class="purevia-form" data-delete-action="<?= BASE_URL ?>/admin/ingredients/delete_ingredient.php" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= ingredientEscape($_SESSION['csrf_ingredient']) ?>">
+                <input type="hidden" name="ingredient_action" value="<?= $ingredientEditing ? 'update' : 'create' ?>">
+                <input type="hidden" name="ingredient_id" value="<?= $ingredientEditing && $ingredientId ? $ingredientId : '' ?>">
+
+                <header class="form-modal-header">
+                    <div>
+                        <h2 id="addIngredientTitle"><?= $ingredientEditing ? 'Edit Ingredient' : 'Add Ingredient' ?></h2>
+                        <p id="ingredientFormSubtitle"<?= $ingredientEditing ? '' : ' hidden' ?>><?= ingredientEscape($ingredientName) ?></p>
+                    </div>
+                    <button type="button" class="form-modal-close" data-close-ingredient-modal aria-label="Close ingredient form">
+                        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                </header>
+
+                <div class="form-modal-body">
+                    <p id="ingredientFormError" class="ingredient-field-error" role="alert"<?= $ingredientFormError === '' ? ' hidden' : '' ?>><?= ingredientEscape($ingredientFormError) ?></p>
+
+                    <div class="form-group">
+                        <label for="ingredientName">Ingredient Name <span class="form-required" aria-hidden="true">*</span></label>
+                        <input type="text" id="ingredientName" name="ingredient_name" class="form-control" placeholder="e.g. Azelaic Acid" maxlength="150" aria-required="true" aria-describedby="ingredientNameError" aria-invalid="<?= isset($ingredientErrors['ingredient_name']) ? 'true' : 'false' ?>" value="<?= ingredientEscape($ingredientName) ?>">
+                        <span id="ingredientNameError" class="ingredient-field-error" role="alert"<?= isset($ingredientErrors['ingredient_name']) ? '' : ' hidden' ?>><?= ingredientEscape($ingredientErrors['ingredient_name'] ?? '') ?></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ingredientDescription">Description</label>
+                        <textarea id="ingredientDescription" name="description" class="form-control form-textarea" rows="3" maxlength="5000" aria-describedby="ingredientDescriptionError" aria-invalid="<?= isset($ingredientErrors['description']) ? 'true' : 'false' ?>"><?= ingredientEscape($ingredientDescription) ?></textarea>
+                        <span id="ingredientDescriptionError" class="ingredient-field-error" role="alert"<?= isset($ingredientErrors['description']) ? '' : ' hidden' ?>><?= ingredientEscape($ingredientErrors['description'] ?? '') ?></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="ingredientCommonIn">Commonly Found In</label>
+                        <input type="text" id="ingredientCommonIn" name="common_in" class="form-control" placeholder="e.g. Serums, Toners" maxlength="255" aria-describedby="ingredientCommonInError" aria-invalid="<?= isset($ingredientErrors['common_in']) ? 'true' : 'false' ?>" value="<?= ingredientEscape($ingredientCommonIn) ?>">
+                        <span id="ingredientCommonInError" class="ingredient-field-error" role="alert"<?= isset($ingredientErrors['common_in']) ? '' : ' hidden' ?>><?= ingredientEscape($ingredientErrors['common_in'] ?? '') ?></span>
+                    </div>
+
+                </div>
+
+                <footer class="form-modal-footer">
+                    <button type="button" class="form-cancel-button" data-close-ingredient-modal>Cancel</button>
+                    <button type="submit" class="form-submit-button"><?= $ingredientEditing ? 'Save Changes' : 'Add Ingredient' ?></button>
+                </footer>
+            </form>
+        </div>
+    </div>
 
     <!-- SIDEBAR JS -->
 

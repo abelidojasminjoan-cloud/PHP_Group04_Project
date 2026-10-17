@@ -147,6 +147,9 @@ body {
 ========================================================= */
 
 .add-concern-button {
+    border: 0;
+    font-family: inherit;
+    cursor: pointer;
     min-height: 48px;
 
     display: inline-flex;
@@ -696,6 +699,128 @@ body {
     font-size: 14px;
 }
 
+
+/* Concern modal overrides never apply to the product form. */
+#addConcernModal {
+    --concern-form-spacing: 30px;
+    --concern-form-field-height: 54px;
+    --form-green: #3f6b50;
+    --form-green-dark: #315640;
+    font-family: 'Poppins', sans-serif;
+}
+
+#addConcernModal .form-modal-header {
+    align-items: center;
+    padding: 26px var(--concern-form-spacing) 20px;
+}
+
+#addConcernModal .form-modal-header h2 {
+    margin: 0;
+    font-size: 26px;
+    line-height: 1.35;
+}
+
+#addConcernModal .form-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+#addConcernModal .form-modal-body {
+    padding: 26px var(--concern-form-spacing) 52px;
+}
+
+#addConcernModal .form-group {
+    margin-bottom: 22px;
+}
+
+#addConcernModal .form-group:last-child {
+    margin-bottom: 0;
+}
+
+#addConcernModal .form-group > label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#addConcernModal .form-control {
+    height: var(--concern-form-field-height);
+    padding: 0 17px;
+    font-size: 14px;
+    border-radius: 10px;
+}
+
+#addConcernModal .form-textarea {
+    height: auto;
+    min-height: 82px;
+    padding: 14px 17px;
+}
+
+#addConcernModal .form-modal-footer {
+    padding: 20px var(--concern-form-spacing);
+    gap: 16px;
+}
+
+#addConcernModal .form-cancel-button,
+#addConcernModal .form-submit-button {
+    min-height: 52px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+#addConcernModal .form-submit-button {
+    min-width: 180px;
+    border-radius: 10px;
+}
+
+#addConcernModal .form-cancel-button:hover {
+    color: var(--form-green);
+}
+
+#addConcernModal .concern-field-error {
+    display: block;
+    margin: 7px 0 0;
+    color: #b33b35;
+    font-size: 12px;
+}
+
+#addConcernModal .concern-field-error[hidden] {
+    display: none;
+}
+
+#addConcernModal .form-control[aria-invalid="true"] {
+    border-color: #b33b35;
+}
+
+@media (max-width: 480px) {
+    #addConcernModal {
+        --concern-form-spacing: 20px;
+        padding: 16px;
+    }
+
+    #addConcernModal .form-modal-dialog {
+        height: auto;
+        max-height: calc(100dvh - 32px);
+        border-radius: 17px;
+    }
+
+    #addConcernModal .form-modal-body {
+        padding-bottom: 30px;
+    }
+
+    #addConcernModal .form-submit-button {
+        min-width: 0;
+        padding: 0 18px;
+    }
+}
+
+#addConcernModal #concernFormSubtitle {
+    margin: 6px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
 
 /* =========================================================
    RESPONSIVE - TABLET

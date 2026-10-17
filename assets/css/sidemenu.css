@@ -31,6 +31,18 @@
 }
 
 
+/* Shared top bar colors for all admin and staff pages. */
+.admin-layout > .admin-topbar,
+.staff-layout > .staff-topbar {
+    background: var(--sidebar-bg);
+    border-bottom-color: var(--sidebar-border);
+}
+
+.admin-topbar > .admin-topbar-title,
+.staff-topbar > .staff-topbar-title {
+    color: var(--sidebar-text);
+}
+
 /* =========================================================
    SIDEBAR
 ========================================================= */
