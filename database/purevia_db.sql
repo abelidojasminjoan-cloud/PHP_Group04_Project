@@ -118,6 +118,7 @@ CREATE TABLE `ingredients` (
   `id` int(10) UNSIGNED NOT NULL,
   `ingredient_name` varchar(150) NOT NULL,
   `description` text DEFAULT NULL,
+  `common_in` varchar(255) DEFAULT NULL,
   `status` enum('active','inactive') NOT NULL DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()

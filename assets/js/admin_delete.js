@@ -119,33 +119,40 @@
         const trigger = event.target.closest(section.selector);
         if (trigger.disabled || !trigger.dataset[section.key + 'Id']) return;
         event.preventDefault();
-        const productForm = document.getElementById('addProductForm');
+        const formIds = { product: 'addProductForm', category: 'addCategoryForm', ingredient: 'addIngredientForm', concern: 'addConcernForm' };
+        const recordForm = document.getElementById(formIds[section.key] || '');
         open({
             trigger,
             title: 'Delete ' + section.label + '?',
             name: trigger.dataset[section.key + 'Name'] || 'this ' + section.label.toLowerCase(),
             message: section.key === 'product'
                 ? 'Its sizes and images will also be removed. Past order records will be kept.'
-                : 'This action cannot be undone.',
+                : section.key === 'category'
+                    ? 'Move any assigned products to another category first. This action cannot be undone.'
+                    : section.key === 'ingredient'
+                        ? 'Remove any links to products or customer ingredient preferences first. This action cannot be undone.'
+                        : section.key === 'concern'
+                            ? 'Remove any links to products or customer skin profiles first. This action cannot be undone.'
+                            : 'This action cannot be undone.',
             confirmLabel: 'Delete ' + section.label,
             async onConfirm() {
                 // These sections currently have no delete processors. Keep the record
                 // and show a clear error instead of navigating to a nonexistent page.
-                if (section.key !== 'product') {
+                if (!['product', 'category', 'ingredient', 'concern'].includes(section.key)) {
                     throw new Error('Deleting ' + section.label.toLowerCase() + ' records is not available yet. No record has been deleted.');
                 }
-                const action = productForm?.dataset.deleteAction;
-                const token = productForm?.elements.namedItem('csrf_token')?.value;
+                const action = recordForm?.dataset.deleteAction;
+                const token = recordForm?.elements.namedItem('csrf_token')?.value;
                 if (!action || !token) throw new Error('Please refresh the page and try again.');
                 const response = await fetch(action, {
                     method: 'POST', credentials: 'same-origin',
                     headers: { Accept: 'application/json' },
-                    body: new URLSearchParams({ product_id: trigger.dataset.productId, csrf_token: token })
+                    body: new URLSearchParams({ [section.key + '_id']: trigger.dataset[section.key + 'Id'], csrf_token: token })
                 });
                 let result;
                 try { result = await response.json(); }
-                catch { throw new Error('Unable to delete this product. Please refresh and try again.'); }
-                if (!response.ok || !result.success) throw new Error(result.message || 'Unable to delete this product.');
+                catch { throw new Error('Unable to delete this ' + section.label.toLowerCase() + '. Please refresh and try again.'); }
+                if (!response.ok || !result.success) throw new Error(result.message || 'Unable to delete this ' + section.label.toLowerCase() + '.');
                 window.location.reload();
             }
         });

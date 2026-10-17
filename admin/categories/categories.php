@@ -35,6 +35,8 @@ $categoryErrors = [];
 $categoryFormError = '';
 $categoryName = '';
 $categoryDescription = '';
+$categoryId = 0;
+$categoryEditing = false;
 $categorySuccess = $_SESSION['category_success'] ?? '';
 unset($_SESSION['category_success']);
 
@@ -44,10 +46,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $categoryDescription = is_string($_POST['description'] ?? null)
         ? trim($_POST['description']) : '';
     $token = $_POST['csrf_token'] ?? null;
+    $categoryAction = $_POST['category_action'] ?? 'create';
+    $categoryEditing = $categoryAction === 'update';
+    $submittedCategoryId = $_POST['category_id'] ?? '';
+    if ($categoryEditing) {
+        $categoryId = is_string($submittedCategoryId)
+            ? (filter_var($submittedCategoryId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0)
+            : 0;
+    }
 
     if (!is_string($token) || !hash_equals($_SESSION['csrf_category'], $token)) {
         http_response_code(403);
         $categoryFormError = 'Your session has expired. Refresh the page and try again.';
+    } elseif (!in_array($categoryAction, ['create', 'update'], true)
+        || ($categoryEditing && !$categoryId)
+        || (!$categoryEditing && $submittedCategoryId !== '')) {
+        http_response_code(400);
+        $categoryFormError = 'Invalid category. Close this form and select the category again.';
     } else {
         if ($categoryName === '') {
             $categoryErrors['category_name'] = 'Please enter a category name.';
@@ -64,28 +79,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $conn->begin_transaction();
                 $categoryTransactionStarted = true;
-                $stmt = $conn->prepare("
-                    INSERT INTO categories (category_name, description, status)
-                    VALUES (?, ?, 'active')
-                ");
-                $stmt->bind_param('ss', $categoryName, $categoryDescription);
-                $stmt->execute();
-                $recordId = (string) $conn->insert_id;
-                $stmt->close();
+                if ($categoryEditing) {
+                    $stmt = $conn->prepare('SELECT id FROM categories WHERE id = ? FOR UPDATE');
+                    $stmt->bind_param('i', $categoryId);
+                    $stmt->execute();
+                    $categoryExists = $stmt->get_result()->num_rows === 1;
+                    $stmt->close();
+                    if (!$categoryExists) {
+                        throw new DomainException('This category no longer exists. Refresh the list.');
+                    }
+                    $stmt = $conn->prepare('UPDATE categories SET category_name = ?, description = ? WHERE id = ?');
+                    $stmt->bind_param('ssi', $categoryName, $categoryDescription, $categoryId);
+                    $stmt->execute();
+                    $recordId = (string) $categoryId;
+                    $stmt->close();
+                } else {
+                    $stmt = $conn->prepare("
+                        INSERT INTO categories (category_name, description, status)
+                        VALUES (?, ?, 'active')
+                    ");
+                    $stmt->bind_param('ss', $categoryName, $categoryDescription);
+                    $stmt->execute();
+                    $recordId = (string) $conn->insert_id;
+                    $stmt->close();
+                }
 
-                $auditDescription = 'Added category "' . $categoryName . '".';
+                $auditAction = $categoryEditing ? 'UPDATE' : 'CREATE';
+                $auditDescription = ($categoryEditing ? 'Updated' : 'Added') . ' category "' . $categoryName . '".';
                 $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
                 $stmt = $conn->prepare("
                     INSERT INTO audit_logs (user_id, action, module, record_id, description, ip_address)
-                    VALUES (?, 'CREATE', 'Categories', ?, ?, ?)
+                    VALUES (?, ?, 'Categories', ?, ?, ?)
                 ");
-                $stmt->bind_param('isss', $adminId, $recordId, $auditDescription, $ipAddress);
+                $stmt->bind_param('issss', $adminId, $auditAction, $recordId, $auditDescription, $ipAddress);
                 $stmt->execute();
                 $stmt->close();
                 $conn->commit();
                 $categoryTransactionStarted = false;
 
-                $_SESSION['category_success'] = 'Category added successfully.';
+                $_SESSION['category_success'] = $categoryEditing
+                    ? 'Category updated successfully.' : 'Category added successfully.';
                 header('Location: ' . BASE_URL . '/admin/categories/categories.php', true, 303);
                 exit;
             } catch (Throwable $error) {
@@ -94,9 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if ($error instanceof mysqli_sql_exception && $error->getCode() === 1062) {
                     $categoryErrors['category_name'] = 'A category with this name already exists.';
+                } elseif ($error instanceof DomainException) {
+                    http_response_code(404);
+                    $categoryFormError = $error->getMessage();
                 } else {
-                    error_log('Add Category Error: ' . $error->getMessage());
-                    $categoryFormError = 'Unable to add this category. Please try again.';
+                    error_log('Save Category Error: ' . $error->getMessage());
+                    $categoryFormError = 'Unable to save this category. Please try again.';
                 }
             }
         }
@@ -472,11 +508,14 @@ $categoryModalOpen = (bool) ($categoryErrors || $categoryFormError);
 
                                             <!-- EDIT -->
 
-                                            <a
-                                                href="./edit_category.php?id=<?= urlencode(
-                                                    $category['id']
-                                                ) ?>"
+                                            <button
+                                                type="button"
                                                 class="category-action-button edit-category-button"
+                                                data-category-id="<?= (int) $category['id'] ?>"
+                                                data-category-name="<?= categoryEscape($category['name']) ?>"
+                                                data-category-description="<?= categoryEscape($category['description']) ?>"
+                                                aria-haspopup="dialog"
+                                                aria-controls="addCategoryModal"
                                                 title="Edit category"
                                                 aria-label="Edit <?= htmlspecialchars(
                                                     $category['name']
@@ -485,7 +524,7 @@ $categoryModalOpen = (bool) ($categoryErrors || $categoryFormError);
 
                                                 <i class="fa-regular fa-pen-to-square"></i>
 
-                                            </a>
+                                            </button>
 
 
                                             <!-- DELETE -->
@@ -576,12 +615,14 @@ $categoryModalOpen = (bool) ($categoryErrors || $categoryFormError);
     >
         <div class="form-modal-backdrop" data-close-category-modal></div>
         <div class="form-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="addCategoryTitle" tabindex="-1">
-            <form action="./categories.php" method="POST" id="addCategoryForm" class="purevia-form" novalidate>
+            <form action="./categories.php" method="POST" id="addCategoryForm" class="purevia-form" data-delete-action="<?= BASE_URL ?>/admin/categories/delete_category.php" novalidate>
                 <input type="hidden" name="csrf_token" value="<?= categoryEscape($_SESSION['csrf_category']) ?>">
+                <input type="hidden" name="category_action" value="<?= $categoryEditing ? 'update' : 'create' ?>">
+                <input type="hidden" name="category_id" value="<?= $categoryEditing && $categoryId ? $categoryId : '' ?>">
 
                 <header class="form-modal-header">
-                    <h2 id="addCategoryTitle">Add Category</h2>
-                    <button type="button" class="form-modal-close" data-close-category-modal aria-label="Close Add Category">
+                    <h2 id="addCategoryTitle"><?= $categoryEditing ? 'Edit Category' : 'Add Category' ?></h2>
+                    <button type="button" class="form-modal-close" data-close-category-modal aria-label="Close category form">
                         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     </button>
                 </header>
@@ -604,7 +645,7 @@ $categoryModalOpen = (bool) ($categoryErrors || $categoryFormError);
 
                 <footer class="form-modal-footer">
                     <button type="button" class="form-cancel-button" data-close-category-modal>Cancel</button>
-                    <button type="submit" class="form-submit-button">Add Category</button>
+                    <button type="submit" class="form-submit-button"><?= $categoryEditing ? 'Save Changes' : 'Add Category' ?></button>
                 </footer>
             </form>
         </div>

@@ -1,6 +1,6 @@
 /* =========================================================
    PUREVIA ADMIN CATEGORIES
-   ADD MODAL + SEARCH + FILTER + DELETE
+   ADD/EDIT MODAL + SEARCH + FILTER + DELETE
 ========================================================= */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const nameInput = document.getElementById('categoryName');
         const descriptionInput = document.getElementById('categoryDescription');
         const submitButton = categoryForm.querySelector('[type="submit"]');
+        const categoryIdInput = categoryForm.elements.namedItem('category_id');
+        const categoryActionInput = categoryForm.elements.namedItem('category_action');
+        const categoryTitle = document.getElementById('addCategoryTitle');
         let previousFocus = null;
         let backgroundElements = [];
         let saving = false;
@@ -25,17 +28,22 @@ document.addEventListener('DOMContentLoaded', function () {
             input.setAttribute('aria-invalid', message ? 'true' : 'false');
         }
 
-        function openCategoryModal(resetForm) {
-            previousFocus = document.activeElement === document.body ? categoryOpener : document.activeElement;
+        function openCategoryModal(resetForm, category = null, trigger = null) {
+            previousFocus = trigger || (document.activeElement === document.body ? categoryOpener : document.activeElement);
             if (resetForm) {
                 categoryForm.reset();
                 // A server validation response can contain old default values.
-                nameInput.value = '';
-                descriptionInput.value = '';
+                categoryActionInput.value = category ? 'update' : 'create';
+                categoryIdInput.value = category ? category.id : '';
+                nameInput.value = category ? category.name : '';
+                descriptionInput.value = category ? category.description : '';
                 setFieldError(nameInput, 'categoryNameError', '');
                 setFieldError(descriptionInput, 'categoryDescriptionError', '');
                 document.getElementById('categoryFormError').hidden = true;
             }
+            const editing = categoryActionInput.value === 'update';
+            categoryTitle.textContent = editing ? 'Edit Category' : 'Add Category';
+            submitButton.textContent = editing ? 'Save Changes' : 'Add Category';
             categoryModal.classList.add('is-open');
             categoryModal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('form-modal-open');
@@ -58,6 +66,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         categoryOpener.addEventListener('click', function () { openCategoryModal(true); });
+        document.querySelectorAll('.edit-category-button').forEach(function (button) {
+            button.addEventListener('click', function () {
+                openCategoryModal(true, {
+                    id: button.dataset.categoryId,
+                    name: button.dataset.categoryName,
+                    description: button.dataset.categoryDescription || ''
+                }, button);
+            });
+        });
         categoryModal.querySelectorAll('[data-close-category-modal]').forEach(function (button) {
             button.addEventListener('click', closeCategoryModal);
         });
@@ -104,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             saving = true;
             submitButton.disabled = true;
-            submitButton.textContent = 'Adding…';
+            submitButton.textContent = categoryActionInput.value === 'update' ? 'Saving…' : 'Adding…';
             categoryForm.setAttribute('aria-busy', 'true');
         });
 
