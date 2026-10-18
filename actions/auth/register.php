@@ -32,6 +32,19 @@ $password = (string) ($_POST['password'] ?? '');
 $confirm = (string) ($_POST['confirm_password'] ?? '');
 $terms = isset($_POST['terms']);
 
+$recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+
+if (
+    !is_string($recaptchaResponse) ||
+    trim($recaptchaResponse) === ''
+) {
+    $_SESSION['register_errors'] = [
+        'captcha' => 'Please complete the reCAPTCHA verification.'
+    ];
+
+    registrationRedirect();
+}
+
 $_SESSION['register_data'] = [
     'first_name' => $firstName,
     'last_name' => $lastName,
@@ -40,6 +53,63 @@ $_SESSION['register_data'] = [
 ];
 
 $errors = [];
+
+
+if (
+    !is_string($recaptchaResponse) ||
+    trim($recaptchaResponse) === ''
+) {
+    $errors['captcha'] =
+        'Please complete the reCAPTCHA verification.';
+}
+
+
+if (
+    is_string($recaptchaResponse) &&
+    trim($recaptchaResponse) !== ''
+) {
+    $secretKey = $_ENV['RECAPTCHA_SECRET_KEY'] ?? '';
+
+    if (!is_string($secretKey) || trim($secretKey) === '') {
+        error_log('PureVia: reCAPTCHA secret key is missing.');
+        $errors['captcha'] =
+            'Verification is temporarily unavailable. Please try again.';
+    } else {
+        $postData = http_build_query([
+            'secret' => $secretKey,
+            'response' => $recaptchaResponse
+        ]);
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' =>
+                    "Content-Type: application/x-www-form-urlencoded\r\n",
+                'content' => $postData,
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+
+        $googleResponse = @file_get_contents(
+            'https://www.google.com/recaptcha/api/siteverify',
+            false,
+            $context
+        );
+
+        $verification = is_string($googleResponse)
+            ? json_decode($googleResponse, true)
+            : null;
+
+        if (
+            !is_array($verification) ||
+            ($verification['success'] ?? false) !== true
+        ) {
+            $errors['captcha'] =
+                'CAPTCHA verification failed. Please try again.';
+        }
+    }
+}
 
 if (strlen($firstName) < 2 || strlen($firstName) > 100) {
     $errors['first_name'] = 'First name must be 2–100 characters.';
