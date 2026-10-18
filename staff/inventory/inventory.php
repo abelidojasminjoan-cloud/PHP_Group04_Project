@@ -1,5 +1,5 @@
 <?php
-
+// TESTING GIT PUSH
 session_start();
 
 require_once __DIR__ . "/../../config/app.php";
