@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Oct 04, 2026 at 01:21 AM
+-- Host: 127.0.0.1:3306
+-- Generation Time: Oct 16, 2026 at 11:48 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -38,6 +38,24 @@ CREATE TABLE `audit_logs` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `audit_logs`
+--
+
+INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `module`, `record_id`, `description`, `ip_address`, `created_at`) VALUES
+(1, 1, 'CREATE', 'Products', '1', 'Created product \"PureVia Matcha Clarify Moisturizer\" (MST-001).', '::1', '2026-10-09 19:01:23'),
+(2, 1, 'CREATE', 'Products', '2', 'Created product \"SDADAD\" (DMO-001).', '::1', '2026-10-09 21:11:47'),
+(3, 3, 'CREATE', 'Addresses', '1', 'Customer added a delivery address.', '::1', '2026-10-14 09:09:28'),
+(4, 3, 'CREATE', 'Addresses', '2', 'Customer added a delivery address.', '::1', '2026-10-14 09:13:01'),
+(5, 3, 'UPDATE', 'Addresses', '2', 'Customer changed the default delivery address.', '::1', '2026-10-14 09:13:36'),
+(6, 3, 'UPDATE', 'Addresses', '1', 'Customer changed the default delivery address.', '::1', '2026-10-14 09:13:39'),
+(7, 3, 'UPDATE', 'Addresses', '1', 'Customer updated a delivery address.', '::1', '2026-10-14 09:34:49'),
+(8, 3, 'UPDATE', 'Addresses', '1', 'Customer updated a delivery address.', '::1', '2026-10-14 09:34:53'),
+(9, 3, 'DELETE', 'Addresses', '1', 'Customer deleted a delivery address.', '::1', '2026-10-14 09:35:08'),
+(10, 3, 'UPDATE', 'Addresses', '2', 'Customer updated a delivery address.', '::1', '2026-10-14 09:35:55'),
+(11, 3, 'DELETE', 'Addresses', '2', 'Customer deleted a delivery address.', '::1', '2026-10-14 09:36:17'),
+(12, 3, 'CREATE', 'Addresses', '3', 'Customer added a delivery address.', '::1', '2026-10-14 10:14:33');
+
 -- --------------------------------------------------------
 
 --
@@ -47,9 +65,15 @@ CREATE TABLE `audit_logs` (
 CREATE TABLE `carts` (
   `id` int(10) UNSIGNED NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `carts`
+--
+
+INSERT INTO `carts` (`id`, `user_id`, `created_at`) VALUES
+(1, 3, '2026-10-13 13:09:11');
 
 -- --------------------------------------------------------
 
@@ -60,11 +84,9 @@ CREATE TABLE `carts` (
 CREATE TABLE `cart_items` (
   `id` int(10) UNSIGNED NOT NULL,
   `cart_id` int(10) UNSIGNED NOT NULL,
-  `product_id` int(10) UNSIGNED NOT NULL,
-  `quantity` int(10) UNSIGNED NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ;
+  `product_variant_id` int(10) UNSIGNED NOT NULL,
+  `quantity` int(10) UNSIGNED NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -171,6 +193,14 @@ CREATE TABLE `orders` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `user_id`, `order_number`, `first_name`, `last_name`, `email`, `phone`, `address_line1`, `address_line2`, `barangay`, `city`, `province`, `postal_code`, `country`, `subtotal`, `shipping_fee`, `total_amount`, `payment_status`, `order_status`, `created_at`, `updated_at`) VALUES
+(3, 3, 'PV-20261014-38687E9C37', 'Ahmhida', 'Macadato', 'amimacadato@gmail.com', '09936008933', 'Blk 3 Mangga St. Nagpayong Pinagbuhatan', '', 'Ermita', 'Manila', 'Metro Manila', '1602', 'Philippines', 267.00, 8.00, 275.00, 'pending', 'pending', '2026-10-14 10:44:25', '2026-10-14 10:44:25'),
+(4, 3, 'ORD-2026-7AD308C96D', 'Ahmhida', 'Macadato', 'amimacadato@gmail.com', '09936008933', 'Blk 3 Mangga St. Nagpayong Pinagbuhatan', '', 'Ermita', 'Manila', 'Metro Manila', '1602', 'Philippines', 160.00, 8.00, 168.00, 'pending', 'pending', '2026-10-14 12:47:33', '2026-10-14 12:47:33');
+
 -- --------------------------------------------------------
 
 --
@@ -186,6 +216,14 @@ CREATE TABLE `order_items` (
   `unit_price` decimal(10,2) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL
 ) ;
+
+--
+-- Dumping data for table `order_items`
+--
+
+INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_name`, `quantity`, `unit_price`, `subtotal`) VALUES
+(3, 3, 1, 'PureVia Matcha Clarify Moisturizer (Travel size · 50g)', 3, 89.00, 267.00),
+(4, 4, 2, 'SDADAD (REG 50g)', 8, 20.00, 160.00);
 
 -- --------------------------------------------------------
 
@@ -238,6 +276,14 @@ CREATE TABLE `payments` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `payment_status`, `transaction_reference`, `gateway_reference`, `verified_by`, `verified_at`, `created_at`, `updated_at`) VALUES
+(3, 3, 'cod', 275.00, 'pending', NULL, NULL, NULL, NULL, '2026-10-14 10:44:25', '2026-10-14 10:44:25'),
+(4, 4, 'cod', 168.00, 'pending', NULL, NULL, NULL, NULL, '2026-10-14 12:47:33', '2026-10-14 12:47:33');
+
 -- --------------------------------------------------------
 
 --
@@ -259,6 +305,34 @@ CREATE TABLE `products` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`id`, `category_id`, `product_name`, `product_code`, `description`, `usage_instructions`, `price`, `stock_quantity`, `image`, `status`, `created_at`, `updated_at`) VALUES
+(1, 3, 'PureVia Matcha Clarify Moisturizer', 'MST-001', 'Refresh and balance your skin with PureVia Matcha Clarify Moisturizer, featuring Matcha Extract, a plant-based ingredient rich in antioxidants known for its skin-conditioning properties. Designed for everyday skincare, this lightweight moisturizer helps control excess oil, minimize the appearance of pores, and provide essential hydration without leaving a greasy feeling, promoting a clearer, smoother, and healthier-looking complexion.', NULL, 89.00, 7, NULL, 'active', '2026-10-09 19:01:23', '2026-10-14 10:44:25'),
+(2, 1, 'SDADAD', 'DMO-001', 'ASDADA', NULL, 20.00, 4, 'uploads/products/3715746d17844d01a7629c2a9bad4f1a.jpg', 'active', '2026-10-09 21:11:47', '2026-10-14 12:47:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_benefits`
+--
+
+CREATE TABLE `product_benefits` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `product_id` int(10) UNSIGNED NOT NULL,
+  `benefit_text` varchar(500) NOT NULL,
+  `sort_order` int(10) UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_benefits`
+--
+
+INSERT INTO `product_benefits` (`id`, `product_id`, `benefit_text`, `sort_order`) VALUES
+(1, 2, 'DADAD', 0);
+
 -- --------------------------------------------------------
 
 --
@@ -269,6 +343,35 @@ CREATE TABLE `product_concerns` (
   `product_id` int(10) UNSIGNED NOT NULL,
   `concern_id` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_concerns`
+--
+
+INSERT INTO `product_concerns` (`product_id`, `concern_id`) VALUES
+(2, 1),
+(2, 4),
+(2, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_images`
+--
+
+CREATE TABLE `product_images` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `product_id` int(10) UNSIGNED NOT NULL,
+  `image_path` varchar(2048) NOT NULL,
+  `sort_order` int(10) UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_images`
+--
+
+INSERT INTO `product_images` (`id`, `product_id`, `image_path`, `sort_order`) VALUES
+(1, 2, 'uploads/products/3715746d17844d01a7629c2a9bad4f1a.jpg', 0);
 
 -- --------------------------------------------------------
 
@@ -284,12 +387,92 @@ CREATE TABLE `product_ingredients` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `product_reviews`
+--
+
+CREATE TABLE `product_reviews` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `product_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `rating` tinyint(3) UNSIGNED NOT NULL,
+  `title` varchar(150) NOT NULL,
+  `review_text` text NOT NULL,
+  `skin_type` varchar(50) DEFAULT NULL,
+  `verified_purchase` tinyint(1) NOT NULL DEFAULT 0,
+  `helpful_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `product_skin_types`
 --
 
 CREATE TABLE `product_skin_types` (
   `product_id` int(10) UNSIGNED NOT NULL,
   `skin_type_id` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_skin_types`
+--
+
+INSERT INTO `product_skin_types` (`product_id`, `skin_type_id`) VALUES
+(2, 4);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_variants`
+--
+
+CREATE TABLE `product_variants` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `product_id` int(10) UNSIGNED NOT NULL,
+  `size_capacity` varchar(100) NOT NULL,
+  `variant_label` varchar(100) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `stock_quantity` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `variant_sku` varchar(100) DEFAULT NULL,
+  `low_stock_threshold` int(10) UNSIGNED NOT NULL DEFAULT 15,
+  `last_restocked_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_variants`
+--
+
+INSERT INTO `product_variants` (`id`, `product_id`, `size_capacity`, `variant_label`, `price`, `stock_quantity`, `created_at`, `updated_at`, `variant_sku`, `low_stock_threshold`, `last_restocked_at`) VALUES
+(1, 1, '50g', 'Travel size', 89.00, 7, '2026-10-09 19:01:23', '2026-10-14 10:44:25', NULL, 15, NULL),
+(2, 2, '50g', 'REG', 20.00, 4, '2026-10-09 21:11:47', '2026-10-14 12:47:33', NULL, 15, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `review_images`
+--
+
+CREATE TABLE `review_images` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `review_id` int(10) UNSIGNED NOT NULL,
+  `image_path` varchar(500) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `review_votes`
+--
+
+CREATE TABLE `review_votes` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `review_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `vote` enum('up','down') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -439,17 +622,20 @@ CREATE TABLE `users` (
   `locked_until` datetime DEFAULT NULL,
   `last_login_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `gender` varchar(30) DEFAULT NULL,
+  `birth_date` date DEFAULT NULL,
+  `profile_photo` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `role_id`, `first_name`, `last_name`, `email`, `phone`, `password`, `status`, `email_verified_at`, `failed_login_attempts`, `locked_until`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Jasmin', 'Abelido', 'jasminabelido475@gmail.com', NULL, '$2y$10$97y2xEWqat8CIC9GQlrqMeHNN5YlwE5Zu3EHQbm2xJo74QtjnxtTm', 'active', NULL, 0, NULL, '2026-10-03 17:28:31', '2026-09-30 16:47:11', '2026-10-03 09:28:31'),
-(2, 2, 'Maria', 'Cuvin', 'mariadianne@gmail.com', NULL, '$2y$10$uRY2Mwthinkf99lNs7japeLF9II31WH.znD5KSVEZttSzphAXW8NC', 'active', NULL, 0, NULL, NULL, '2026-09-30 16:58:48', '2026-09-30 16:59:59'),
-(3, 3, 'Ami', 'Macadato', 'amimacadato@gmail.com', NULL, '$2y$10$ZlGVOXu9aR/zHIux/zLsCeD15TVKrIVG1tR8nQm0QsjW2MZ3SpP/.', 'active', NULL, 0, NULL, NULL, '2026-09-30 16:59:12', '2026-09-30 16:59:12');
+INSERT INTO `users` (`id`, `role_id`, `first_name`, `last_name`, `email`, `phone`, `password`, `status`, `email_verified_at`, `failed_login_attempts`, `locked_until`, `last_login_at`, `created_at`, `updated_at`, `gender`, `birth_date`, `profile_photo`) VALUES
+(1, 1, 'Jasmin', 'Abelido', 'jasminabelido475@gmail.com', NULL, '$2y$10$97y2xEWqat8CIC9GQlrqMeHNN5YlwE5Zu3EHQbm2xJo74QtjnxtTm', 'active', NULL, 0, NULL, '2026-10-14 20:27:36', '2026-09-30 16:47:11', '2026-10-14 12:27:36', NULL, NULL, NULL),
+(2, 2, 'Maria', 'Cuvin', 'mariadianne@gmail.com', NULL, '$2y$10$uRY2Mwthinkf99lNs7japeLF9II31WH.znD5KSVEZttSzphAXW8NC', 'active', NULL, 0, NULL, '2026-10-12 22:07:30', '2026-09-30 16:58:48', '2026-10-12 14:07:30', NULL, NULL, NULL),
+(3, 3, 'Ahmhida', 'Macadato', 'amimacadato@gmail.com', '', '$2y$10$ZlGVOXu9aR/zHIux/zLsCeD15TVKrIVG1tR8nQm0QsjW2MZ3SpP/.', 'active', NULL, 0, NULL, '2026-10-14 21:49:28', '2026-09-30 16:59:12', '2026-10-14 13:49:28', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -460,6 +646,7 @@ INSERT INTO `users` (`id`, `role_id`, `first_name`, `last_name`, `email`, `phone
 CREATE TABLE `user_addresses` (
   `id` int(10) UNSIGNED NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
+  `address_label` varchar(50) NOT NULL DEFAULT 'Home',
   `recipient_first_name` varchar(100) NOT NULL,
   `recipient_last_name` varchar(100) NOT NULL,
   `phone` varchar(30) DEFAULT NULL,
@@ -474,6 +661,13 @@ CREATE TABLE `user_addresses` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_addresses`
+--
+
+INSERT INTO `user_addresses` (`id`, `user_id`, `address_label`, `recipient_first_name`, `recipient_last_name`, `phone`, `address_line1`, `address_line2`, `barangay`, `city`, `province`, `postal_code`, `country`, `is_default`, `created_at`, `updated_at`) VALUES
+(3, 3, 'Home', 'Ahmhida', 'Macadato', '09936008933', 'Blk 3 Mangga St. Nagpayong Pinagbuhatan', '', 'Ermita', 'Manila', 'Metro Manila', '1602', 'Philippines', 1, '2026-10-14 10:14:33', '2026-10-14 10:14:33');
 
 -- --------------------------------------------------------
 
@@ -506,15 +700,17 @@ ALTER TABLE `audit_logs`
 --
 ALTER TABLE `carts`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `user_id` (`user_id`);
+  ADD UNIQUE KEY `user_id` (`user_id`),
+  ADD UNIQUE KEY `uq_carts_user` (`user_id`);
 
 --
 -- Indexes for table `cart_items`
 --
 ALTER TABLE `cart_items`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_cart_product` (`cart_id`,`product_id`),
-  ADD KEY `idx_cart_items_product` (`product_id`);
+  ADD UNIQUE KEY `unique_cart_variant` (`cart_id`,`product_variant_id`),
+  ADD UNIQUE KEY `uq_cart_variant` (`cart_id`,`product_variant_id`),
+  ADD KEY `product_variant_id` (`product_variant_id`);
 
 --
 -- Indexes for table `categories`
@@ -603,11 +799,25 @@ ALTER TABLE `products`
   ADD KEY `idx_products_name` (`product_name`);
 
 --
+-- Indexes for table `product_benefits`
+--
+ALTER TABLE `product_benefits`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_benefits_product` (`product_id`);
+
+--
 -- Indexes for table `product_concerns`
 --
 ALTER TABLE `product_concerns`
   ADD PRIMARY KEY (`product_id`,`concern_id`),
   ADD KEY `fk_product_concerns_concern` (`concern_id`);
+
+--
+-- Indexes for table `product_images`
+--
+ALTER TABLE `product_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_images_product` (`product_id`);
 
 --
 -- Indexes for table `product_ingredients`
@@ -617,11 +827,42 @@ ALTER TABLE `product_ingredients`
   ADD KEY `fk_product_ingredients_ingredient` (`ingredient_id`);
 
 --
+-- Indexes for table `product_reviews`
+--
+ALTER TABLE `product_reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_review_user` (`user_id`),
+  ADD KEY `idx_review_product_status` (`product_id`,`status`);
+
+--
 -- Indexes for table `product_skin_types`
 --
 ALTER TABLE `product_skin_types`
   ADD PRIMARY KEY (`product_id`,`skin_type_id`),
   ADD KEY `fk_product_skin_type` (`skin_type_id`);
+
+--
+-- Indexes for table `product_variants`
+--
+ALTER TABLE `product_variants`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `variant_sku` (`variant_sku`),
+  ADD KEY `idx_product_variants_product` (`product_id`);
+
+--
+-- Indexes for table `review_images`
+--
+ALTER TABLE `review_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_review_image` (`review_id`);
+
+--
+-- Indexes for table `review_votes`
+--
+ALTER TABLE `review_votes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_review_vote` (`review_id`,`user_id`),
+  ADD KEY `fk_vote_user` (`user_id`);
 
 --
 -- Indexes for table `roles`
@@ -696,19 +937,19 @@ ALTER TABLE `user_avoided_ingredients`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -738,7 +979,7 @@ ALTER TABLE `login_attempts`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `order_items`
@@ -762,12 +1003,48 @@ ALTER TABLE `password_reset_tokens`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `product_benefits`
+--
+ALTER TABLE `product_benefits`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `product_images`
+--
+ALTER TABLE `product_images`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `product_reviews`
+--
+ALTER TABLE `product_reviews`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `product_variants`
+--
+ALTER TABLE `product_variants`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `review_images`
+--
+ALTER TABLE `review_images`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `review_votes`
+--
+ALTER TABLE `review_votes`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -810,7 +1087,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_addresses`
 --
 ALTER TABLE `user_addresses`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Constraints for dumped tables
@@ -826,14 +1103,14 @@ ALTER TABLE `audit_logs`
 -- Constraints for table `carts`
 --
 ALTER TABLE `carts`
-  ADD CONSTRAINT `fk_carts_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `carts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  ADD CONSTRAINT `fk_cart_items_cart` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_cart_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `cart_items_ibfk_1` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cart_items_ibfk_2` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `email_verification_tokens`
@@ -886,11 +1163,23 @@ ALTER TABLE `products`
   ADD CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`);
 
 --
+-- Constraints for table `product_benefits`
+--
+ALTER TABLE `product_benefits`
+  ADD CONSTRAINT `fk_benefits_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `product_concerns`
 --
 ALTER TABLE `product_concerns`
   ADD CONSTRAINT `fk_product_concerns_concern` FOREIGN KEY (`concern_id`) REFERENCES `skin_concerns` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_product_concerns_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `product_images`
+--
+ALTER TABLE `product_images`
+  ADD CONSTRAINT `fk_images_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `product_ingredients`
@@ -900,11 +1189,37 @@ ALTER TABLE `product_ingredients`
   ADD CONSTRAINT `fk_product_ingredients_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `product_reviews`
+--
+ALTER TABLE `product_reviews`
+  ADD CONSTRAINT `fk_review_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_review_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `product_skin_types`
 --
 ALTER TABLE `product_skin_types`
   ADD CONSTRAINT `fk_product_skin_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_product_skin_type` FOREIGN KEY (`skin_type_id`) REFERENCES `skin_types` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `product_variants`
+--
+ALTER TABLE `product_variants`
+  ADD CONSTRAINT `fk_product_variants_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `review_images`
+--
+ALTER TABLE `review_images`
+  ADD CONSTRAINT `fk_review_image` FOREIGN KEY (`review_id`) REFERENCES `product_reviews` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `review_votes`
+--
+ALTER TABLE `review_votes`
+  ADD CONSTRAINT `fk_vote_review` FOREIGN KEY (`review_id`) REFERENCES `product_reviews` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_vote_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `skin_profiles`

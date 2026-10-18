@@ -1,0 +1,667 @@
+/* =========================================
+   PUREVIA - SALES REPORT
+========================================= */
+
+:root {
+    --report-bg: #f8f5ef;
+    --report-card: #ffffff;
+    --report-border: #ddd5ca;
+    --report-text: #171912;
+    --report-muted: #8a786d;
+
+    --purevia-green: #53634b;
+    --purevia-green-dark: #43523d;
+
+    --revenue-text: #15945b;
+    --orders-text: #3a7bd5;
+    --avg-text: #8f5be8;
+    --delivery-text: #e67e22;
+
+    --pending-bg: #f8ead8;
+    --pending-text: #c38c18;
+
+    --processing-bg: #e2eefc;
+    --processing-text: #3478c6;
+
+    --shipped-bg: #ebe6fb;
+    --shipped-text: #7262db;
+
+    --delivered-bg: #e1f3e9;
+    --delivered-text: #15945b;
+
+    --cancelled-bg: #f8e1e1;
+    --cancelled-text: #d84b4b;
+
+    --panel-radius: 15px;
+}
+
+/* =========================================
+   RESET
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--report-bg);
+    color: var(--report-text);
+    font-family: 'Poppins', sans-serif;
+}
+
+/* =========================================
+   PAGE
+========================================= */
+
+main.sales-page {
+    min-height: 100vh;
+    background: var(--report-bg);
+}
+
+.sales-topbar {
+    display: flex;
+    align-items: center;
+
+    height: 64px;
+    padding: 0 30px;
+
+    background: #fbfaf7;
+    border-bottom: 1px solid #e8e5de;
+}
+
+.sales-topbar p {
+    margin: 0;
+    color: #5f665a;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.sales-content {
+    width: 100%;
+    padding: 30px 28px 50px;
+}
+
+/* =========================================
+   PAGE HEADER
+========================================= */
+
+.sales-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 25px;
+    margin-bottom: 24px;
+}
+
+.sales-heading h1 {
+    margin: 0 0 5px;
+    color: #11130f;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.sales-heading p {
+    margin: 0;
+    color: var(--report-muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.sales-export {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+    min-height: 44px;
+    padding: 0 18px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: var(--purevia-green);
+    color: #ffffff;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.sales-export:hover {
+    background: var(--purevia-green-dark);
+}
+
+/* =========================================
+   SUMMARY DASHBOARD
+========================================= */
+
+.sales-summary-dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.analytics-card {
+    min-height: 145px;
+    padding: 18px 20px;
+
+    background: var(--report-card);
+    border: 1px solid var(--report-border);
+    border-radius: var(--panel-radius);
+}
+
+.analytics-icon {
+    width: 38px;
+    height: 38px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 18px;
+    border-radius: 10px;
+}
+
+.analytics-icon i {
+    font-size: 18px;
+}
+
+.analytics-card strong {
+    display: block;
+    margin-bottom: 6px;
+
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.analytics-card span {
+    color: #6f6c65;
+    font-size: 14px;
+}
+
+.revenue-card .analytics-icon {
+    background: #e1f3e9;
+}
+
+.revenue-card .analytics-icon i,
+.revenue-card strong {
+    color: var(--revenue-text);
+}
+
+.orders-card .analytics-icon {
+    background: #e2eefc;
+}
+
+.orders-card .analytics-icon i,
+.orders-card strong {
+    color: var(--orders-text);
+}
+
+.avg-card .analytics-icon {
+    background: #efe7fd;
+}
+
+.avg-card .analytics-icon i,
+.avg-card strong {
+    color: var(--avg-text);
+}
+
+.delivery-card .analytics-icon {
+    background: #f9eadc;
+}
+
+.delivery-card .analytics-icon i,
+.delivery-card strong {
+    color: var(--delivery-text);
+}
+
+/* =========================================
+   GRID PANELS
+========================================= */
+
+.sales-report-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.dashboard-panel {
+    background: var(--report-card);
+    border: 1px solid var(--report-border);
+    border-radius: var(--panel-radius);
+    overflow: hidden;
+}
+
+.dashboard-panel-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid #ebe5db;
+}
+
+.dashboard-panel-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin: 0;
+    color: #20231d;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dashboard-panel-header i {
+    color: #d16e3b;
+    font-size: 13px;
+}
+
+/* =========================================
+   TOP PRODUCTS
+========================================= */
+
+.top-products-list {
+    padding: 14px 16px 18px;
+}
+
+.top-product-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 14px;
+    padding: 10px 0;
+}
+
+.top-product-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.top-product-rank {
+    min-width: 26px;
+    color: #6d7e86;
+    font-size: 13px;
+}
+
+.top-product-thumb {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f3efe8;
+    border: 1px solid #e5ddd1;
+    flex-shrink: 0;
+}
+
+.top-product-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.top-product-thumb.fallback-thumb i {
+    color: var(--purevia-green);
+    font-size: 14px;
+}
+
+.top-product-info {
+    min-width: 0;
+}
+
+.top-product-info h3 {
+    margin: 0 0 2px;
+    color: #1d211a;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.top-product-info p {
+    margin: 0;
+    color: #7d776d;
+    font-size: 12px;
+}
+
+.top-product-revenue {
+    flex-shrink: 0;
+    color: #15945b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* =========================================
+   CATEGORY REVENUE
+========================================= */
+
+.category-revenue-list {
+    padding: 16px 16px 18px;
+}
+
+.category-row {
+    margin-bottom: 14px;
+}
+
+.category-row:last-child {
+    margin-bottom: 0;
+}
+
+.category-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    margin-bottom: 7px;
+}
+
+.category-row-top span {
+    color: #24261f;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.category-row-top strong {
+    color: #6f7e6b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.category-bar {
+    width: 100%;
+    height: 8px;
+
+    overflow: hidden;
+    border-radius: 999px;
+    background: #ece8df;
+}
+
+.category-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #d8834b;
+}
+
+/* =========================================
+   STATUS BREAKDOWN
+========================================= */
+
+.status-panel {
+    padding-bottom: 18px;
+}
+
+.status-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    gap: 14px;
+    padding: 18px 18px 0;
+}
+
+.status-card {
+    min-height: 98px;
+    padding: 18px 16px;
+    border-radius: 14px;
+}
+
+.status-card strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.status-card span {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-card small {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-card.pending {
+    background: var(--pending-bg);
+    color: var(--pending-text);
+}
+
+.status-card.processing {
+    background: var(--processing-bg);
+    color: var(--processing-text);
+}
+
+.status-card.shipped {
+    background: var(--shipped-bg);
+    color: var(--shipped-text);
+}
+
+.status-card.delivered {
+    background: var(--delivered-bg);
+    color: var(--delivered-text);
+}
+
+.status-card.cancelled {
+    background: var(--cancelled-bg);
+    color: var(--cancelled-text);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1200px) {
+    .sales-summary-dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .status-breakdown-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .sales-topbar {
+        padding-left: 75px;
+    }
+
+    .sales-content {
+        padding: 25px 22px 40px;
+    }
+
+    .sales-report-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .sales-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sales-heading h1 {
+        font-size: 28px;
+    }
+
+    .sales-export {
+        width: 100%;
+    }
+
+    .sales-summary-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .status-breakdown-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sales-content {
+        padding: 20px 15px 35px;
+    }
+}
+
+
+/* =========================================
+   PUREVIA - USER BREAKDOWN
+========================================= */
+
+.user-breakdown-panel {
+    width: 100%;
+    margin-top: 18px;
+
+    background: #ffffff;
+    border: 1px solid #ddd5ca;
+    border-radius: 15px;
+
+    overflow: hidden;
+}
+
+/* HEADER */
+
+.user-breakdown-header {
+    padding: 20px 20px 10px;
+}
+
+.user-breakdown-header h2 {
+    margin: 0;
+
+    color: #171912;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* THREE-COLUMN LAYOUT */
+
+.user-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 20px;
+    padding: 15px 20px 25px;
+}
+
+/* USER ITEM */
+
+.user-breakdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+    min-width: 0;
+    min-height: 110px;
+
+    text-align: center;
+}
+
+/* ICON */
+
+.user-breakdown-item i {
+    color: #8a786d;
+    font-size: 15px;
+}
+
+/* COUNT */
+
+.user-breakdown-item strong {
+    display: block;
+
+    color: #53634b;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* LABEL */
+
+.user-breakdown-item span {
+    color: #8a786d;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 550px) {
+
+    .user-breakdown-grid {
+        gap: 8px;
+        padding: 12px 10px 20px;
+    }
+
+    .user-breakdown-item strong {
+        font-size: 23px;
+    }
+
+    .user-breakdown-item span {
+        font-size: 11px;
+    }
+
+}
+
+
+/* EMPTY TOP PRODUCTS */
+
+.sales-empty-products {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+    min-height: 180px;
+    padding: 25px;
+
+    color: #8a786d;
+    text-align: center;
+}
+
+.sales-empty-products i {
+    font-size: 24px;
+    color: #53634b;
+}
+
+.sales-empty-products p {
+    margin: 0;
+    font-size: 13px;
+}
+
+/* EXPORT LINK */
+
+.sales-export {
+    text-decoration: none;
+}
+
+.sales-export:hover,
+.sales-export:focus-visible {
+    color: #ffffff;
+}
