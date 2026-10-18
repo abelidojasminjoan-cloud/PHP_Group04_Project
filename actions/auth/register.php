@@ -1,25 +1,20 @@
 <?php
+declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../services/EmailService.php';
 
-/* =========================================================
-   ONLY ALLOW POST
-========================================================= */
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . BASE_URL . '/register.php');
+function registrationRedirect(): never {
+    header('Location: ' . BASE_URL . '/public/register.php');
     exit;
 }
 
-/* =========================================================
-   VALIDATE FORM TOKEN
-========================================================= */
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    registrationRedirect();
+}
 
 if (
     empty($_SESSION['csrf_token']) ||
-    !is_string($_SESSION['csrf_token']) ||
     !is_string($_POST['csrf_token'] ?? null) ||
     !hash_equals(
         $_SESSION['csrf_token'],
@@ -27,175 +22,91 @@ if (
     )
 ) {
     http_response_code(403);
-    exit('Invalid form request. Please refresh and try again.');
+    exit('Invalid form request.');
 }
 
-
-/* =========================================================
-   GET FORM VALUES
-========================================================= */
-
-$firstName = is_string($_POST['first_name'] ?? null) ? trim($_POST['first_name']) : '';
-$lastName = is_string($_POST['last_name'] ?? null) ? trim($_POST['last_name']) : '';
-$email = is_string($_POST['email'] ?? null) ? strtolower(trim($_POST['email'])) : '';
-
-$password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
-$confirmPassword = is_string($_POST['confirm_password'] ?? null) ? $_POST['confirm_password'] : '';
-
-$termsAccepted = isset($_POST['terms']);
-
-unset($_SESSION['register_error'], $_SESSION['register_errors']);
-
-
-/* =========================================================
-   SAVE VALUES TEMPORARILY
-========================================================= */
+$firstName = trim((string) ($_POST['first_name'] ?? ''));
+$lastName = trim((string) ($_POST['last_name'] ?? ''));
+$email = strtolower(trim((string) ($_POST['email'] ?? '')));
+$password = (string) ($_POST['password'] ?? '');
+$confirm = (string) ($_POST['confirm_password'] ?? '');
+$terms = isset($_POST['terms']);
 
 $_SESSION['register_data'] = [
     'first_name' => $firstName,
     'last_name' => $lastName,
     'email' => $email,
-    'terms' => $termsAccepted
+    'terms' => $terms
 ];
 
+$errors = [];
 
-/* =========================================================
-   VALIDATION
-========================================================= */
-
-$fieldErrors = [];
-
-if ($firstName === '') {
-    $fieldErrors['first_name'] = 'Please enter your first name.';
-} elseif (strlen($firstName) < 2 || strlen($firstName) > 100) {
-    $fieldErrors['first_name'] = 'First name must contain 2 to 100 characters.';
+if (strlen($firstName) < 2 || strlen($firstName) > 100) {
+    $errors['first_name'] = 'First name must be 2–100 characters.';
 }
 
-if ($lastName === '') {
-    $fieldErrors['last_name'] = 'Please enter your last name.';
-} elseif (strlen($lastName) < 2 || strlen($lastName) > 100) {
-    $fieldErrors['last_name'] = 'Last name must contain 2 to 100 characters.';
+if (strlen($lastName) < 2 || strlen($lastName) > 100) {
+    $errors['last_name'] = 'Last name must be 2–100 characters.';
 }
 
-if ($email === '') {
-    $fieldErrors['email'] = 'Please enter your email address.';
-} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $fieldErrors['email'] = 'Please enter a valid email address.';
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) ||
+    strlen($email) > 254) {
+    $errors['email'] = 'Enter a valid email address.';
 }
 
-if ($password === '') {
-    $fieldErrors['password'] = 'Please create a password.';
-} elseif (strlen($password) < 12) {
-    $fieldErrors['password'] = 'Password must contain at least 12 characters.';
-} elseif (!preg_match('/[A-Z]/', $password)) {
-    $fieldErrors['password'] = 'Password must contain at least one uppercase letter.';
-} elseif (!preg_match('/[a-z]/', $password)) {
-    $fieldErrors['password'] = 'Password must contain at least one lowercase letter.';
-} elseif (!preg_match('/[0-9]/', $password)) {
-    $fieldErrors['password'] = 'Password must contain at least one number.';
-} elseif (!preg_match('/[^A-Za-z0-9]/', $password)) {
-    $fieldErrors['password'] = 'Password must contain at least one special character.';
+if (
+    strlen($password) < 12 ||
+    !preg_match('/[A-Z]/', $password) ||
+    !preg_match('/[a-z]/', $password) ||
+    !preg_match('/[0-9]/', $password) ||
+    !preg_match('/[^A-Za-z0-9]/', $password)
+) {
+    $errors['password'] =
+        'Password needs 12 characters, uppercase, lowercase, '
+        . 'number, and special character.';
 }
 
-if ($confirmPassword === '') {
-    $fieldErrors['confirm_password'] = 'Please confirm your password.';
-} elseif ($password !== $confirmPassword) {
-    $fieldErrors['confirm_password'] = 'Passwords do not match.';
+if ($password !== $confirm) {
+    $errors['confirm_password'] = 'Passwords do not match.';
 }
 
-if (!$termsAccepted) {
-    $fieldErrors['terms'] = 'Please agree to the Terms and Privacy Policy.';
+if (!$terms) {
+    $errors['terms'] = 'Accept the Terms and Privacy Policy.';
 }
 
-if ($fieldErrors) {
-    $_SESSION['register_errors'] = $fieldErrors;
-    header('Location: ' . BASE_URL . '/register.php');
-    exit;
+if ($errors) {
+    $_SESSION['register_errors'] = $errors;
+    registrationRedirect();
 }
-
-
-/* =========================================================
-   CHECK IF EMAIL ALREADY EXISTS
-========================================================= */
-
-$checkStatement = $conn->prepare(
-    'SELECT id FROM users WHERE email = ? LIMIT 1'
-);
-
-$checkStatement->bind_param(
-    's',
-    $email
-);
-
-$checkStatement->execute();
-
-$checkResult = $checkStatement->get_result();
-
-
-if ($checkResult->num_rows > 0) {
-
-    $checkStatement->close();
-
-    $_SESSION['register_errors'] = [
-        'email' => 'An account with this email already exists.'
-    ];
-
-    header('Location: ' . BASE_URL . '/register.php');
-    exit;
-}
-
-
-$checkStatement->close();
-
-
-/* =========================================================
-   HASH PASSWORD
-========================================================= */
-
-$passwordHash = password_hash(
-    $password,
-    PASSWORD_DEFAULT
-);
-
-
-/* =========================================================
-   CREATE CUSTOMER ACCOUNT
-
-   role_id = 3 → Customer
-
-   DEVELOPMENT ONLY:
-   Accounts are temporarily activated immediately so
-   registration/login can be tested without OTP/email
-   activation.
-
-   PRODUCTION:
-   Change this back to:
-   $status = 'pending';
-========================================================= */
-
-
-$roleId = 3;
-$status = 'pending';
 
 try {
-    // Generate a cryptographically secure token.
-    $token = bin2hex(random_bytes(32));
-
-    // Store only the hash in MySQL.
-    $tokenHash = hash('sha256', $token);
-
-    $passwordHash = password_hash(
-        $password,
-        PASSWORD_DEFAULT
+    $stmt = $conn->prepare(
+        'SELECT id FROM users WHERE email = ? LIMIT 1'
     );
+    $stmt->bind_param('s', $email);
+    $stmt->execute();
+    $exists = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($exists) {
+        $_SESSION['register_errors'] = [
+            'email' => 'An account with this email already exists.'
+        ];
+        registrationRedirect();
+    }
+
+    $otp = (string) random_int(100000, 999999);
+    $otpHash = password_hash($otp, PASSWORD_DEFAULT);
+    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+    $roleId = 3;
+    $status = 'pending';
 
     $conn->begin_transaction();
 
-    // Create pending customer account.
     $stmt = $conn->prepare(
         'INSERT INTO users
-            (role_id, first_name, last_name,
-             email, password, status)
+            (role_id, first_name, last_name, email, password, status)
          VALUES (?, ?, ?, ?, ?, ?)'
     );
 
@@ -210,25 +121,22 @@ try {
     );
 
     $stmt->execute();
-
-    $userId = $conn->insert_id;
-
+    $userId = (int) $conn->insert_id;
     $stmt->close();
 
-    // Save hashed verification token.
+    $purpose = 'email_verification';
+
     $stmt = $conn->prepare(
-        'INSERT INTO email_verification_tokens
-            (user_id, token_hash, expires_at)
-         VALUES (
-            ?, ?,
-            DATE_ADD(NOW(), INTERVAL 30 MINUTE)
-         )'
+        'INSERT INTO otp_codes
+            (user_id, otp_hash, purpose, expires_at)
+         VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))'
     );
 
     $stmt->bind_param(
-        'is',
+        'iss',
         $userId,
-        $tokenHash
+        $otpHash,
+        $purpose
     );
 
     $stmt->execute();
@@ -236,27 +144,17 @@ try {
 
     $conn->commit();
 
-    // Send email after database transaction completes.
-    $emailSent = sendVerificationEmail(
-        $email,
-        $firstName,
-        $token
-    );
-
+    $_SESSION['pending_verification_user_id'] = $userId;
     unset($_SESSION['register_data']);
 
-    if ($emailSent) {
-        $_SESSION['login_success'] =
-            'Account created! Check your email for '
-            . 'the verification link before logging in.';
-    } else {
-        $_SESSION['login_success'] =
-            'Account created, but we could not send '
-            . 'the verification email. Please contact '
-            . 'support to request another link.';
-    }
+    $sent = sendOtpEmail($email, $firstName, $otp);
 
-    header('Location: ' . BASE_URL . '/login.php');
+    $_SESSION['otp_notice'] = $sent
+        ? 'We sent a 6-digit verification code to your email.'
+        : 'Your account was created, but the email could not '
+          . 'be sent. Check your email settings, then use Resend OTP.';
+
+    header('Location: ' . BASE_URL . '/public/verify-email.php');
     exit;
 
 } catch (Throwable $e) {
@@ -265,52 +163,10 @@ try {
     } catch (Throwable $ignored) {
     }
 
-    error_log(
-        'PureVia registration error: '
-        . $e->getMessage()
-    );
+    error_log('Registration error: ' . $e->getMessage());
 
     $_SESSION['register_error'] =
-        'Unable to complete registration. '
-        . 'Please try again.';
+        'Unable to register. Please try again.';
 
-    header('Location: ' . BASE_URL . '/register.php');
-    exit;
+    registrationRedirect();
 }
-
-
-
-/* =========================================================
-   INSERT ACCOUNT
-========================================================= */
-
-if (!$insertStatement->execute()) {
-
-    error_log(
-        'Registration failed: ' .
-        $insertStatement->error
-    );
-
-    $insertStatement->close();
-
-    $_SESSION['register_error'] =
-        'Unable to create your account. Please try again.';
-
-    header('Location: ' . BASE_URL . '/register.php');
-    exit;
-}
-
-
-/* =========================================================
-   SUCCESS
-========================================================= */
-
-$insertStatement->close();
-
-unset($_SESSION['register_data']);
-
-$_SESSION['login_success'] =
-    'Account created successfully. You may now log in.';
-
-header('Location: ' . BASE_URL . '/login.php');
-exit;

@@ -1,5 +1,4 @@
 <?php
-// TESTING GIT PUSH
 session_start();
 
 require_once __DIR__ . "/../../config/app.php";
@@ -17,7 +16,7 @@ if (
     empty($_SESSION['role_id']) ||
     (int) $_SESSION['role_id'] !== 2
 ) {
-    header("Location: " . BASE_URL . "/index.php");
+    header("Location: " . BASE_URL . "/public/index.php");
     exit;
 }
 

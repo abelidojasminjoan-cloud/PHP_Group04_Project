@@ -1,102 +1,152 @@
 <?php
-
-session_start();
 require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/db.php';
 
-$pageTitle = "Categories";
+$pageTitle = 'Categories';
 
+function categoryEscape(?string $value): string
+{
+    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+}
 
-/* =========================================
-   TEMPORARY ADMIN SESSION
-   Remove when login is connected
-========================================= */
+$adminId = (int) ($_SESSION['user_id'] ?? 0);
+$stmt = $conn->prepare("
+    SELECT u.id FROM users u
+    INNER JOIN roles r ON r.id = u.role_id
+    WHERE u.id = ? AND u.status = 'active' AND LOWER(r.role_name) = 'admin'
+    LIMIT 1
+");
+$stmt->bind_param('i', $adminId);
+$stmt->execute();
+$categoryAdminAllowed = $stmt->get_result()->num_rows === 1;
+$stmt->close();
 
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
+if (!$categoryAdminAllowed) {
+    header('Location: ' . BASE_URL . '/public/index.php');
+    exit;
+}
 
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
+header('Cache-Control: no-store');
+if (empty($_SESSION['csrf_category'])) {
+    $_SESSION['csrf_category'] = bin2hex(random_bytes(32));
+}
 
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
+$categoryErrors = [];
+$categoryFormError = '';
+$categoryName = '';
+$categoryDescription = '';
+$categoryId = 0;
+$categoryEditing = false;
+$categorySuccess = $_SESSION['category_success'] ?? '';
+unset($_SESSION['category_success']);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $categoryName = is_string($_POST['category_name'] ?? null)
+        ? trim($_POST['category_name']) : '';
+    $categoryDescription = is_string($_POST['description'] ?? null)
+        ? trim($_POST['description']) : '';
+    $token = $_POST['csrf_token'] ?? null;
+    $categoryAction = $_POST['category_action'] ?? 'create';
+    $categoryEditing = $categoryAction === 'update';
+    $submittedCategoryId = $_POST['category_id'] ?? '';
+    if ($categoryEditing) {
+        $categoryId = is_string($submittedCategoryId)
+            ? (filter_var($submittedCategoryId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0)
+            : 0;
+    }
 
-/* =========================================
-   SAMPLE CATEGORY DATA
-   Replace with MySQL query later
-========================================= */
+    if (!is_string($token) || !hash_equals($_SESSION['csrf_category'], $token)) {
+        http_response_code(403);
+        $categoryFormError = 'Your session has expired. Refresh the page and try again.';
+    } elseif (!in_array($categoryAction, ['create', 'update'], true)
+        || ($categoryEditing && !$categoryId)
+        || (!$categoryEditing && $submittedCategoryId !== '')) {
+        http_response_code(400);
+        $categoryFormError = 'Invalid category. Close this form and select the category again.';
+    } else {
+        if ($categoryName === '') {
+            $categoryErrors['category_name'] = 'Please enter a category name.';
+        } elseif (mb_strlen($categoryName, 'UTF-8') > 100) {
+            $categoryErrors['category_name'] = 'Use no more than 100 characters.';
+        }
+        if (!is_string($_POST['description'] ?? '')
+            || mb_strlen($categoryDescription, 'UTF-8') > 5000) {
+            $categoryErrors['description'] = 'Use no more than 5,000 characters.';
+        }
 
-$categories = [
+        if (!$categoryErrors) {
+            $categoryTransactionStarted = false;
+            try {
+                $conn->begin_transaction();
+                $categoryTransactionStarted = true;
+                if ($categoryEditing) {
+                    $stmt = $conn->prepare('SELECT id FROM categories WHERE id = ? FOR UPDATE');
+                    $stmt->bind_param('i', $categoryId);
+                    $stmt->execute();
+                    $categoryExists = $stmt->get_result()->num_rows === 1;
+                    $stmt->close();
+                    if (!$categoryExists) {
+                        throw new DomainException('This category no longer exists. Refresh the list.');
+                    }
+                    $stmt = $conn->prepare('UPDATE categories SET category_name = ?, description = ? WHERE id = ?');
+                    $stmt->bind_param('ssi', $categoryName, $categoryDescription, $categoryId);
+                    $stmt->execute();
+                    $recordId = (string) $categoryId;
+                    $stmt->close();
+                } else {
+                    $stmt = $conn->prepare("
+                        INSERT INTO categories (category_name, description, status)
+                        VALUES (?, ?, 'active')
+                    ");
+                    $stmt->bind_param('ss', $categoryName, $categoryDescription);
+                    $stmt->execute();
+                    $recordId = (string) $conn->insert_id;
+                    $stmt->close();
+                }
 
-    [
-        'id' => 1,
-        'name' => 'Cleansers',
-        'description' => 'Facial cleansers and micellar waters',
-        'products' => 8,
-        'status' => 'active'
-    ],
+                $auditAction = $categoryEditing ? 'UPDATE' : 'CREATE';
+                $auditDescription = ($categoryEditing ? 'Updated' : 'Added') . ' category "' . $categoryName . '".';
+                $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+                $stmt = $conn->prepare("
+                    INSERT INTO audit_logs (user_id, action, module, record_id, description, ip_address)
+                    VALUES (?, ?, 'Categories', ?, ?, ?)
+                ");
+                $stmt->bind_param('issss', $adminId, $auditAction, $recordId, $auditDescription, $ipAddress);
+                $stmt->execute();
+                $stmt->close();
+                $conn->commit();
+                $categoryTransactionStarted = false;
 
-    [
-        'id' => 2,
-        'name' => 'Toners',
-        'description' => 'Balancing and hydrating toners',
-        'products' => 6,
-        'status' => 'active'
-    ],
+                $_SESSION['category_success'] = $categoryEditing
+                    ? 'Category updated successfully.' : 'Category added successfully.';
+                header('Location: ' . BASE_URL . '/admin/categories/categories.php', true, 303);
+                exit;
+            } catch (Throwable $error) {
+                if ($categoryTransactionStarted) {
+                    $conn->rollback();
+                }
+                if ($error instanceof mysqli_sql_exception && $error->getCode() === 1062) {
+                    $categoryErrors['category_name'] = 'A category with this name already exists.';
+                } elseif ($error instanceof DomainException) {
+                    http_response_code(404);
+                    $categoryFormError = $error->getMessage();
+                } else {
+                    error_log('Save Category Error: ' . $error->getMessage());
+                    $categoryFormError = 'Unable to save this category. Please try again.';
+                }
+            }
+        }
+    }
+}
 
-    [
-        'id' => 3,
-        'name' => 'Serums',
-        'description' => 'Targeted treatment serums',
-        'products' => 12,
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 4,
-        'name' => 'Moisturizers',
-        'description' => 'Day and night creams',
-        'products' => 9,
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 5,
-        'name' => 'Sunscreen',
-        'description' => 'SPF protection products',
-        'products' => 5,
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 6,
-        'name' => 'Eye Care',
-        'description' => 'Eye creams and treatments',
-        'products' => 4,
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 7,
-        'name' => 'Masks',
-        'description' => 'Sheet masks and clay masks',
-        'products' => 7,
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 8,
-        'name' => 'Exfoliators',
-        'description' => 'Chemical and physical exfoliating products',
-        'products' => 3,
-        'status' => 'inactive'
-    ]
-
-];
-
-
+$categories = $conn->query("
+    SELECT c.id, c.category_name AS name, c.description, c.status,
+        (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) AS products
+    FROM categories c
+    ORDER BY c.category_name
+")->fetch_all(MYSQLI_ASSOC);
 $totalCategories = count($categories);
-
+$categoryModalOpen = (bool) ($categoryErrors || $categoryFormError);
 ?>
 
 <!DOCTYPE html>
@@ -147,6 +197,9 @@ $totalCategories = count($categories);
     >
 
 
+    <!-- Shared product form styles; category overrides stay in category.css. -->
+    <link rel="stylesheet" href="../../assets/css/form2.css">
+
     <!-- CATEGORY CSS -->
 
     <link
@@ -156,6 +209,7 @@ $totalCategories = count($categories);
 
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin_delete.css">
 </head>
 
 
@@ -166,7 +220,7 @@ $totalCategories = count($categories);
          SIDEBAR
     ====================================== -->
 
-    <?php include("../../includes/sidemenu.php"); ?>
+    <?php include __DIR__ . '/../../includes/sidemenu.php'; ?>
 
 
     <!-- =====================================
@@ -219,9 +273,12 @@ $totalCategories = count($categories);
 
                 <!-- ADD CATEGORY -->
 
-                <a
-                    href="./add_category.php"
+                <button
+                    type="button"
+                    id="openAddCategoryModal"
                     class="add-category-button"
+                    aria-haspopup="dialog"
+                    aria-controls="addCategoryModal"
                 >
 
                     <i class="fa-solid fa-plus"></i>
@@ -230,7 +287,7 @@ $totalCategories = count($categories);
                         Add Category
                     </span>
 
-                </a>
+                </button>
 
 
             </section>
@@ -239,6 +296,10 @@ $totalCategories = count($categories);
             <!-- =================================
                  CATEGORY CARD
             ================================== -->
+
+            <?php if ($categorySuccess): ?>
+                <p class="form-alert form-alert-success" role="status"><?= categoryEscape($categorySuccess) ?></p>
+            <?php endif; ?>
 
             <section class="categories-card">
 
@@ -391,7 +452,7 @@ $totalCategories = count($categories);
                                         <span class="category-description">
 
                                             <?= htmlspecialchars(
-                                                $category['description']
+                                                $category['description'] ?? ''
                                             ) ?>
 
                                         </span>
@@ -447,11 +508,14 @@ $totalCategories = count($categories);
 
                                             <!-- EDIT -->
 
-                                            <a
-                                                href="./edit_category.php?id=<?= urlencode(
-                                                    $category['id']
-                                                ) ?>"
+                                            <button
+                                                type="button"
                                                 class="category-action-button edit-category-button"
+                                                data-category-id="<?= (int) $category['id'] ?>"
+                                                data-category-name="<?= categoryEscape($category['name']) ?>"
+                                                data-category-description="<?= categoryEscape($category['description']) ?>"
+                                                aria-haspopup="dialog"
+                                                aria-controls="addCategoryModal"
                                                 title="Edit category"
                                                 aria-label="Edit <?= htmlspecialchars(
                                                     $category['name']
@@ -460,7 +524,7 @@ $totalCategories = count($categories);
 
                                                 <i class="fa-regular fa-pen-to-square"></i>
 
-                                            </a>
+                                            </button>
 
 
                                             <!-- DELETE -->
@@ -543,6 +607,50 @@ $totalCategories = count($categories);
     </div>
 
 
+    <!-- Category-only IDs and overrides leave the product modal unchanged. -->
+    <div
+        id="addCategoryModal"
+        class="form-modal<?= $categoryModalOpen ? ' is-open' : '' ?>"
+        aria-hidden="<?= $categoryModalOpen ? 'false' : 'true' ?>"
+    >
+        <div class="form-modal-backdrop" data-close-category-modal></div>
+        <div class="form-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="addCategoryTitle" tabindex="-1">
+            <form action="./categories.php" method="POST" id="addCategoryForm" class="purevia-form" data-delete-action="<?= BASE_URL ?>/admin/categories/delete_category.php" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= categoryEscape($_SESSION['csrf_category']) ?>">
+                <input type="hidden" name="category_action" value="<?= $categoryEditing ? 'update' : 'create' ?>">
+                <input type="hidden" name="category_id" value="<?= $categoryEditing && $categoryId ? $categoryId : '' ?>">
+
+                <header class="form-modal-header">
+                    <h2 id="addCategoryTitle"><?= $categoryEditing ? 'Edit Category' : 'Add Category' ?></h2>
+                    <button type="button" class="form-modal-close" data-close-category-modal aria-label="Close category form">
+                        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                </header>
+
+                <div class="form-modal-body">
+                    <p id="categoryFormError" class="category-field-error" role="alert"<?= $categoryFormError === '' ? ' hidden' : '' ?>><?= categoryEscape($categoryFormError) ?></p>
+
+                    <div class="form-group">
+                        <label for="categoryName">Category Name <span class="form-required" aria-hidden="true">*</span></label>
+                        <input type="text" id="categoryName" name="category_name" class="form-control" placeholder="e.g. Essences" maxlength="100" aria-required="true" aria-describedby="categoryNameError" aria-invalid="<?= isset($categoryErrors['category_name']) ? 'true' : 'false' ?>" value="<?= categoryEscape($categoryName) ?>">
+                        <span id="categoryNameError" class="category-field-error" role="alert"<?= isset($categoryErrors['category_name']) ? '' : ' hidden' ?>><?= categoryEscape($categoryErrors['category_name'] ?? '') ?></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoryDescription">Description</label>
+                        <textarea id="categoryDescription" name="description" class="form-control form-textarea" placeholder="Brief description of this category" rows="3" maxlength="5000" aria-describedby="categoryDescriptionError" aria-invalid="<?= isset($categoryErrors['description']) ? 'true' : 'false' ?>"><?= categoryEscape($categoryDescription) ?></textarea>
+                        <span id="categoryDescriptionError" class="category-field-error" role="alert"<?= isset($categoryErrors['description']) ? '' : ' hidden' ?>><?= categoryEscape($categoryErrors['description'] ?? '') ?></span>
+                    </div>
+                </div>
+
+                <footer class="form-modal-footer">
+                    <button type="button" class="form-cancel-button" data-close-category-modal>Cancel</button>
+                    <button type="submit" class="form-submit-button"><?= $categoryEditing ? 'Save Changes' : 'Add Category' ?></button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
     <!-- SIDEBAR JS -->
 
     <script src="../../assets/js/sidemenu.js"></script>
@@ -555,6 +663,7 @@ $totalCategories = count($categories);
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
 </body>
 
 </html>

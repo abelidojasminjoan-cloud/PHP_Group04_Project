@@ -1,7 +1,7 @@
 
 <?php
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 $pageTitle = 'Shop All Products | PureVia';
 
@@ -65,7 +65,7 @@ function shopImage(?string $path): string
 
     // Verify local product image exists.
     $fullPath = __DIR__ .
-        '/uploads/products/' .
+        '/../uploads/products/' .
         $filename;
 
     if (is_file($fullPath)) {
@@ -399,7 +399,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
 <body>
 
-<?php include __DIR__ . '/includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="shop-page">
 
@@ -850,7 +850,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
                     $fullStars = min(5, max(0, (int) round($rating)));
 
-                    $productUrl = BASE_URL . '/product.php?id=' . $productId;
+                    $productUrl = BASE_URL . '/public/product.php?id=' . $productId;
 
                     ?>
 
@@ -1059,7 +1059,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
 </main>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
 
 <script src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/shop.js"></script>

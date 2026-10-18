@@ -13,7 +13,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 ========================================= */
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -113,7 +113,17 @@ if (empty($_SESSION['csrf_token'])) {
    FLASH MESSAGES
 ========================================= */
 
-$error = (string) ($_SESSION['profile_error'] ?? '');
+$fieldErrors = $_SESSION['profile_field_errors'] ?? [];
+$oldProfile = $_SESSION['profile_old'] ?? [];
+$photoError = (string) ($_SESSION['profile_photo_error'] ?? '');
+unset($_SESSION['profile_photo_error']);
+unset($_SESSION['profile_field_errors'], $_SESSION['profile_old']);
+foreach (['first_name','last_name','phone','gender','birth_date'] as $field) {
+    if (isset($oldProfile[$field]) && is_string($oldProfile[$field])) $user[$field] = $oldProfile[$field];
+}
+$firstName = $user['first_name'];
+$lastName = $user['last_name'];
+$error = $fieldErrors ? '' : (string) ($_SESSION['profile_error'] ?? '');
 $success = (string) ($_SESSION['profile_success'] ?? '');
 
 unset(
@@ -284,7 +294,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                 <div class="account-sidebar-divider"></div>
 
                 <a
-                    href="<?= BASE_URL ?>/my-orders.php"
+                    href="<?= BASE_URL ?>/public/my-orders.php"
                     class="account-nav-item"
                 >
                     <span>📦</span>
@@ -292,7 +302,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                 </a>
 
                 <a
-                    href="<?= BASE_URL ?>/shop.php"
+                    href="<?= BASE_URL ?>/public/shop.php"
                     class="account-nav-item"
                 >
                     <span>🛒</span>
@@ -320,7 +330,7 @@ $currentGender = (string) ($user['gender'] ?? '');
             <?php if ($error !== ''): ?>
 
                 <div
-                    class="account-alert error"
+                    class="account-form-error"
                     role="alert"
                 >
                     <?= e($error) ?>
@@ -351,10 +361,11 @@ $currentGender = (string) ($user['gender'] ?? '');
 
                 <div class="account-edit-card">
 
-                    <form
+                    <form novalidate
                         method="POST"
                         action="<?= BASE_URL ?>/actions/account/update_profile.php"
                         id="profileEditForm"
+                        data-field-errors="<?= e(json_encode($fieldErrors, JSON_THROW_ON_ERROR)) ?>"
                     >
 
                         <input
@@ -384,7 +395,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                                         aria-label="First Name"
                                         maxlength="100"
                                         autocomplete="given-name"
-                                        required
+                                        aria-required="true"
                                     >
 
                                     <input
@@ -396,7 +407,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                                         aria-label="Last Name"
                                         maxlength="100"
                                         autocomplete="family-name"
-                                        required
+                                        aria-required="true"
                                     >
 
                                 </div>
@@ -574,8 +585,9 @@ $currentGender = (string) ($user['gender'] ?? '');
 
                     <!-- PHOTO UPLOAD FORM -->
 
-                    <form
+                    <form novalidate
                         id="profilePhotoForm"
+                        data-field-errors="<?= e(json_encode(['profile_photo' => $photoError], JSON_THROW_ON_ERROR)) ?>"
                         method="POST"
                         enctype="multipart/form-data"
                         action="<?= BASE_URL ?>/actions/account/profile_photo.php"
@@ -593,7 +605,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                             id="profilePhotoInput"
                             accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                             hidden
-                            required
+                            aria-required="true"
                         >
 
                         <button

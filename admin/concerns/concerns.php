@@ -1,108 +1,151 @@
 <?php
-
-session_start();
 require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../config/db.php';
 
-$pageTitle = "Skin Concerns";
+$pageTitle = 'Skin Concerns';
 
+function concernEscape(?string $value): string
+{
+    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+}
 
-/* =========================================================
-   TEMPORARY ADMIN SESSION
-   Remove this when your login/session is fully connected
-========================================================= */
+$adminId = (int) ($_SESSION['user_id'] ?? 0);
+$stmt = $conn->prepare("
+    SELECT u.id FROM users u
+    INNER JOIN roles r ON r.id = u.role_id
+    WHERE u.id = ? AND u.status = 'active' AND LOWER(r.role_name) = 'admin'
+    LIMIT 1
+");
+$stmt->bind_param('i', $adminId);
+$stmt->execute();
+$concernAdminAllowed = $stmt->get_result()->num_rows === 1;
+$stmt->close();
 
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
+if (!$concernAdminAllowed) {
+    header('Location: ' . BASE_URL . '/public/index.php');
+    exit;
+}
 
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
+header('Cache-Control: no-store');
+if (empty($_SESSION['csrf_concern'])) {
+    $_SESSION['csrf_concern'] = bin2hex(random_bytes(32));
+}
 
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
+$concernErrors = [];
+$concernFormError = '';
+$concernName = '';
+$concernDescription = '';
+$concernId = 0;
+$concernEditing = false;
+$concernSuccess = $_SESSION['concern_success'] ?? '';
+unset($_SESSION['concern_success']);
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $concernName = is_string($_POST['concern_name'] ?? null)
+        ? trim($_POST['concern_name']) : '';
+    $concernDescription = is_string($_POST['description'] ?? null)
+        ? trim($_POST['description']) : '';
+    $token = $_POST['csrf_token'] ?? null;
+    $concernAction = $_POST['concern_action'] ?? 'create';
+    $concernEditing = $concernAction === 'update';
+    $submittedConcernId = $_POST['concern_id'] ?? '';
+    if ($concernEditing) {
+        $concernId = is_string($submittedConcernId)
+            ? (filter_var($submittedConcernId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0)
+            : 0;
+    }
 
-/* =========================================================
-   SAMPLE SKIN CONCERN DATA
-   Replace this with your MySQL query later
-========================================================= */
+    if (!is_string($token) || !hash_equals($_SESSION['csrf_concern'], $token)) {
+        http_response_code(403);
+        $concernFormError = 'Your session has expired. Refresh the page and try again.';
+    } elseif (!in_array($concernAction, ['create', 'update'], true)
+        || ($concernEditing && !$concernId)
+        || (!$concernEditing && $submittedConcernId !== '')) {
+        http_response_code(400);
+        $concernFormError = 'Invalid concern. Close this form and select the concern again.';
+    } else {
+        if ($concernName === '') {
+            $concernErrors['concern_name'] = 'Please enter a concern name.';
+        } elseif (mb_strlen($concernName, 'UTF-8') > 100) {
+            $concernErrors['concern_name'] = 'Use no more than 100 characters.';
+        }
+        if (!is_string($_POST['description'] ?? '')
+            || mb_strlen($concernDescription, 'UTF-8') > 5000) {
+            $concernErrors['description'] = 'Use no more than 5,000 characters.';
+        }
 
-$skinConcerns = [
+        if (!$concernErrors) {
+            $concernTransactionStarted = false;
+            try {
+                $conn->begin_transaction();
+                $concernTransactionStarted = true;
+                if ($concernEditing) {
+                    $stmt = $conn->prepare('SELECT id FROM skin_concerns WHERE id = ? FOR UPDATE');
+                    $stmt->bind_param('i', $concernId);
+                    $stmt->execute();
+                    $concernExists = $stmt->get_result()->num_rows === 1;
+                    $stmt->close();
+                    if (!$concernExists) {
+                        throw new DomainException('This concern no longer exists. Refresh the list.');
+                    }
+                    $stmt = $conn->prepare('UPDATE skin_concerns SET concern_name = ?, description = ? WHERE id = ?');
+                    $stmt->bind_param('ssi', $concernName, $concernDescription, $concernId);
+                    $stmt->execute();
+                    $recordId = (string) $concernId;
+                    $stmt->close();
+                } else {
+                    $stmt = $conn->prepare("
+                        INSERT INTO skin_concerns (concern_name, description, status)
+                        VALUES (?, ?, 'active')
+                    ");
+                    $stmt->bind_param('ss', $concernName, $concernDescription);
+                    $stmt->execute();
+                    $recordId = (string) $conn->insert_id;
+                    $stmt->close();
+                }
 
-    [
-        'id' => 1,
-        'name' => 'Acne',
-        'description' => 'Treatment and care for acne concerns',
-        'status' => 'active'
-    ],
+                $auditAction = $concernEditing ? 'UPDATE' : 'CREATE';
+                $auditDescription = ($concernEditing ? 'Updated' : 'Added') . ' concern "' . $concernName . '".';
+                $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+                $stmt = $conn->prepare("
+                    INSERT INTO audit_logs (user_id, action, module, record_id, description, ip_address)
+                    VALUES (?, ?, 'Skin Concerns', ?, ?, ?)
+                ");
+                $stmt->bind_param('issss', $adminId, $auditAction, $recordId, $auditDescription, $ipAddress);
+                $stmt->execute();
+                $stmt->close();
+                $conn->commit();
+                $concernTransactionStarted = false;
 
-    [
-        'id' => 2,
-        'name' => 'Aging',
-        'description' => 'Treatment and care for aging concerns',
-        'status' => 'active'
-    ],
+                $_SESSION['concern_success'] = $concernEditing
+                    ? 'Skin concern updated successfully.' : 'Skin concern added successfully.';
+                header('Location: ' . BASE_URL . '/admin/concerns/concerns.php', true, 303);
+                exit;
+            } catch (Throwable $error) {
+                if ($concernTransactionStarted) {
+                    $conn->rollback();
+                }
+                if ($error instanceof mysqli_sql_exception && $error->getCode() === 1062) {
+                    $concernErrors['concern_name'] = 'A concern with this name already exists.';
+                } elseif ($error instanceof DomainException) {
+                    http_response_code(404);
+                    $concernFormError = $error->getMessage();
+                } else {
+                    error_log('Save Concern Error: ' . $error->getMessage());
+                    $concernFormError = 'Unable to save this concern. Please try again.';
+                }
+            }
+        }
+    }
+}
 
-    [
-        'id' => 3,
-        'name' => 'Brightening',
-        'description' => 'Treatment and care for brightening concerns',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 4,
-        'name' => 'Dark Spots',
-        'description' => 'Treatment and care for dark spots concerns',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 5,
-        'name' => 'Dryness',
-        'description' => 'Treatment and care for dryness concerns',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 6,
-        'name' => 'Enlarged Pores',
-        'description' => 'Treatment and care for enlarged pores concerns',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 7,
-        'name' => 'Hyperpigmentation',
-        'description' => 'Treatment and care for hyperpigmentation concerns',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 8,
-        'name' => 'Redness',
-        'description' => 'Treatment and care for redness concerns',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 9,
-        'name' => 'Sensitivity',
-        'description' => 'Treatment and care for sensitive skin concerns',
-        'status' => 'active'
-    ],
-
-    [
-        'id' => 10,
-        'name' => 'Uneven Texture',
-        'description' => 'Treatment and care for uneven skin texture',
-        'status' => 'inactive'
-    ]
-
-];
-
-
+$skinConcerns = $conn->query("
+    SELECT id, concern_name AS name, COALESCE(description, '') AS description, status
+    FROM skin_concerns
+    ORDER BY concern_name
+")->fetch_all(MYSQLI_ASSOC);
 $totalConcerns = count($skinConcerns);
-
+$concernModalOpen = (bool) ($concernErrors || $concernFormError);
 ?>
 
 <!DOCTYPE html>
@@ -156,6 +199,8 @@ $totalConcerns = count($skinConcerns);
 
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form2.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin_delete.css">
 </head>
 
 
@@ -166,7 +211,7 @@ $totalConcerns = count($skinConcerns);
          SIDEBAR
     ====================================================== -->
 
-    <?php include("../../includes/sidemenu.php"); ?>
+    <?php include __DIR__ . '/../../includes/sidemenu.php'; ?>
 
 
     <!-- =====================================================
@@ -219,9 +264,12 @@ $totalConcerns = count($skinConcerns);
 
                 <!-- ADD CONCERN -->
 
-                <a
-                    href="./add_concern.php"
+                <button
+                    type="button"
+                    id="openAddConcernModal"
                     class="add-concern-button"
+                    aria-haspopup="dialog"
+                    aria-controls="addConcernModal"
                 >
 
                     <i class="fa-solid fa-plus"></i>
@@ -230,7 +278,7 @@ $totalConcerns = count($skinConcerns);
                         Add Concern
                     </span>
 
-                </a>
+                </button>
 
 
             </section>
@@ -239,6 +287,10 @@ $totalConcerns = count($skinConcerns);
             <!-- =============================================
                  CARD
             ============================================== -->
+
+            <?php if ($concernSuccess): ?>
+                <p class="form-alert form-alert-success" role="status"><?= concernEscape($concernSuccess) ?></p>
+            <?php endif; ?>
 
             <section class="skin-concerns-card">
 
@@ -434,11 +486,14 @@ $totalConcerns = count($skinConcerns);
 
                                             <!-- EDIT -->
 
-                                            <a
-                                                href="./edit_concern.php?id=<?= urlencode(
-                                                    $concern['id']
-                                                ) ?>"
+                                            <button
+                                                type="button"
                                                 class="skin-concern-action-button edit-concern-button"
+                                                data-concern-id="<?= (int) $concern['id'] ?>"
+                                                data-concern-name="<?= concernEscape($concern['name']) ?>"
+                                                data-concern-description="<?= concernEscape($concern['description']) ?>"
+                                                aria-haspopup="dialog"
+                                                aria-controls="addConcernModal"
                                                 title="Edit concern"
                                                 aria-label="Edit <?= htmlspecialchars(
                                                     $concern['name']
@@ -447,7 +502,7 @@ $totalConcerns = count($skinConcerns);
 
                                                 <i class="fa-regular fa-pen-to-square"></i>
 
-                                            </a>
+                                            </button>
 
 
                                             <!-- DELETE -->
@@ -532,6 +587,53 @@ $totalConcerns = count($skinConcerns);
     </div>
 
 
+    <!-- Concern-only IDs and overrides leave the product modal unchanged. -->
+    <div
+        id="addConcernModal"
+        class="form-modal<?= $concernModalOpen ? ' is-open' : '' ?>"
+        aria-hidden="<?= $concernModalOpen ? 'false' : 'true' ?>"
+    >
+        <div class="form-modal-backdrop" data-close-concern-modal></div>
+        <div class="form-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="addConcernTitle" tabindex="-1">
+            <form action="./concerns.php" method="POST" id="addConcernForm" class="purevia-form" data-delete-action="<?= BASE_URL ?>/admin/concerns/delete_concern.php" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= concernEscape($_SESSION['csrf_concern']) ?>">
+                <input type="hidden" name="concern_action" value="<?= $concernEditing ? 'update' : 'create' ?>">
+                <input type="hidden" name="concern_id" value="<?= $concernEditing && $concernId ? $concernId : '' ?>">
+
+                <header class="form-modal-header">
+                    <div>
+                        <h2 id="addConcernTitle"><?= $concernEditing ? 'Edit Skin Concern' : 'Add Skin Concern' ?></h2>
+                        <p id="concernFormSubtitle"<?= $concernEditing ? '' : ' hidden' ?>><?= concernEscape($concernName) ?></p>
+                    </div>
+                    <button type="button" class="form-modal-close" data-close-concern-modal aria-label="Close concern form">
+                        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                </header>
+
+                <div class="form-modal-body">
+                    <p id="concernFormError" class="concern-field-error" role="alert"<?= $concernFormError === '' ? ' hidden' : '' ?>><?= concernEscape($concernFormError) ?></p>
+
+                    <div class="form-group">
+                        <label for="concernName">Concern Name <span class="form-required" aria-hidden="true">*</span></label>
+                        <input type="text" id="concernName" name="concern_name" class="form-control" placeholder="e.g. Melasma" maxlength="100" aria-required="true" aria-describedby="concernNameError" aria-invalid="<?= isset($concernErrors['concern_name']) ? 'true' : 'false' ?>" value="<?= concernEscape($concernName) ?>">
+                        <span id="concernNameError" class="concern-field-error" role="alert"<?= isset($concernErrors['concern_name']) ? '' : ' hidden' ?>><?= concernEscape($concernErrors['concern_name'] ?? '') ?></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="concernDescription">Description</label>
+                        <textarea id="concernDescription" name="description" class="form-control form-textarea" rows="3" maxlength="5000" aria-describedby="concernDescriptionError" aria-invalid="<?= isset($concernErrors['description']) ? 'true' : 'false' ?>"><?= concernEscape($concernDescription) ?></textarea>
+                        <span id="concernDescriptionError" class="concern-field-error" role="alert"<?= isset($concernErrors['description']) ? '' : ' hidden' ?>><?= concernEscape($concernErrors['description'] ?? '') ?></span>
+                    </div>
+                </div>
+
+                <footer class="form-modal-footer">
+                    <button type="button" class="form-cancel-button" data-close-concern-modal>Cancel</button>
+                    <button type="submit" class="form-submit-button"><?= $concernEditing ? 'Save Changes' : 'Add Concern' ?></button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
     <!-- SIDEBAR JS -->
 
     <script src="../../assets/js/sidemenu.js"></script>
@@ -544,6 +646,7 @@ $totalConcerns = count($skinConcerns);
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
 </body>
 
 </html>

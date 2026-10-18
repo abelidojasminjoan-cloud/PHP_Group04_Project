@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -100,72 +100,42 @@ if ($action === 'create' || $action === 'update') {
         'country' => 100
     ];
 
+    $fieldErrors = [];
     foreach ($fields as $field => $maxLength) {
-
         $value = $_POST[$field] ?? '';
-
         if (!is_string($value)) {
-            addressFail('Invalid form data.', $formUrl);
+            $fieldErrors[$field] = 'Invalid form value.';
+            $value = '';
         }
-
-        $value = trim($value);
-
-        if (mb_strlen($value) > $maxLength) {
-            addressFail(
-                'One or more fields are too long.',
-                $formUrl
-            );
+        $data[$field] = trim($value);
+        if (mb_strlen($data[$field]) > $maxLength) {
+            $fieldErrors[$field] = 'Use no more than ' . $maxLength . ' characters.';
         }
-
-        $data[$field] = $value;
     }
-
     $requiredFields = [
-        'recipient_first_name',
-        'recipient_last_name',
-        'address_line1',
-        'city',
-        'province',
-        'postal_code',
-        'country'
+        'recipient_first_name' => 'first name', 'recipient_last_name' => 'last name',
+        'address_line1' => 'street address', 'city' => 'city', 'province' => 'province',
+        'postal_code' => 'postal code', 'country' => 'country'
     ];
-
-    foreach ($requiredFields as $field) {
-        if ($data[$field] === '') {
-            addressFail(
-                'Please complete all required fields.',
-                $formUrl
-            );
-        }
+    foreach ($requiredFields as $field => $label) {
+        if ($data[$field] === '') $fieldErrors[$field] = 'Please enter your ' . $label . '.';
     }
-
-    if (
-        $data['phone'] !== '' &&
-        !preg_match(
-            '/^[0-9+\s()\-]+$/',
-            $data['phone']
-        )
-    ) {
-        addressFail(
-            'Please enter a valid phone number.',
-            $formUrl
-        );
+    if ($data['phone'] !== '' && !preg_match('/^[0-9+\\s()\\-]+$/', $data['phone'])) {
+        $fieldErrors['phone'] = 'Please enter a valid phone number.';
     }
-
     $addressLabel = $_POST['address_label'] ?? 'Home';
-
-    if (
-        !is_string($addressLabel) ||
-        !in_array(
-            $addressLabel,
-            ['Home', 'Office'],
-            true
-        )
-    ) {
-        addressFail(
-            'Please select a valid address label.',
-            $formUrl
-        );
+    if (!is_string($addressLabel) || !in_array($addressLabel, ['Home','Office'], true)) {
+        $fieldErrors['address_label'] = 'Please select Home or Office.';
+        $addressLabel = 'Home';
+    }
+    if ($fieldErrors) {
+        $_SESSION['address_field_errors'] = $fieldErrors;
+        $_SESSION['address_old'] = $data + [
+            'id' => $action === 'update' ? $addressId : 0,
+            'address_label' => $addressLabel,
+            'is_default' => ($_POST['is_default'] ?? null) === '1' ? 1 : 0
+        ];
+        addressFail('Please check the highlighted fields.', $formUrl);
     }
 
     $isDefault = (

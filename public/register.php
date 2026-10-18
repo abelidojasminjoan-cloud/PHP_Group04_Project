@@ -1,13 +1,13 @@
 
 <?php
-require_once __DIR__ . '/config/app.php';
+require_once __DIR__ . '/../config/app.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
 if (!empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -47,7 +47,7 @@ function escapeHtml(string $value): string {
 <main class="auth-shell">
 
     <section class="auth-visual" aria-label="PureVia skincare">
-        <a class="auth-brand" href="<?= BASE_URL ?>/index.php" aria-label="PureVia home">
+        <a class="auth-brand" href="<?= BASE_URL ?>/public/index.php" aria-label="PureVia home">
             <img src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png" alt="PureVia" width="168" height="168">
         </a>
         <h2 class="auth-visual-title">
@@ -292,7 +292,7 @@ function escapeHtml(string $value): string {
 
             <p class="auth-bottom-link">
                 Already have an account?
-                <a href="<?= BASE_URL ?>/login.php">
+                <a href="<?= BASE_URL ?>/public/login.php">
                     Sign in
                 </a>
             </p>

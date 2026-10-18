@@ -35,11 +35,11 @@
 
             <div class="footer-menu">
 
-                <a href="./login.php">
+                <a href="<?= BASE_URL ?>/public/login.php">
                     Login
                 </a>
 
-                <a href="./register.php">
+                <a href="<?= BASE_URL ?>/public/register.php">
                     Register
                 </a>
 
@@ -65,27 +65,27 @@
 
             <h3>SHOP</h3>
 
-            <a href="./shop.php">
+            <a href="<?= BASE_URL ?>/public/shop.php">
                 All Products
             </a>
 
-            <a href="./shop.php?category=cleansers">
+            <a href="<?= BASE_URL ?>/public/shop.php?category=cleansers">
                 Cleansers
             </a>
 
-            <a href="./shop.php?category=toners">
+            <a href="<?= BASE_URL ?>/public/shop.php?category=toners">
                 Toners
             </a>
 
-            <a href="./shop.php?category=serums">
+            <a href="<?= BASE_URL ?>/public/shop.php?category=serums">
                 Serums
             </a>
 
-            <a href="./shop.php?category=moisturizers">
+            <a href="<?= BASE_URL ?>/public/shop.php?category=moisturizers">
                 Moisturizers
             </a>
 
-            <a href="./shop.php?category=sunscreens">
+            <a href="<?= BASE_URL ?>/public/shop.php?category=sunscreens">
                 Sunscreens
             </a>
 
@@ -100,11 +100,11 @@
 
             <h3>DISCOVER</h3>
 
-            <a href="./skin-type-finder.php">
+            <a href="<?= BASE_URL ?>/skin-type-finder.php">
                 Skin Type Finder
             </a>
 
-            <a href="./skin-match.php">
+            <a href="<?= BASE_URL ?>/skin-match.php">
                 Skin Matching
             </a>
 
@@ -113,17 +113,17 @@
                 $_SESSION['role'] == 'customer'
             ): ?>
 
-                <a href="./account/skin-profile.php">
+                <a href="<?= BASE_URL ?>/account/skin-profile.php">
                     My Skin Profile
                 </a>
 
             <?php endif; ?>
 
-            <a href="./shop.php">
+            <a href="<?= BASE_URL ?>/public/shop.php">
                 Product Ingredients
             </a>
 
-            <a href="./about.php">
+            <a href="<?= BASE_URL ?>/about.php">
                 About PureVia
             </a>
 
@@ -146,23 +146,23 @@
                 $_SESSION['role'] == 'admin'
             ): ?>
 
-                <a href="./admin/dashboard.php">
+                <a href="<?= BASE_URL ?>/admin/dashboard.php">
                     Dashboard
                 </a>
 
-                <a href="./admin/products/index.php">
+                <a href="<?= BASE_URL ?>/admin/products/index.php">
                     Products
                 </a>
 
-                <a href="./admin/categories/index.php">
+                <a href="<?= BASE_URL ?>/admin/categories/index.php">
                     Categories
                 </a>
 
-                <a href="./admin/orders/index.php">
+                <a href="<?= BASE_URL ?>/admin/orders/index.php">
                     Orders
                 </a>
 
-                <a href="./admin/payments/index.php">
+                <a href="<?= BASE_URL ?>/admin/payments/index.php">
                     Payments
                 </a>
 
@@ -174,19 +174,19 @@
                 $_SESSION['role'] == 'staff'
             ): ?>
 
-                <a href="./staff/dashboard.php">
+                <a href="<?= BASE_URL ?>/staff/dashboard.php">
                     Dashboard
                 </a>
 
-                <a href="./staff/products/index.php">
+                <a href="<?= BASE_URL ?>/staff/products/index.php">
                     Products
                 </a>
 
-                <a href="./staff/inventory/index.php">
+                <a href="<?= BASE_URL ?>/staff/inventory/index.php">
                     Inventory
                 </a>
 
-                <a href="./staff/orders/index.php">
+                <a href="<?= BASE_URL ?>/staff/orders/index.php">
                     Orders
                 </a>
 
@@ -198,23 +198,23 @@
                 $_SESSION['role'] == 'customer'
             ): ?>
 
-                <a href="./index.php">
+                <a href="<?= BASE_URL ?>/public/index.php">
                     Home
                 </a>
 
-                <a href="./shop.php">
+                <a href="<?= BASE_URL ?>/public/shop.php">
                     Shop
                 </a>
 
-                <a href="./account/profile.php">
+                <a href="<?= BASE_URL ?>/account/profile.php">
                     My Account
                 </a>
 
-                <a href="./my-orders.php">
+                <a href="<?= BASE_URL ?>/public/my-orders.php">
                     My Orders
                 </a>
 
-                <a href="./cart.php">
+                <a href="<?= BASE_URL ?>/public/cart.php">
                     My Bag
                 </a>
 
@@ -223,19 +223,19 @@
 
             <?php else: ?>
 
-                <a href="./index.php">
+                <a href="<?= BASE_URL ?>/public/index.php">
                     Home
                 </a>
 
-                <a href="./shop.php">
+                <a href="<?= BASE_URL ?>/public/shop.php">
                     Shop
                 </a>
 
-                <a href="./login.php">
+                <a href="<?= BASE_URL ?>/public/login.php">
                     Login
                 </a>
 
-                <a href="./register.php">
+                <a href="<?= BASE_URL ?>/public/register.php">
                     Register
                 </a>
 
@@ -252,27 +252,27 @@
 
             <h3>SUPPORT</h3>
 
-            <a href="./about.php">
+            <a href="<?= BASE_URL ?>/about.php">
                 About Us
             </a>
 
-            <a href="./contact.php">
+            <a href="<?= BASE_URL ?>/contact.php">
                 Contact
             </a>
 
-            <a href="./faq.php">
+            <a href="<?= BASE_URL ?>/faq.php">
                 FAQs
             </a>
 
-            <a href="./shipping.php">
+            <a href="<?= BASE_URL ?>/shipping.php">
                 Shipping & Returns
             </a>
 
-            <a href="./privacy-policy.php">
+            <a href="<?= BASE_URL ?>/privacy-policy.php">
                 Privacy Policy
             </a>
 
-            <a href="./terms.php">
+            <a href="<?= BASE_URL ?>/terms.php">
                 Terms & Conditions
             </a>
 
@@ -316,13 +316,13 @@
 
         <div class="footer-legal">
 
-            <a href="./privacy-policy.php">
+            <a href="<?= BASE_URL ?>/privacy-policy.php">
                 Privacy
             </a>
 
             <span>·</span>
 
-            <a href="./terms.php">
+            <a href="<?= BASE_URL ?>/terms.php">
                 Terms
             </a>
 

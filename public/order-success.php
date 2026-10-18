@@ -1,13 +1,13 @@
 <?php
 
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 $orderId = (int) ($_SESSION['confirmed_order_id'] ?? 0);
 
 if ($userId <= 0 || $orderId <= 0) {
-    header('Location: ' . BASE_URL . '/cart.php');
+    header('Location: ' . BASE_URL . '/public/cart.php');
     exit;
 }
 
@@ -30,7 +30,7 @@ $order = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$order) {
-    header('Location: ' . BASE_URL . '/cart.php');
+    header('Location: ' . BASE_URL . '/public/cart.php');
     exit;
 }
 
@@ -69,7 +69,7 @@ function orderEsc(mixed $value): string
 
 <body>
 
-<?php include __DIR__ . '/includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="pv-success-page">
 
@@ -138,14 +138,14 @@ function orderEsc(mixed $value): string
         <div class="pv-success-actions">
 
             <a
-                href="<?= BASE_URL ?>/my-orders.php"
+                href="<?= BASE_URL ?>/public/my-orders.php"
                 class="pv-success-button pv-success-primary"
             >
                 View My Orders
             </a>
 
             <a
-                href="<?= BASE_URL ?>/shop.php"
+                href="<?= BASE_URL ?>/public/shop.php"
                 class="pv-success-button pv-success-secondary"
             >
                 Continue Shopping

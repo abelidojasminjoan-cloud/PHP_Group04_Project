@@ -4,8 +4,8 @@
    LOAD CONFIGURATION
 ========================================= */
 
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
 
 /* =========================================
    LOGIN MODAL MESSAGE
@@ -167,7 +167,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                     )
                                 );
 
-                                $defaultImage = './assets/images/products/default-product.jpg';
+                                $defaultImage = BASE_URL . '/assets/images/products/default-product.jpg';
 
                                 if ($imagePath === '') {
 
@@ -194,7 +194,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                     // Only allow files in the product uploads directory
                                     $filename = basename($imagePath);
 
-                                    $fullPath = __DIR__ . '/uploads/products/' . $filename;
+                                    $fullPath = __DIR__ . '/../uploads/products/' . $filename;
 
                                     if (
                                         $filename !== '.' &&
@@ -202,7 +202,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                         is_file($fullPath)
                                     ) {
                                         $productImage =
-                                            './uploads/products/' . rawurlencode($filename);
+                                            BASE_URL . '/uploads/products/' . rawurlencode($filename);
                                     } else {
                                         $productImage = $defaultImage;
                                     }
@@ -210,7 +210,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                 ?>
 
                                 <a
-                                    href="./product.php?id=<?= (int) $product['id'] ?>"
+                                    href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $product['id'] ?>"
                                     class="product-image-wrapper"
                                 >
                                     <img
@@ -226,7 +226,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                         ) ?>"
                                         class="product-image"
                                         loading="lazy"
-                                        onerror="this.onerror=null;this.src='./assets/images/products/default-product.jpg';"
+                                        onerror="this.onerror=null;this.src='<?= BASE_URL ?>/assets/images/products/default-product.jpg';"
                                     >
                                 </a>
 
@@ -235,7 +235,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
                                         <h3 class="product-name">
                                             <a
-                                                href="./product.php?id=<?= (int) $product['id'] ?>"
+                                                href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $product['id'] ?>"
                                             >
                                                 <?= htmlspecialchars(
                                                     $product['product_name']
@@ -394,14 +394,14 @@ function renderHomeProductCard(array $product, array $homeVariants): void
         rel="stylesheet"
     >
 
-    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
 
     <!-- Header CSS -->
-    <link rel="stylesheet" href="./assets/css/header.css">
-    <link rel="stylesheet" href="./assets/css/footer.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/header.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/footer.css">
 
-    <link rel="stylesheet" href="./assets/css/form1.css">
-    <link rel="stylesheet" href="./assets/css/search.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form1.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/search.css">
     
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/cart_add.css">
 
@@ -418,7 +418,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
 <body>
 
-    <?php include("./includes/header.php"); ?>
+    <?php include __DIR__ . '/../includes/header.php'; ?>
 
 
     <!-- =====================================
@@ -492,7 +492,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         <div class="hero-actions">
 
                             <a
-                                href="./skin-match.php"
+                                href="<?= BASE_URL ?>/skin-match.php"
                                 class="hero-primary-btn"
                             >
                                 SHOP BY SKIN TYPE
@@ -500,7 +500,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
 
                             <a
-                                href="./skin-type-finder.php"
+                                href="<?= BASE_URL ?>/skin-type-finder.php"
                                 class="hero-secondary-btn"
                             >
                                 See how it works
@@ -579,7 +579,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
             <div class="bestsellers-container">
                 <div class="new-arrivals-heading">
                     <h2 id="newArrivalsTitle">New Arrivals</h2>
-                    <a class="shop-all-link" href="<?= BASE_URL ?>/shop.php">View all products</a>
+                    <a class="shop-all-link" href="<?= BASE_URL ?>/public/shop.php">View all products</a>
                 </div>
                 <div class="new-arrivals-carousel">
                     <div class="new-arrivals-track" id="newArrivalsTrack" tabindex="0" aria-label="New arrival products">
@@ -632,7 +632,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         </p>
 
                         <a
-                            href="./shop.php"
+                            href="<?= BASE_URL ?>/public/shop.php"
                             class="shop-all-link"
                         >
                             <span>SEE ALL PRODUCTS</span>
@@ -1245,14 +1245,14 @@ function renderHomeProductCard(array $product, array $homeVariants): void
          FOOTER
     ====================================== -->
 
-    <?php include("./includes/footer.php"); ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 
 
     <!-- =====================================
          JAVASCRIPT
     ====================================== -->
-    <script src="./assets/js/main.js"></script>
-    <script src="./assets/js/search.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/main.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/search.js"></script>
     <script>
         window.PUREVIA_BASE_URL = <?= json_encode(BASE_URL) ?>;
     </script>

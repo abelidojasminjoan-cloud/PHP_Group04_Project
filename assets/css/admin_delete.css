@@ -1,0 +1,96 @@
+/* Reuse form2.css without changing any product or category form rules. */
+#adminDeleteModal {
+    --admin-delete-width: 500px;
+    --admin-delete-padding: 24px;
+    --admin-delete-green: #3f6b50;
+    --admin-delete-green-hover: #315640;
+    --form-green: var(--admin-delete-green);
+    --form-green-dark: var(--admin-delete-green-hover);
+    z-index: 10020;
+    padding: 16px;
+    font-family: 'Poppins', sans-serif;
+}
+
+#adminDeleteModal .form-modal-dialog {
+    max-width: var(--admin-delete-width);
+    height: auto;
+    max-height: calc(100dvh - 32px);
+    border-radius: 17px;
+}
+
+#adminDeleteModal .form-modal-header {
+    align-items: center;
+    padding: 22px var(--admin-delete-padding);
+}
+
+#adminDeleteModal .form-modal-header h2 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.4;
+}
+
+#adminDeleteModal .form-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+#adminDeleteModal .form-modal-body {
+    padding: 26px var(--admin-delete-padding) 30px;
+    color: #414039;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+#adminDeleteModal #adminDeleteDescription {
+    margin: 0 0 12px;
+}
+
+#adminDeleteModal .admin-delete-note {
+    margin: 0;
+    color: #8d847a;
+    font-size: 13px;
+}
+
+#adminDeleteModal .admin-delete-error {
+    margin: 14px 0 0;
+    color: #b33b35;
+    font-size: 13px;
+}
+
+#adminDeleteModal .admin-delete-error[hidden] {
+    display: none;
+}
+
+#adminDeleteModal .form-modal-footer {
+    padding: 18px var(--admin-delete-padding);
+}
+
+#adminDeleteModal .form-cancel-button,
+#adminDeleteModal .form-submit-button {
+    min-height: 46px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#adminDeleteModal .form-cancel-button:hover {
+    color: var(--admin-delete-green);
+}
+
+#adminDeleteModal button:focus-visible {
+    outline: 2px solid var(--admin-delete-green);
+    outline-offset: 3px;
+}
+
+#adminDeleteModal button:disabled {
+    cursor: wait;
+}
+
+@media (max-width: 480px) {
+    #adminDeleteModal {
+        --admin-delete-padding: 20px;
+    }
+}

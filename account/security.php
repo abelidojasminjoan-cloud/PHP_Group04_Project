@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
@@ -54,6 +54,7 @@ $stmt = $conn->prepare("
         password
     FROM users
     WHERE id = ?
+      AND role_id = 3 AND status = 'active'
     LIMIT 1
 ");
 
@@ -68,78 +69,76 @@ if (!$user) {
     exit('Account not found.');
 }
 
-$errors = [];
+$fieldErrors = [];
+$formError = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $submittedToken = (string) ($_POST['csrf_token'] ?? '');
-
-    if (!hash_equals($csrfToken, $submittedToken)) {
-        $errors[] = 'Invalid request. Please refresh and try again.';
+    $submittedToken = $_POST['csrf_token'] ?? null;
+    if (!is_string($submittedToken) || !is_string($csrfToken) ||
+        !hash_equals($csrfToken, $submittedToken)) {
+        http_response_code(403);
+        $formError = 'Invalid request. Please refresh and try again.';
     } else {
+        $currentPassword = is_string($_POST['current_password'] ?? null) ? $_POST['current_password'] : '';
+        $newPassword = is_string($_POST['new_password'] ?? null) ? $_POST['new_password'] : '';
+        $confirmPassword = is_string($_POST['confirm_password'] ?? null) ? $_POST['confirm_password'] : '';
 
-        $currentPassword = (string) ($_POST['current_password'] ?? '');
-        $newPassword = (string) ($_POST['new_password'] ?? '');
-        $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
-
-        if (
-            $currentPassword === '' ||
-            $newPassword === '' ||
-            $confirmPassword === ''
-        ) {
-            $errors[] = 'Please complete all password fields.';
+        if ($currentPassword === '') {
+            $fieldErrors['current_password'] = 'Please enter your current password.';
+        } elseif (!password_verify($currentPassword, (string) $user['password'])) {
+            $fieldErrors['current_password'] = 'Your current password is incorrect.';
         }
 
-        if (
-            $currentPassword !== '' &&
-            !password_verify($currentPassword, (string) $user['password'])
-        ) {
-            $errors[] = 'Your current password is incorrect.';
+        if ($newPassword === '') {
+            $fieldErrors['new_password'] = 'Please create a new password.';
+        } elseif (strlen($newPassword) < 12) {
+            $fieldErrors['new_password'] = 'Password must contain at least 12 characters.';
+        } elseif (strlen($newPassword) > 128) {
+            $fieldErrors['new_password'] = 'Password must not exceed 128 bytes.';
+        } elseif (!preg_match('/[A-Z]/', $newPassword)) {
+            $fieldErrors['new_password'] = 'Password must contain at least one uppercase letter.';
+        } elseif (!preg_match('/[a-z]/', $newPassword)) {
+            $fieldErrors['new_password'] = 'Password must contain at least one lowercase letter.';
+        } elseif (!preg_match('/[0-9]/', $newPassword)) {
+            $fieldErrors['new_password'] = 'Password must contain at least one number.';
+        } elseif (!preg_match('/[^A-Za-z0-9]/', $newPassword)) {
+            $fieldErrors['new_password'] = 'Password must contain at least one special character.';
+        } elseif ($currentPassword !== '' && hash_equals($currentPassword, $newPassword)) {
+            $fieldErrors['new_password'] = 'New password must be different from your current password.';
         }
 
-        if (strlen($newPassword) < 12) {
-            $errors[] = 'New password must contain at least 12 characters.';
+        if ($confirmPassword === '') {
+            $fieldErrors['confirm_password'] = 'Please confirm your new password.';
+        } elseif ($newPassword !== $confirmPassword) {
+            $fieldErrors['confirm_password'] = 'Passwords do not match.';
         }
 
-        if (strlen($newPassword) > 128) {
-            $errors[] = 'New password must not exceed 128 bytes.';
-        }
-
-        if ($newPassword !== $confirmPassword) {
-            $errors[] = 'New passwords do not match.';
-        }
-
-        if (
-            $currentPassword !== '' &&
-            $newPassword !== '' &&
-            hash_equals($currentPassword, $newPassword)
-        ) {
-            $errors[] = 'New password must be different from your current password.';
-        }
-
-        if (!$errors) {
-            $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-
-            $update = $conn->prepare("
-                UPDATE users
-                SET password = ?
-                WHERE id = ?
-            ");
-
-            $update->bind_param('si', $newHash, $userId);
-
-            if ($update->execute()) {
-                session_regenerate_id(true);
-                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-                $csrfToken = $_SESSION['csrf_token'];
-
-                $success = 'Your password has been updated successfully.';
-            } else {
-                $errors[] = 'Unable to update your password. Please try again.';
+        if (!$fieldErrors) {
+            try {
+                $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+                // A concurrent password change must not be overwritten.
+                $update = $conn->prepare("
+                    UPDATE users SET password = ?
+                    WHERE id = ? AND password = ? AND role_id = 3 AND status = 'active'
+                ");
+                $oldHash = $user['password'];
+                $update->bind_param('sis', $newHash, $userId, $oldHash);
+                $update->execute();
+                $changed = $update->affected_rows === 1;
+                $update->close();
+                if ($changed) {
+                    session_regenerate_id(true);
+                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                    $csrfToken = $_SESSION['csrf_token'];
+                    $success = 'Your password has been updated successfully.';
+                } else {
+                    $formError = 'Your account changed. Please refresh and try again.';
+                }
+            } catch (Throwable $error) {
+                error_log('Account password update failed: ' . $error->getMessage());
+                $formError = 'Unable to update your password. Please try again.';
             }
-
-            $update->close();
         }
     }
 }
@@ -269,12 +268,12 @@ $initials = secInitials($name);
 
                     <div class="sec-nav-divider"></div>
 
-                    <a href="<?= BASE_URL ?>/my-orders.php">
+                    <a href="<?= BASE_URL ?>/public/my-orders.php">
                         <span>📦</span>
                         My Orders
                     </a>
 
-                    <a href="<?= BASE_URL ?>/shop.php">
+                    <a href="<?= BASE_URL ?>/public/shop.php">
                         <span>🛒</span>
                         Shop
                     </a>
@@ -293,15 +292,7 @@ $initials = secInitials($name);
 
                     <h3>Change Password</h3>
 
-                    <?php if ($errors): ?>
-
-                        <div class="sec-alert sec-alert-error" role="alert">
-                            <?php foreach ($errors as $error): ?>
-                                <p><?= secEsc($error) ?></p>
-                            <?php endforeach; ?>
-                        </div>
-
-                    <?php endif; ?>
+                    <p class="sec-field-error" id="secFormError" role="alert" <?= $formError === '' ? 'hidden' : '' ?>><?= secEsc($formError) ?></p>
 
                     <?php if ($success !== ''): ?>
 
@@ -312,7 +303,7 @@ $initials = secInitials($name);
 
                     <?php endif; ?>
 
-                    <form
+                    <form novalidate
                         id="secPasswordForm"
                         action="<?= BASE_URL ?>/account/security.php"
                         method="POST"
@@ -339,23 +330,33 @@ $initials = secInitials($name);
                                     type="password"
                                     id="currentPassword"
                                     name="current_password"
+                                    placeholder="Enter your current password"
                                     autocomplete="current-password"
-                                    required
+                                    aria-invalid="<?= isset($fieldErrors['current_password']) ? 'true' : 'false' ?>"
+                                    aria-describedby="currentPasswordError"
+                                    aria-required="true"
                                 >
 
                                 <button
                                     type="button"
                                     class="sec-toggle-password"
                                     data-target="currentPassword"
+                                    aria-controls="currentPassword"
                                     hidden
                                     aria-label="Show current password"
                                     aria-pressed="false"
                                 >
-                                    <i class="fa-regular fa-eye"></i>
+                                    <div class="sec-password-icon" aria-hidden="true">
+                                    <!-- Font Awesome Free 7.2.0, Fonticons, Inc. https://fontawesome.com/license/free -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
+                                    <path d="M320 96C239.2 96 174.5 132.8 127.4 176.6C80.6 220.1 49.3 272 34.4 307.7C31.1 315.6 31.1 324.4 34.4 332.3C49.3 368 80.6 420 127.4 463.4C174.5 507.1 239.2 544 320 544C400.8 544 465.5 507.2 512.6 463.4C559.4 419.9 590.7 368 605.6 332.3C608.9 324.4 608.9 315.6 605.6 307.7C590.7 272 559.4 220 512.6 176.6C465.5 132.9 400.8 96 320 96zM176 320C176 240.5 240.5 176 320 176C399.5 176 464 240.5 464 320C464 399.5 399.5 464 320 464C240.5 464 176 399.5 176 320zM320 256C320 291.3 291.3 320 256 320C244.5 320 233.7 317 224.3 311.6C223.3 322.5 224.2 333.7 227.2 344.8C240.9 396 293.6 426.4 344.8 412.7C396 399 426.4 346.3 412.7 295.1C400.5 249.4 357.2 220.3 311.6 224.3C316.9 233.6 320 244.4 320 256z"/>
+                                    </svg>
+                                    </div>
                                 </button>
 
                             </div>
 
+                            <span class="sec-field-error" id="currentPasswordError" role="alert" <?= isset($fieldErrors['current_password']) ? '' : 'hidden' ?>><?= secEsc($fieldErrors['current_password'] ?? '') ?></span>
                         </div>
 
                         <!-- NEW PASSWORD -->
@@ -372,29 +373,64 @@ $initials = secInitials($name);
                                     type="password"
                                     id="newPassword"
                                     name="new_password"
-                                    placeholder="Min. 12 characters"
+                                    placeholder="At least 12 characters"
                                     autocomplete="new-password"
                                     minlength="12"
                                     maxlength="128"
-                                    required
+                                    aria-invalid="<?= isset($fieldErrors['new_password']) ? 'true' : 'false' ?>"
+                                    aria-describedby="newPasswordError newPasswordFeedback"
+                                    aria-required="true"
                                 >
 
                                 <button
                                     type="button"
                                     class="sec-toggle-password"
                                     data-target="newPassword"
+                                    aria-controls="newPassword"
                                     hidden
                                     aria-label="Show new password"
                                     aria-pressed="false"
                                 >
-                                    <i class="fa-regular fa-eye"></i>
+                                    <div class="sec-password-icon" aria-hidden="true">
+                                    <!-- Font Awesome Free 7.2.0, Fonticons, Inc. https://fontawesome.com/license/free -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
+                                    <path d="M320 96C239.2 96 174.5 132.8 127.4 176.6C80.6 220.1 49.3 272 34.4 307.7C31.1 315.6 31.1 324.4 34.4 332.3C49.3 368 80.6 420 127.4 463.4C174.5 507.1 239.2 544 320 544C400.8 544 465.5 507.2 512.6 463.4C559.4 419.9 590.7 368 605.6 332.3C608.9 324.4 608.9 315.6 605.6 307.7C590.7 272 559.4 220 512.6 176.6C465.5 132.9 400.8 96 320 96zM176 320C176 240.5 240.5 176 320 176C399.5 176 464 240.5 464 320C464 399.5 399.5 464 320 464C240.5 464 176 399.5 176 320zM320 256C320 291.3 291.3 320 256 320C244.5 320 233.7 317 224.3 311.6C223.3 322.5 224.2 333.7 227.2 344.8C240.9 396 293.6 426.4 344.8 412.7C396 399 426.4 346.3 412.7 295.1C400.5 249.4 357.2 220.3 311.6 224.3C316.9 233.6 320 244.4 320 256z"/>
+                                    </svg>
+                                    </div>
                                 </button>
 
                             </div>
 
-                            <p class="sec-field-hint" id="secPasswordHint">
-                                Use at least 12 characters.
-                            </p>
+                            <span class="sec-field-error" id="newPasswordError" role="alert" <?= isset($fieldErrors['new_password']) ? '' : 'hidden' ?>><?= secEsc($fieldErrors['new_password'] ?? '') ?></span>
+                            <div class="sec-password-feedback" id="newPasswordFeedback" hidden>
+                        <p class="sec-password-strength">
+                            Password strength:
+                            <strong id="newPasswordStrength" data-level="empty" aria-live="polite" aria-atomic="true">Not set</strong>
+                        </p>
+                        <ul class="sec-password-checklist">
+                            <?php foreach ([
+                                'length' => 'At least 12 characters',
+                                'uppercase' => 'One uppercase letter',
+                                'lowercase' => 'One lowercase letter',
+                                'number' => 'One number',
+                                'symbol' => 'One special character'
+                            ] as $passwordRuleKey => $passwordRuleLabel): ?>
+                                <li data-password-rule="<?= secEsc($passwordRuleKey) ?>" data-met="false">
+                                    <div class="sec-rule-icon" aria-hidden="true">
+                                        <svg class="sec-rule-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
+                                            <!-- Font Awesome Free 7.2.0, Fonticons, Inc. https://fontawesome.com/license/free -->
+                                            <path d="M530.8 134.1C545.1 144.5 548.3 164.5 537.9 178.8L281.9 530.8C276.4 538.4 267.9 543.1 258.5 543.9C249.1 544.7 240 541.2 233.4 534.6L105.4 406.6C92.9 394.1 92.9 373.8 105.4 361.3C117.9 348.8 138.2 348.8 150.7 361.3L252.2 462.8L486.2 141.1C496.6 126.8 516.6 123.6 530.9 134z"/>
+                                        </svg>
+                                        <svg class="sec-rule-x" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
+                                            <!-- Font Awesome Free 7.3.1, Fonticons, Inc. https://fontawesome.com/license/free -->
+                                            <path d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"/>
+                                        </svg>
+                                    </div>
+                                    <span><?= secEsc($passwordRuleLabel) ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
 
                         </div>
 
@@ -416,30 +452,33 @@ $initials = secInitials($name);
                                     autocomplete="new-password"
                                     minlength="12"
                                     maxlength="128"
-                                    required
+                                    aria-invalid="<?= isset($fieldErrors['confirm_password']) ? 'true' : 'false' ?>"
+                                    aria-describedby="confirmPasswordError"
+                                    aria-required="true"
                                 >
 
                                 <button
                                     type="button"
                                     class="sec-toggle-password"
                                     data-target="confirmPassword"
+                                    aria-controls="confirmPassword"
                                     hidden
                                     aria-label="Show confirmed password"
                                     aria-pressed="false"
                                 >
-                                    <i class="fa-regular fa-eye"></i>
+                                    <div class="sec-password-icon" aria-hidden="true">
+                                    <!-- Font Awesome Free 7.2.0, Fonticons, Inc. https://fontawesome.com/license/free -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
+                                    <path d="M320 96C239.2 96 174.5 132.8 127.4 176.6C80.6 220.1 49.3 272 34.4 307.7C31.1 315.6 31.1 324.4 34.4 332.3C49.3 368 80.6 420 127.4 463.4C174.5 507.1 239.2 544 320 544C400.8 544 465.5 507.2 512.6 463.4C559.4 419.9 590.7 368 605.6 332.3C608.9 324.4 608.9 315.6 605.6 307.7C590.7 272 559.4 220 512.6 176.6C465.5 132.9 400.8 96 320 96zM176 320C176 240.5 240.5 176 320 176C399.5 176 464 240.5 464 320C464 399.5 399.5 464 320 464C240.5 464 176 399.5 176 320zM320 256C320 291.3 291.3 320 256 320C244.5 320 233.7 317 224.3 311.6C223.3 322.5 224.2 333.7 227.2 344.8C240.9 396 293.6 426.4 344.8 412.7C396 399 426.4 346.3 412.7 295.1C400.5 249.4 357.2 220.3 311.6 224.3C316.9 233.6 320 244.4 320 256z"/>
+                                    </svg>
+                                    </div>
                                 </button>
 
                             </div>
 
-                            <p class="sec-field-hint" id="secConfirmHint"></p>
+                            <span class="sec-field-error" id="confirmPasswordError" role="alert" <?= isset($fieldErrors['confirm_password']) ? '' : 'hidden' ?>><?= secEsc($fieldErrors['confirm_password'] ?? '') ?></span>
 
                         </div>
-
-                        <p class="sec-client-error"
-                           id="secClientError"
-                           role="alert"
-                           hidden></p>
 
                         <button
                             type="submit"

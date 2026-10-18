@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let requestId = 0;
 
     function searchUrl(query) {
-        return BASE_URL + "/shop.php?q=" +
+        return BASE_URL + "/public/shop.php?q=" +
             encodeURIComponent(query);
     }
 
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
             link.href = BASE_URL +
-                "/product.php?id=" +
+                "/public/product.php?id=" +
                 encodeURIComponent(product.id);
 
             const imageBox = createElement(

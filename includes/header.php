@@ -69,7 +69,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
 
                 
                 <a
-                    href="<?= BASE_URL ?>/index.php"
+                    href="<?= BASE_URL ?>/public/index.php"
                     class="brand"
                     aria-label="PureVia Home"
                 >
@@ -86,7 +86,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                 <nav class="main-nav">
 
                     <a
-                        href="<?= BASE_URL ?>/shop.php"
+                        href="<?= BASE_URL ?>/public/shop.php"
                         class="<?= $currentPage === 'shop.php' ? 'active' : '' ?>"
                     >
                         SHOP
@@ -188,7 +188,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                             </a>
 
                             <a
-                                href="<?= BASE_URL ?>/my-orders.php"
+                                href="<?= BASE_URL ?>/public/my-orders.php"
                                 class="account-dropdown-item"
                             >
                                 <i class="fa-solid fa-box"></i>
@@ -238,7 +238,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                 <?php else: ?>
 
                     <a
-                        href="<?= BASE_URL ?>/login.php"
+                        href="<?= BASE_URL ?>/public/login.php"
                         class="nav-icon guest-account-icon"
                         aria-label="Sign in"
                     >
@@ -264,7 +264,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                 <!-- SHOPPING BAG -->
 
                 <a
-                    href="<?= BASE_URL ?>/cart.php"
+                    href="<?= BASE_URL ?>/public/cart.php"
                     class="bag-link"
                     aria-label="Shopping Bag, <?= (int) $cartCount ?> <?= $cartCount === 1 ? 'item' : 'items' ?>"
                 >
@@ -401,7 +401,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                             <!-- VIEW ALL RESULTS -->
 
                             <a
-                                href="<?= BASE_URL ?>/shop.php"
+                                href="<?= BASE_URL ?>/public/shop.php"
                                 class="pv-search-view-all"
                                 id="pvSearchViewAll"
                             >

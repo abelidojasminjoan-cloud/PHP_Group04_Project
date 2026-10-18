@@ -12,7 +12,7 @@ $redirect = BASE_URL . '/account/profile.php';
 function photoError(string $message): never {
     global $redirect;
 
-    $_SESSION['profile_error'] = $message;
+    $_SESSION['profile_photo_error'] = $message;
     header('Location: ' . $redirect, true, 303);
     exit;
 }
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/index.php');
+    header('Location: ' . BASE_URL . '/public/index.php');
     exit;
 }
 
