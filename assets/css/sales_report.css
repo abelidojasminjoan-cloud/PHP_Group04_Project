@@ -1,0 +1,848 @@
+/* ==========================================
+   PUREVIA - SALES REPORT
+========================================== */
+
+:root {
+    --report-bg: #f8f5ef;
+    --report-white: #ffffff;
+    --report-text: #151914;
+    --report-muted: #8a786d;
+    --report-border: #ded5ca;
+
+    --report-green: #53634b;
+    --report-green-dark: #40513c;
+
+    --report-revenue: #07995a;
+    --report-blue: #397ddc;
+    --report-purple: #9255ed;
+    --report-orange: #e87b20;
+}
+
+/* RESET */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    color: var(--report-text);
+    background: var(--report-bg);
+}
+
+button,
+a {
+    font-family: inherit;
+}
+
+/* PAGE LAYOUT */
+
+/*
+The existing sidemenu.css manages the
+admin-layout's left margin.
+Do not add another sidebar margin here.
+*/
+
+main.sales-page {
+    min-height: 100vh;
+    background: var(--report-bg);
+}
+
+
+/* ==========================================
+   SALES REPORT - MATCH PAYMENTS LAYOUT
+========================================== */
+
+.sales-page {
+    min-height: 100vh;
+    background: #f8f5ef;
+}
+
+/* DARK GREEN TOP BAR - SAME AS PAYMENTS */
+
+.sales-page>.admin-topbar {
+    width: 100%;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 30px;
+
+    background: #31382c;
+    border-bottom: 1px solid #4a5144;
+}
+
+.sales-page>.admin-topbar .admin-topbar-title {
+    margin: 0;
+
+    color: #f8f6f0;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* MAIN CONTENT - SAME PADDING AS PAYMENTS */
+
+.sales-content {
+    width: 100%;
+    padding: 30px 28px 50px;
+}
+
+/* PAGE HEADER */
+
+.sales-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* REPORTS HEADING */
+
+.sales-heading h1 {
+    margin: 0 0 5px;
+
+    color: #11130f;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: normal;
+}
+
+/* SUBTITLE */
+
+.sales-heading p {
+    margin: 0;
+
+    color: #8a786d;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    line-height: normal;
+}
+
+/* EXPORT BUTTON */
+
+.sales-export {
+    align-self: center;
+}
+
+/* RESPONSIVE - SAME BREAKPOINTS AS PAYMENTS */
+
+@media (max-width: 800px) {
+    .sales-page>.admin-topbar {
+        padding-left: 75px;
+    }
+
+    .sales-content {
+        padding: 28px 22px 40px;
+    }
+}
+
+@media (max-width: 550px) {
+    .sales-page>.admin-topbar {
+        height: 65px;
+        padding-left: 70px;
+        padding-right: 18px;
+    }
+
+    .sales-content {
+        padding: 24px 15px 35px;
+    }
+
+    .sales-title-row {
+        align-items: flex-start;
+        flex-direction: column;
+        margin-bottom: 22px;
+    }
+
+    .sales-heading h1 {
+        font-size: 29px;
+    }
+}
+
+
+/* EXPORT CSV */
+
+.sales-export {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+
+    min-height: 54px;
+    padding: 0 23px;
+
+    border: 1px solid var(--report-green);
+    border-radius: 12px;
+
+    background: var(--report-green);
+    color: #ffffff;
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease;
+}
+
+.sales-export:hover {
+    color: #ffffff;
+    background: var(--report-green-dark);
+    border-color: var(--report-green-dark);
+}
+
+.sales-export i {
+    font-size: 15px;
+}
+
+.sales-export.is-exporting {
+    opacity: .75;
+    pointer-events: none;
+}
+
+/* ==========================================
+   FOUR SUMMARY CARDS
+========================================== */
+
+.sales-summary-dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 17px;
+    margin-bottom: 24px;
+}
+
+.analytics-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    min-width: 0;
+    min-height: 182px;
+
+    padding: 24px;
+    border: 1px solid var(--report-border);
+    border-radius: 17px;
+
+    background: var(--report-white);
+}
+
+/* ICON SQUARES */
+
+.analytics-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 47px;
+    height: 47px;
+
+    margin-bottom: 22px;
+    border-radius: 12px;
+    font-size: 22px;
+}
+
+.analytics-card strong {
+    display: block;
+    max-width: 100%;
+    margin-bottom: 7px;
+
+    font-size: clamp(20px, 1.7vw, 28px);
+    font-weight: 700;
+    line-height: 1.25;
+
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.analytics-card>span {
+    color: var(--report-muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* REVENUE */
+
+.revenue-card .analytics-icon {
+    background: #dff4e8;
+    color: var(--report-revenue);
+}
+
+.revenue-card strong {
+    color: var(--report-revenue);
+}
+
+/* ORDERS */
+
+.orders-card .analytics-icon {
+    background: #e2edfd;
+    color: var(--report-blue);
+}
+
+.orders-card strong {
+    color: var(--report-blue);
+}
+
+/* AVERAGE ORDER VALUE */
+
+.avg-card .analytics-icon {
+    background: #f0e6ff;
+    color: var(--report-purple);
+}
+
+.avg-card strong {
+    color: var(--report-purple);
+}
+
+/* DELIVERY RATE */
+
+.delivery-card .analytics-icon {
+    background: #faeade;
+    color: var(--report-orange);
+}
+
+.delivery-card strong {
+    color: var(--report-orange);
+}
+
+/* ==========================================
+   CONTENT PANELS
+========================================== */
+
+.sales-report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.dashboard-panel {
+    min-width: 0;
+    overflow: hidden;
+
+    border: 1px solid var(--report-border);
+    border-radius: 17px;
+    background: var(--report-white);
+}
+
+.dashboard-panel-header {
+    display: flex;
+    align-items: center;
+
+    min-height: 68px;
+    padding: 18px 23px;
+
+    border-bottom: 1px solid #e9e0d6;
+}
+
+.dashboard-panel-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin: 0;
+
+    color: #171914;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.dashboard-panel-header h2 i {
+    color: #df7436;
+    font-size: 15px;
+}
+
+/* ==========================================
+   TOP PRODUCTS BY REVENUE
+========================================== */
+
+.top-products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    min-height: 365px;
+    padding: 17px 20px 21px;
+}
+
+.top-product-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    min-height: 72px;
+    padding: 8px 0;
+}
+
+.top-product-left {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    min-width: 0;
+    flex: 1;
+}
+
+.top-product-rank {
+    flex-shrink: 0;
+    width: 27px;
+
+    color: #87908a;
+    font-size: 14px;
+}
+
+.top-product-thumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+
+    overflow: hidden;
+
+    border: 1px solid #e4d9cc;
+    border-radius: 9px;
+
+    background: #f3efe9;
+    color: var(--report-green);
+}
+
+.top-product-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.top-product-thumb i {
+    font-size: 18px;
+}
+
+.top-product-info {
+    min-width: 0;
+}
+
+.top-product-info h3 {
+    margin: 0 0 4px;
+
+    color: #151914;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+
+    overflow-wrap: anywhere;
+}
+
+.top-product-info p {
+    margin: 0;
+
+    color: var(--report-muted);
+    font-size: 12px;
+}
+
+.top-product-revenue {
+    flex-shrink: 0;
+
+    color: var(--report-revenue);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+
+    font-variant-numeric: tabular-nums;
+}
+
+/* NO SALES MESSAGE */
+
+.sales-empty-products {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+
+    min-height: 290px;
+    padding: 25px;
+
+    color: #a08d7b;
+    text-align: center;
+}
+
+.sales-empty-products i {
+    font-size: 28px;
+    color: var(--report-green);
+}
+
+.sales-empty-products p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ==========================================
+   REVENUE BY CATEGORY
+========================================== */
+
+.category-revenue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+
+    padding: 23px 21px 27px;
+}
+
+.category-row {
+    min-width: 0;
+}
+
+.category-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-bottom: 10px;
+}
+
+.category-row-top span {
+    color: #141714;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.category-row-top strong {
+    color: #697b68;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.category-bar {
+    width: 100%;
+    height: 9px;
+
+    overflow: hidden;
+
+    border-radius: 50px;
+    background: #e9e5de;
+}
+
+.category-bar-fill {
+    width: 0;
+    height: 100%;
+
+    border-radius: inherit;
+    background: #db844d;
+
+    transition: width .7s ease;
+}
+
+/* ==========================================
+   ORDER STATUS BREAKDOWN
+========================================== */
+
+.status-panel {
+    margin-bottom: 24px;
+}
+
+.status-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+
+    padding: 23px 22px 24px;
+}
+
+.status-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+
+    min-height: 130px;
+    padding: 18px 20px;
+
+    border-radius: 15px;
+}
+
+.status-card strong {
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.status-card span {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-card small {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-card.pending {
+    background: #f9ead7;
+    color: #ce8e0f;
+}
+
+.status-card.processing {
+    background: #e3eefe;
+    color: #3078d8;
+}
+
+.status-card.shipped {
+    background: #eee8fc;
+    color: #7d5ae9;
+}
+
+.status-card.delivered {
+    background: #e0f3e9;
+    color: #009b5b;
+}
+
+.status-card.cancelled {
+    background: #fae3e3;
+    color: #e44747;
+}
+
+/* ==========================================
+   USER BREAKDOWN
+========================================== */
+
+.user-breakdown-panel {
+    margin-bottom: 20px;
+}
+
+.user-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+
+    padding: 26px 22px 29px;
+}
+
+.user-breakdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 118px;
+    text-align: center;
+}
+
+.user-breakdown-item i {
+    color: #7d8a7a;
+    font-size: 17px;
+}
+
+.user-breakdown-item strong {
+    color: #283f31;
+    font-size: 31px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.user-breakdown-item span {
+    color: var(--report-muted);
+    font-size: 13px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 1400px) {
+    .sales-content {
+        padding: 30px 28px 50px;
+    }
+
+    .analytics-card {
+        padding: 21px;
+    }
+
+    .status-breakdown-grid {
+        gap: 12px;
+    }
+
+    .status-card {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .sales-summary-dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sales-report-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .status-breakdown-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .sales-topbar {
+        height: 62px;
+        padding: 0 18px;
+    }
+
+    .sales-content {
+        padding: 24px 16px 40px;
+    }
+
+    .sales-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .sales-heading h1 {
+        font-size: 32px;
+    }
+
+    .sales-heading p {
+        font-size: 13px;
+    }
+
+    .sales-export {
+        min-height: 45px;
+        padding: 0 17px;
+        font-size: 12px;
+    }
+
+    .sales-summary-dashboard {
+        gap: 12px;
+    }
+
+    .analytics-card {
+        min-height: 150px;
+        padding: 16px;
+    }
+
+    .analytics-icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 17px;
+        font-size: 18px;
+    }
+
+    .analytics-card strong {
+        font-size: 20px;
+    }
+
+    .analytics-card>span {
+        font-size: 12px;
+    }
+
+    .dashboard-panel-header {
+        padding: 17px;
+        min-height: 60px;
+    }
+
+    .dashboard-panel-header h2 {
+        font-size: 14px;
+    }
+
+    .top-products-list {
+        padding: 13px 15px 18px;
+    }
+
+    .top-product-item {
+        gap: 10px;
+    }
+
+    .top-product-left {
+        gap: 8px;
+    }
+
+    .top-product-info h3 {
+        font-size: 12px;
+    }
+
+    .top-product-revenue {
+        font-size: 12px;
+    }
+
+    .category-revenue-list {
+        padding: 20px 16px 24px;
+    }
+
+    .status-breakdown-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 17px;
+    }
+
+    .status-card {
+        min-height: 112px;
+        padding: 15px;
+    }
+
+    .user-breakdown-grid {
+        gap: 8px;
+        padding: 20px 12px;
+    }
+
+    .user-breakdown-item strong {
+        font-size: 25px;
+    }
+
+    .user-breakdown-item span {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 390px) {
+    .sales-summary-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .status-breakdown-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .user-breakdown-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ACCESSIBILITY */
+
+.sales-export:focus-visible {
+    outline: 3px solid #7a9b79;
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .category-bar-fill,
+    .sales-export {
+        transition: none;
+    }
+}
