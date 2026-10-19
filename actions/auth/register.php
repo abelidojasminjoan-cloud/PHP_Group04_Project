@@ -30,7 +30,6 @@ $lastName = trim((string) ($_POST['last_name'] ?? ''));
 $email = strtolower(trim((string) ($_POST['email'] ?? '')));
 $password = (string) ($_POST['password'] ?? '');
 $confirm = (string) ($_POST['confirm_password'] ?? '');
-$terms = isset($_POST['terms']);
 
 $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
@@ -48,8 +47,7 @@ if (
 $_SESSION['register_data'] = [
     'first_name' => $firstName,
     'last_name' => $lastName,
-    'email' => $email,
-    'terms' => $terms
+    'email' => $email
 ];
 
 $errors = [];
@@ -138,10 +136,6 @@ if (
 
 if ($password !== $confirm) {
     $errors['confirm_password'] = 'Passwords do not match.';
-}
-
-if (!$terms) {
-    $errors['terms'] = 'Accept the Terms and Privacy Policy.';
 }
 
 if ($errors) {

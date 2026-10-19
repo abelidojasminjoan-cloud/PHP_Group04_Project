@@ -258,44 +258,29 @@ function escapeHtml(string $value): string {
                 </div>
 
                 <div class="auth-terms-field">
-                    <label class="auth-terms">
-                        <input
-                            type="checkbox"
-                            id="registerTerms"
-                            name="terms"
-                            value="1"
-                            aria-invalid="<?= isset($fieldErrors['terms']) ? 'true' : 'false' ?>"
-                            aria-describedby="registerTermsError"
-                            <?= !empty($data['terms']) ? 'checked' : '' ?>
-                        >
-                        <span>
-                            By creating and/or using your account, you agree to our
-                            <a href="<?= BASE_URL ?>/terms.php" target="_blank" rel="noopener">
-                                Terms of Use
-                            </a>
-                            and
-                            <a href="<?= BASE_URL ?>/privacy.php" target="_blank" rel="noopener">
-                                Privacy Policy
-                            </a>.
-                        </span>
-                    </label>
-                    <span class="auth-field-error" id="registerTermsError" role="alert" <?= isset($fieldErrors['terms']) ? '' : 'hidden' ?>>
-                        <?= escapeHtml($fieldErrors['terms'] ?? '') ?>
-                    </span>
+                    <p class="auth-terms">
+                        By continuing and using your account, you agree to our
+                        <a href="<?= BASE_URL ?>/terms.php" target="_blank" rel="noopener">Terms of Use</a>
+                        and <a href="<?= BASE_URL ?>/privacy.php" target="_blank" rel="noopener">Privacy Policy</a>.
+                    </p>
                 </div>
 
-                    <!-- Google reCAPTCHA v2 -->
-                    <div class="auth-field">
-                        <div
-                            class="g-recaptcha"
-                            data-sitekey="6LdxLOYtAAAAAIc1Bv561HLEp6DRgGccXKDgwCD3"
-                        ></div>
-                    </div>
+                <!-- Google reCAPTCHA v2 -->
+                <div class="auth-field">
+                    <div
+                        class="g-recaptcha"
+                        data-sitekey="<?= htmlspecialchars(
+                            $_ENV['RECAPTCHA_SITE_KEY'] ?? '',
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>"
+                    ></div>
+                </div>
 
                 <?php if (!empty($fieldErrors['captcha'])): ?>
-                    <p class="field-error">
+                    <span class="auth-field-error" role="alert">
                         <?= escapeHtml($fieldErrors['captcha']) ?>
-                    </p>
+                    </span>
                 <?php endif; ?>
 
                 <button type="submit" class="auth-submit">
@@ -331,6 +316,7 @@ function escapeHtml(string $value): string {
 
 </main>
 
+<script src="<?= BASE_URL ?>/assets/js/auth_loading.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/auth.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>

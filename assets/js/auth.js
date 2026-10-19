@@ -45,6 +45,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const fields = Array.from(form.querySelectorAll('input:not([type="hidden"])'));
     const formError = document.querySelector('.auth-form-error');
     const registerPassword = document.getElementById('registerPassword');
+    let registering = false;
+
+    if (registerPassword) {
+        window.addEventListener('pageshow', () => {
+            registering = false;
+            form.removeAttribute('aria-busy');
+            form.querySelector('button[type="submit"]').disabled = false;
+        });
+    }
 
     const passwordRules = [
         { key: 'length', test: value => value.length >= 12, message: 'Password must contain at least 12 characters.' },
@@ -129,9 +138,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!value) return 'Please confirm your password.';
                 if (value !== registerPassword.value) return 'Passwords do not match.';
                 break;
-            case 'terms':
-                if (!input.checked) return 'Please agree to the Terms and Privacy Policy.';
-                break;
         }
 
         return '';
@@ -146,6 +152,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener('submit', event => {
+        if (registering) {
+            event.preventDefault();
+            return;
+        }
         if (formError) formError.hidden = true;
         let firstInvalid = null;
 
@@ -158,6 +168,17 @@ document.addEventListener('DOMContentLoaded', function () {
         if (firstInvalid) {
             event.preventDefault();
             firstInvalid.focus();
+            return;
+        }
+
+        if (registerPassword && window.PureViaAuthLoading) {
+            registering = true;
+            form.setAttribute('aria-busy', 'true');
+            form.querySelector('button[type="submit"]').disabled = true;
+            window.PureViaAuthLoading.show(
+                'Creating your account',
+                'Sending a verification code to your email.'
+            );
         }
     });
 

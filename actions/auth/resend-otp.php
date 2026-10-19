@@ -140,6 +140,8 @@ try {
 
     $conn->commit();
 
+    unset($_SESSION['account_activation']);
+
     $sent = sendOtpEmail(
         $user['email'],
         $user['first_name'],

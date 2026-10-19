@@ -1190,27 +1190,11 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
                 <!-- TERMS -->
 
-                <label class="register-terms">
-
-                    <input
-                        type="checkbox"
-                        name="terms"
-                        value="1"
-                        required
-                    >
-
-                    <span>
-                        I agree to the
-                        <a href="<?= BASE_URL ?>/terms.php">
-                            Terms of Service
-                        </a>
-                        and
-                        <a href="<?= BASE_URL ?>/privacy-policy.php">
-                            Privacy Policy
-                        </a>
-                    </span>
-
-                </label>
+                <p class="register-terms">
+                    By continuing and using your account, you agree to our
+                    <a href="<?= BASE_URL ?>/terms.php">Terms of Use</a>
+                    and <a href="<?= BASE_URL ?>/privacy.php">Privacy Policy</a>.
+                </p>
 
 
                 <!-- REGISTER BUTTON -->

@@ -295,23 +295,12 @@ if (session_status() === PHP_SESSION_ACTIVE) {
 
 /*
  * Maximum failed login attempts before
- * temporary account lockout.
+ * permanent account lockout. A locked account must be manually unlocked.
  */
 
 define(
     'MAX_LOGIN_ATTEMPTS',
     3
-);
-
-
-/*
- * Lockout duration:
- * 15 minutes
- */
-
-define(
-    'LOGIN_LOCKOUT_TIME',
-    15 * 60
 );
 
 
