@@ -284,6 +284,20 @@ function escapeHtml(string $value): string {
                     </span>
                 </div>
 
+                    <!-- Google reCAPTCHA v2 -->
+                    <div class="auth-field">
+                        <div
+                            class="g-recaptcha"
+                            data-sitekey="6LdxLOYtAAAAAIc1Bv561HLEp6DRgGccXKDgwCD3"
+                        ></div>
+                    </div>
+
+                <?php if (!empty($fieldErrors['captcha'])): ?>
+                    <p class="field-error">
+                        <?= escapeHtml($fieldErrors['captcha']) ?>
+                    </p>
+                <?php endif; ?>
+
                 <button type="submit" class="auth-submit">
                     Create my account
                 </button>
@@ -318,5 +332,6 @@ function escapeHtml(string $value): string {
 </main>
 
 <script src="<?= BASE_URL ?>/assets/js/auth.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
