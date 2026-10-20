@@ -24,6 +24,14 @@ if (!$user || $user['status'] !== 'pending') {
     exit;
 }
 
+if (
+    ($_SESSION['account_activation']['user_id'] ?? 0) === $userId &&
+    ($_SESSION['account_activation']['completed_at'] ?? 0) >= time() - 1800
+) {
+    header('Location: ' . BASE_URL . '/public/account-activated.php');
+    exit;
+}
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -47,6 +55,10 @@ function otpEscape(string $value): string {
 
     <title>Verify Email | PureVia</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet"
           href="<?= BASE_URL ?>/assets/css/auth.css">
 
@@ -66,18 +78,13 @@ function otpEscape(string $value): string {
             text-align: center;
             border: 1px solid #ccc;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
 
         .otp-message {
             padding: 12px;
             border-radius: 7px;
             margin: 15px 0;
-        }
-
-        .otp-error {
-            background: #fff0f0;
-            color: #a11;
         }
 
         .otp-success {
@@ -143,12 +150,6 @@ function otpEscape(string $value): string {
                 The code expires in 10 minutes.
             </p>
 
-            <?php if ($error !== ''): ?>
-                <div class="otp-message otp-error" role="alert">
-                    <?= otpEscape($error) ?>
-                </div>
-            <?php endif; ?>
-
             <?php if ($notice !== ''): ?>
                 <div class="otp-message otp-success" role="status">
                     <?= otpEscape($notice) ?>
@@ -156,8 +157,10 @@ function otpEscape(string $value): string {
             <?php endif; ?>
 
             <form
+                id="verifyOtpForm"
                 class="auth-form"
                 method="POST"
+                novalidate
                 action="<?= BASE_URL ?>/actions/auth/verify-otp.php">
 
                 <input
@@ -181,12 +184,17 @@ function otpEscape(string $value): string {
                         inputmode="numeric"
                         autocomplete="one-time-code"
                         placeholder="000000"
-                        required
+                        aria-required="true"
+                        aria-invalid="<?= $error !== '' ? 'true' : 'false' ?>"
+                        aria-describedby="otpError"
                         autofocus>
+                    <span class="auth-field-error" id="otpError" role="alert" <?= $error === '' ? 'hidden' : '' ?>>
+                        <?= otpEscape($error) ?>
+                    </span>
                 </div>
 
                 <button type="submit" class="auth-submit">
-                    Verify & Activate Account
+                    Verify OTP
                 </button>
             </form>
 
@@ -219,5 +227,7 @@ function otpEscape(string $value): string {
 
 </main>
 
+<script src="<?= BASE_URL ?>/assets/js/auth_loading.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/verify_email.js"></script>
 </body>
 </html>

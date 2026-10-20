@@ -75,7 +75,7 @@ function sendOtpEmail(
         <p>Hello ' . $safeName . ',</p>
 
         <p>Thank you for registering. Enter this
-        one-time password to activate your account:</p>
+        one-time password to verify your email address:</p>
 
         <div style="background:#f0f5f1;padding:22px;
                     text-align:center;border-radius:10px;">
@@ -110,7 +110,8 @@ function sendOtpEmail(
 
 function sendActivationEmail(
     string $email,
-    string $name
+    string $name,
+    string $activationUrl
 ): bool {
     $safeName = htmlspecialchars(
         $name,
@@ -118,10 +119,8 @@ function sendActivationEmail(
         'UTF-8'
     );
 
-    $loginUrl = APP_URL . '/public/login.php';
-
     $safeUrl = htmlspecialchars(
-        $loginUrl,
+        $activationUrl,
         ENT_QUOTES,
         'UTF-8'
     );
@@ -131,7 +130,7 @@ function sendActivationEmail(
                 max-width:540px;margin:auto;padding:30px;">
 
         <h2 style="color:#426b58;">
-            Your PureVia Account Is Activated!
+            Activate Your PureVia Account
         </h2>
 
         <p>Hello ' . $safeName . ',</p>
@@ -139,33 +138,35 @@ function sendActivationEmail(
         <p>Your email address has been verified
         successfully.</p>
 
-        <p>Your PureVia account is now active.
-        You can sign in using your registered
-        email address and password.</p>
+        <p>Click the button below to activate your account.
+        You will then be taken to the login page.</p>
 
         <p style="margin:30px 0;">
             <a href="' . $safeUrl . '"
                style="background:#426b58;color:white;
                       padding:14px 24px;border-radius:6px;
                       text-decoration:none;">
-                Login to PureVia
+                Activate Account &amp; Sign In
             </a>
         </p>
 
-        <p>Thank you for joining PureVia!</p>
+        <p>This link expires in 30 minutes and can only be used once.</p>
+
+        <p>If you did not create this account, ignore this email.</p>
 
         <p>PureVia Team</p>
     </div>';
 
     $plain = "Hello {$name},\n\n"
-        . "Your PureVia account is now active.\n"
-        . "Login here: {$loginUrl}\n\n"
-        . "Use your registered email and password.";
+        . "Your email address has been verified.\n"
+        . "Activate your account and continue to login: {$activationUrl}\n\n"
+        . "This single-use link expires in 30 minutes.\n"
+        . "If you did not create this account, ignore this email.";
 
     return sendPureViaMail(
         $email,
         $name,
-        'PureVia Account Successfully Activated',
+        'Activate Your PureVia Account',
         $html,
         $plain
     );

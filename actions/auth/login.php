@@ -121,7 +121,7 @@ function recordLoginAttempt(
 function rejectLogin(string $email, string $message): never
 {
     $_SESSION['login_email'] = $email;
-    $_SESSION['login_error'] = $message;
+    $_SESSION['login_errors'] = ['password' => $message];
     header('Location: ' . BASE_URL . '/public/login.php');
     exit;
 }
@@ -138,8 +138,6 @@ try {
         SELECT
             u.id, u.first_name, u.last_name, u.email, u.password, u.status,
             u.failed_login_attempts, u.locked_until,
-            COALESCE(u.locked_until > NOW(), 0) AS login_locked,
-            GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), u.locked_until)) AS lock_seconds_remaining,
             (SELECT r.role_name FROM roles r WHERE r.id = u.role_id) AS role_name
         FROM users u
         WHERE u.email = ?
@@ -159,55 +157,49 @@ try {
 
     $userId = (int) $user['id'];
 
-    if ($user['status'] === 'locked' || (int) $user['login_locked'] === 1) {
-        if ($user['status'] === 'locked') {
-            $message = 'Your account is locked. Please contact support.';
-        } else {
-            $minutes = max(1, (int) ceil((int) $user['lock_seconds_remaining'] / 60));
-            $message = 'Account locked after ' . MAX_LOGIN_ATTEMPTS . ' failed login attempts. '
-                . 'Try again in ' . $minutes . ($minutes === 1 ? ' minute.' : ' minutes.');
-        }
+    if (
+        $user['status'] === 'locked' ||
+        $user['locked_until'] !== null ||
+        (int) $user['failed_login_attempts'] >= MAX_LOGIN_ATTEMPTS
+    ) {
+        // Existing timed locks also remain locked until manually unlocked.
+        $update = $conn->prepare("UPDATE users SET status = 'locked', locked_until = NULL WHERE id = ?");
+        $update->bind_param('i', $userId);
+        $update->execute();
+        $update->close();
         recordLoginAttempt($conn, $userId, $email, false, 'Login blocked: account locked.');
         $conn->commit();
-        rejectLogin($email, $message);
+        rejectLogin($email, 'Your account is locked. Please contact support.');
     }
 
-    // An expired temporary lock starts a new set of attempts.
-    $failedAttempts = $user['locked_until'] !== null
-        ? 0
-        : (int) $user['failed_login_attempts'];
+    $failedAttempts = (int) $user['failed_login_attempts'];
 
     if (!password_verify($password, $user['password'])) {
         $failedAttempts = min(MAX_LOGIN_ATTEMPTS, $failedAttempts + 1);
         $locked = $failedAttempts >= MAX_LOGIN_ATTEMPTS;
-        $lockSeconds = LOGIN_LOCKOUT_TIME;
         $lockedValue = $locked ? 1 : 0;
         $update = $conn->prepare("
             UPDATE users
             SET failed_login_attempts = ?,
-                locked_until = CASE WHEN ? = 1
-                    THEN DATE_ADD(NOW(), INTERVAL ? SECOND)
-                    ELSE NULL END
+                status = CASE WHEN ? = 1 THEN 'locked' ELSE status END,
+                locked_until = NULL
             WHERE id = ?
         ");
-        $update->bind_param('iiii', $failedAttempts, $lockedValue, $lockSeconds, $userId);
+        $update->bind_param('iii', $failedAttempts, $lockedValue, $userId);
         $update->execute();
         $update->close();
 
         $reason = $locked
-            ? 'Account locked after ' . MAX_LOGIN_ATTEMPTS . ' failed login attempts.'
-            : 'Invalid password. Attempt ' . $failedAttempts . ' of ' . MAX_LOGIN_ATTEMPTS . '.';
+            ? 'Account locked.'
+            : 'Invalid email or password.';
         recordLoginAttempt($conn, $userId, $email, false, $reason);
         $conn->commit();
 
         if ($locked) {
-            $minutes = max(1, (int) ceil(LOGIN_LOCKOUT_TIME / 60));
-            rejectLogin($email, $reason . ' Try again in ' . $minutes . ' minutes.');
+            rejectLogin($email, 'Your account is locked. Please contact support.');
         }
 
-        $remaining = MAX_LOGIN_ATTEMPTS - $failedAttempts;
-        rejectLogin($email, 'Invalid email or password. ' . $remaining
-            . ($remaining === 1 ? ' attempt remaining.' : ' attempts remaining.'));
+        rejectLogin($email, 'Invalid email or password.');
     }
 
     if ($user['status'] !== 'active') {

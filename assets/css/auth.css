@@ -444,21 +444,11 @@ body.auth-page {
 /* TERMS */
 
 .auth-terms {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    display: block;
+    margin: 0;
     color: #87968e;
     font-size: 11px;
     line-height: 1.6;
-    cursor: pointer;
-}
-
-.auth-terms input {
-    width: 15px;
-    height: 15px;
-    margin: 2px 0 0;
-    flex-shrink: 0;
-    accent-color: #173e33;
 }
 
 .auth-terms a {
@@ -560,6 +550,67 @@ body.auth-page {
     border: 1px solid #c7e3cf;
     background: #f0faf2;
     color: #2f7044;
+}
+
+/* LOADING WITHIN THE REGISTER AND EMAIL VERIFICATION PAGES */
+
+body.auth-page.auth-is-loading {
+    overflow: hidden;
+}
+
+.auth-loading-dialog {
+    width: calc(100% - 32px);
+    max-width: 400px;
+    max-height: calc(100svh - 32px);
+    margin: auto;
+    padding: 32px 24px;
+    border: 1px solid #d5e0d8;
+    border-radius: 18px;
+    outline: none;
+    background: #ffffff;
+    color: #173e33;
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    overflow: auto;
+}
+
+.auth-loading-dialog::backdrop {
+    background: rgba(23, 62, 51, 0.24);
+    backdrop-filter: blur(3px);
+}
+
+.auth-loading-dialog h2 {
+    margin: 0 0 10px;
+    font-size: 23px;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.auth-loading-dialog p {
+    margin: 0;
+    color: #84958e;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.auth-loading-spinner {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 22px;
+    border: 4px solid #dbe6df;
+    border-top-color: #315e50;
+    border-radius: 50%;
+    animation: auth-loading-spin 0.9s linear infinite;
+}
+
+@keyframes auth-loading-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-loading-spinner {
+        animation: none;
+    }
 }
 
 /* FOOTER */
