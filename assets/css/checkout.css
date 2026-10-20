@@ -388,7 +388,7 @@
 
 .pv-payment-option.selected {
     border-color: #38634e;
-    background: #fff;
+    background: #f4f7f5;
 }
 
 .pv-payment-option input {
@@ -443,6 +443,7 @@
     height: 20px;
     border: 2px solid #38634e;
     border-radius: 50%;
+    background: #38634e;
     flex-shrink: 0;
 }
 
@@ -450,6 +451,37 @@
     background: #38634e;
 }
 
+.pv-payment-option.selected .pv-payment-indicator::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    width: 5px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(40deg);
+}
+
+.pv-card-details {
+    min-width: 0;
+    margin: 0;
+    padding: 20px;
+    border: 1px solid #d9d0c5;
+    border-radius: 12px;
+    background: #f8f6f2;
+}
+
+.pv-card-details-intro { margin-bottom: 20px; }
+.pv-card-details-intro strong { font-size: 13px; font-weight: 600; }
+.pv-card-details-intro p { margin: 5px 0 0; color: #a38b7d; font-size: 10px; line-height: 1.6; }
+.pv-card-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
+.pv-card-details-full { grid-column: 1 / -1; }
+.pv-card-details label { display: flex; flex-direction: column; min-width: 0; gap: 8px; font-size: 11px; font-weight: 500; }
+.pv-card-details input, .pv-card-details select { width: 100%; min-width: 0; height: 44px; padding: 0 14px; border: 1px solid #d9d0c5; border-radius: 8px; background: white; color: #20221d; font: 12px 'Poppins', sans-serif; outline: none; }
+.pv-card-details input::placeholder { color: #9a8e83; opacity: 1; }
+.pv-card-details input:focus, .pv-card-details select:focus { border-color: #38634e; box-shadow: 0 0 0 2px rgba(56,99,78,.08); }
+.pv-card-details select { appearance: none; padding-right: 34px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1h10L6 7z' fill='%238d847a'/%3E%3C/svg%3E"); background-position: right 14px center; background-repeat: no-repeat; }
 
 
 .pv-payment-notice {

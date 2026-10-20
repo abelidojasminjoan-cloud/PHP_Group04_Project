@@ -427,6 +427,39 @@ function peso(float $amount): string {
                             <span class="pv-payment-indicator"></span>
                         </label>
 
+                        <fieldset class="pv-card-details" id="pvCardDetails" aria-labelledby="pvCardDetailsTitle" hidden disabled>
+                            <div class="pv-card-details-intro">
+                                <strong id="pvCardDetailsTitle">Enter your card details</strong>
+                                <p>Enter the details shown on your card.</p>
+                            </div>
+                            <div class="pv-card-details-grid">
+                                <label class="pv-card-details-full" for="pvCardName">
+                                    Name on Card
+                                    <input type="text" id="pvCardName" autocomplete="cc-name" placeholder="Name as shown on card" maxlength="120">
+                                </label>
+                                <label class="pv-card-details-full" for="pvCardNumber">
+                                    Card Number
+                                    <input type="text" id="pvCardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="23">
+                                </label>
+                                <label for="pvCardExpiry">
+                                    Expiry Date
+                                    <input type="text" id="pvCardExpiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5">
+                                </label>
+                                <label for="pvCardSecurityCode">
+                                    Security Code
+                                    <input type="password" id="pvCardSecurityCode" inputmode="numeric" autocomplete="cc-csc" placeholder="CVV" maxlength="4">
+                                </label>
+                                <label for="pvCardType">
+                                    Card Type
+                                    <select id="pvCardType" autocomplete="cc-type">
+                                        <option value="visa">Visa</option>
+                                        <option value="mastercard">Mastercard</option>
+                                        <option value="jcb">JCB</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </fieldset>
+
                         <label class="pv-payment-option">
                             <input type="radio"
                                    name="payment_method"

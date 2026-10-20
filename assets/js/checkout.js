@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const paymentNotice = document.getElementById("pvPaymentNotice");
+    const cardDetails = document.getElementById("pvCardDetails");
     const codMessage = document.getElementById("pvCodMessage");
 
     const placeOrder = document.getElementById("pvPlaceOrder");
@@ -245,6 +246,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 radio === selected
             );
         });
+
+        if (cardDetails) {
+            const cardSelected = selected?.value === "card";
+            cardDetails.hidden = !cardSelected;
+            cardDetails.disabled = !cardSelected;
+        }
 
         // Show COD information only when COD is selected
         if (codMessage) {
