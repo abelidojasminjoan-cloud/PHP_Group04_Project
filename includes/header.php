@@ -127,29 +127,13 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                     </div>
                 </button>
 
-                <!-- SKIN PROFILE / FAVORITES -->
-
-                <?php if ($role === 'customer'): ?>
-
-                    <a
-                        href="<?= BASE_URL ?>/account/skin-profile.php"
-                        class="nav-icon"
-                        aria-label="Skin Profile"
-                    >
-                        <i class="fa-regular fa-heart"></i>
-                    </a>
-
-                <?php else: ?>
-
-                    <a
-                        href="#"
-                        class="nav-icon"
-                        aria-label="Favorites"
-                    >
-                        <i class="fa-regular fa-heart"></i>
-                    </a>
-
-                <?php endif; ?>
+                <!-- MY FAVORITES -->
+                <a href="<?= BASE_URL ?>/public/favorites.php" class="nav-icon pv-favorites-link"
+                   data-favorite-scope="<?= htmlspecialchars(BASE_URL . ':' . $headerUserId, ENT_QUOTES, 'UTF-8') ?>"
+                   aria-label="My Favorites">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+                    <span class="pv-favorites-count" hidden></span>
+                </a>
 
                 <!-- ACCOUNT -->
 
@@ -450,3 +434,4 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
 ></div>
 
 <?php require_once __DIR__ . '/session_timeout.php'; ?>
+<script src="<?= BASE_URL ?>/assets/js/product-favorites.js?v=<?= filemtime(__DIR__ . '/../assets/js/product-favorites.js') ?>" defer></script>

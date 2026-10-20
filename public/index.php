@@ -209,6 +209,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                 }
                                 ?>
 
+                                <div class="pv-product-photo">
                                 <a
                                     href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $product['id'] ?>"
                                     class="product-image-wrapper"
@@ -229,6 +230,8 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                         onerror="this.onerror=null;this.src='<?= BASE_URL ?>/assets/images/products/default-product.jpg';"
                                     >
                                 </a>
+                                <?php include __DIR__ . '/../includes/product_favorite_button.php'; ?>
+                                </div>
 
 
                                     <div class="product-details">
@@ -414,6 +417,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
     >
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/product-favorites.css">
 </head>
 
 <body>
