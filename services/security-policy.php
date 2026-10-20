@@ -41,18 +41,26 @@ function securityPolicy(mysqli $conn): array
     return $defaults;
 }
 
-function enforcePureViaSessionTimeout(array $policy): void
+function enforcePureViaSessionTimeout(array $policy, bool $refreshActivity = true): void
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
         return;
     }
 
     $timeout = (int) $policy['session_timeout_minutes'] * 60;
-    if (isset($_SESSION['last_activity']) && time() - (int) $_SESSION['last_activity'] > $timeout) {
+    if (isset($_SESSION['last_activity']) && time() - (int) $_SESSION['last_activity'] >= $timeout) {
         $_SESSION = [];
         session_regenerate_id(true);
     }
-    $_SESSION['last_activity'] = time();
+    if ($refreshActivity) {
+        $_SESSION['last_activity'] = time();
+    }
+}
+
+function securitySessionRemainingSeconds(array $policy): int
+{
+    return max(0, (int) ($_SESSION['last_activity'] ?? time())
+        + (int) $policy['session_timeout_minutes'] * 60 - time());
 }
 
 // Call inside the settings update transaction. New installations have no row yet.

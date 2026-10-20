@@ -75,9 +75,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     "aria-selected",
                     isActive ? "true" : "false"
                 );
+                button.tabIndex = isActive ? 0 : -1;
             });
 
+            document.getElementById("moOrderList")?.setAttribute("aria-labelledby", tab.id);
+
             filterOrders();
+            tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+        });
+
+        tab.addEventListener("keydown", (event) => {
+            const index = tabs.indexOf(tab);
+            let nextIndex;
+            if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+            else if (event.key === "ArrowLeft") nextIndex = (index - 1 + tabs.length) % tabs.length;
+            else if (event.key === "Home") nextIndex = 0;
+            else if (event.key === "End") nextIndex = tabs.length - 1;
+            else return;
+            event.preventDefault();
+            tabs[nextIndex].click();
+            tabs[nextIndex].focus();
         });
     });
 

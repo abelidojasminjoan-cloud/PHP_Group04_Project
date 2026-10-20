@@ -763,3 +763,5 @@ else {
 
 
 </aside>
+
+<?php require_once __DIR__ . '/session_timeout.php'; ?>

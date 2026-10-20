@@ -448,3 +448,5 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
     id="pvSearchOverlay"
     hidden
 ></div>
+
+<?php require_once __DIR__ . '/session_timeout.php'; ?>

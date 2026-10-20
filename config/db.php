@@ -32,4 +32,7 @@ try {
 }
 
 require_once __DIR__ . '/../services/security-policy.php';
-enforcePureViaSessionTimeout(securityPolicy($conn));
+enforcePureViaSessionTimeout(
+    securityPolicy($conn),
+    !defined('PUREVIA_SESSION_STATUS_REQUEST')
+);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../services/order-cancellation.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -32,11 +33,11 @@ if ($userId <= 0) {
     cancelResponse(false, 'Please log in first.', 401);
 }
 
-$submittedToken = (string) ($_POST['csrf_token'] ?? '');
-$sessionToken = (string) ($_SESSION['csrf_token'] ?? '');
+$submittedToken = $_POST['csrf_token'] ?? null;
+$sessionToken = $_SESSION['csrf_token'] ?? null;
 
 if (
-    $sessionToken === '' ||
+    !is_string($submittedToken) || !is_string($sessionToken) || $sessionToken === '' ||
     !hash_equals($sessionToken, $submittedToken)
 ) {
     cancelResponse(false, 'Invalid security token.', 403);
@@ -60,6 +61,7 @@ try {
             o.id,
             o.order_status,
             o.payment_status,
+            o.created_at,
             (
                 SELECT p.payment_method
                 FROM payments p
@@ -86,16 +88,14 @@ try {
         cancelResponse(false, 'Order not found.', 404);
     }
 
-    if (
-        $order['order_status'] !== 'pending' ||
-        $order['payment_status'] !== 'pending' ||
-        $order['payment_method'] !== 'cod'
-    ) {
+    if (!canCancelCustomerOrder($order)) {
         $conn->rollback();
 
         cancelResponse(
             false,
-            'This order can no longer be cancelled online.',
+            orderCancellationEligible($order)
+                ? 'The cancellation deadline has passed. Please contact support.'
+                : 'This order can no longer be cancelled online.',
             409
         );
     }
