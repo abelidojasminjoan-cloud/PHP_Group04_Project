@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/db.php';
+$passwordPolicy = securityPolicy($conn);
 require_once __DIR__ . '/../../services/EmailService.php';
 
 function registrationRedirect(): never {
@@ -122,16 +123,9 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) ||
     $errors['email'] = 'Enter a valid email address.';
 }
 
-if (
-    strlen($password) < 12 ||
-    !preg_match('/[A-Z]/', $password) ||
-    !preg_match('/[a-z]/', $password) ||
-    !preg_match('/[0-9]/', $password) ||
-    !preg_match('/[^A-Za-z0-9]/', $password)
-) {
-    $errors['password'] =
-        'Password needs 12 characters, uppercase, lowercase, '
-        . 'number, and special character.';
+$passwordErrors = validatePureViaPassword($password, $passwordPolicy);
+if ($passwordErrors) {
+    $errors['password'] = $passwordErrors[0];
 }
 
 if ($password !== $confirm) {

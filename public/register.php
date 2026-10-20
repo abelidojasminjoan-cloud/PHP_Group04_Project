@@ -1,6 +1,7 @@
 
 <?php
-require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
+$passwordPolicy = securityPolicy($conn);
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -161,9 +162,9 @@ function escapeHtml(string $value): string {
                             type="password"
                             id="registerPassword"
                             name="password"
-                            placeholder="At least 12 characters"
+                            placeholder="At least <?= (int) $passwordPolicy['password_min_length'] ?> characters"
                             autocomplete="new-password"
-                            minlength="12"
+                            minlength="<?= (int) $passwordPolicy['password_min_length'] ?>"
                             aria-invalid="<?= isset($fieldErrors['password']) ? 'true' : 'false' ?>"
                             aria-describedby="registerPasswordError registerPasswordFeedback"
                         >
@@ -194,13 +195,7 @@ function escapeHtml(string $value): string {
                             <strong id="registerPasswordStrength" data-level="empty" aria-live="polite" aria-atomic="true">Not set</strong>
                         </p>
                         <ul class="auth-password-checklist">
-                            <?php foreach ([
-                                'length' => 'At least 12 characters',
-                                'uppercase' => 'One uppercase letter',
-                                'lowercase' => 'One lowercase letter',
-                                'number' => 'One number',
-                                'symbol' => 'One special character'
-                            ] as $passwordRuleKey => $passwordRuleLabel): ?>
+                            <?php foreach (securityPasswordRequirements($passwordPolicy) as $passwordRuleKey => $passwordRuleLabel): ?>
                                 <li data-password-rule="<?= escapeHtml($passwordRuleKey) ?>" data-met="false">
                                     <div class="auth-rule-icon" aria-hidden="true">
                                         <svg class="auth-rule-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
@@ -231,7 +226,7 @@ function escapeHtml(string $value): string {
                             name="confirm_password"
                             placeholder="Enter your password again"
                             autocomplete="new-password"
-                            minlength="12"
+                            minlength="<?= (int) $passwordPolicy['password_min_length'] ?>"
                             aria-invalid="<?= isset($fieldErrors['confirm_password']) ? 'true' : 'false' ?>"
                             aria-describedby="registerConfirmPasswordError"
                         >

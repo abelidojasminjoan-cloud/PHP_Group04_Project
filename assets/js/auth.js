@@ -55,13 +55,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const minimumLength = registerPassword ? registerPassword.minLength : 12;
     const passwordRules = [
-        { key: 'length', test: value => value.length >= 12, message: 'Password must contain at least 12 characters.' },
+        { key: 'length', test: value => new TextEncoder().encode(value).length >= minimumLength, message: `Password must contain at least ${minimumLength} characters.` },
         { key: 'uppercase', test: value => /[A-Z]/.test(value), message: 'Password must contain at least one uppercase letter.' },
         { key: 'lowercase', test: value => /[a-z]/.test(value), message: 'Password must contain at least one lowercase letter.' },
         { key: 'number', test: value => /[0-9]/.test(value), message: 'Password must contain at least one number.' },
         { key: 'symbol', test: value => /[^A-Za-z0-9]/.test(value), message: 'Password must contain at least one special character.' }
-    ];
+    ].filter(rule => !registerPassword || document.getElementById('registerPasswordFeedback')?.querySelector(`[data-password-rule="${rule.key}"]`));
 
     const passwordFeedback = document.getElementById('registerPasswordFeedback');
     const passwordStrength = document.getElementById('registerPasswordStrength');
@@ -130,6 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'password': {
                 if (!value) return registerPassword ? 'Please create a password.' : 'Please enter your password.';
                 if (!registerPassword) break;
+                if (new TextEncoder().encode(value).length > 72 || value.includes('\0')) return 'Password must not exceed 72 bytes or contain null characters.';
                 const unmet = passwordRules.find(rule => !rule.test(value));
                 if (unmet) return unmet.message;
                 break;

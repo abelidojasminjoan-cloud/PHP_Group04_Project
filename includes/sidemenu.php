@@ -6,161 +6,12 @@
 ========================================================= */
 
 
-/* =========================================================
-   SESSION
-========================================================= */
+require_once __DIR__ . '/role-check.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-
-/* =========================================================
-   LOAD CONFIG FILES
-========================================================= */
-
-/*
-|--------------------------------------------------------------------------
-| IMPORTANT
-|--------------------------------------------------------------------------
-| This assumes sidemenu.php is inside:
-|
-| purevia_website/includes/sidemenu.php
-|
-| If your sidemenu.php is somewhere else, adjust these paths.
-*/
-
-require_once __DIR__ . '/../config/app.php';
-require_once __DIR__ . '/../config/db.php';
-
-
-/* =========================================================
-   CHECK LOGIN
-========================================================= */
-
-if (empty($_SESSION['user_id'])) {
-
-    header('Location: ' . BASE_URL . '/public/index.php');
-    exit;
-}
-
-
-$userId = (int) $_SESSION['user_id'];
-
-
-/* =========================================================
-   GET CURRENT USER FROM DATABASE
-========================================================= */
-
-$sql = "
-    SELECT
-        u.id,
-        u.role_id,
-        u.first_name,
-        u.last_name,
-        u.email,
-        u.status,
-        r.role_name
-
-    FROM users AS u
-
-    INNER JOIN roles AS r
-        ON r.id = u.role_id
-
-    WHERE u.id = ?
-
-    LIMIT 1
-";
-
-
-$stmt = $conn->prepare($sql);
-
-
-if (!$stmt) {
-
-    error_log(
-        'Sidebar prepare failed: ' .
-        $conn->error
-    );
-
-    header('Location: ' . BASE_URL . '/public/index.php');
-    exit;
-}
-
-
-$stmt->bind_param(
-    'i',
-    $userId
-);
-
-
-$stmt->execute();
-
-
-$result = $stmt->get_result();
-
-
-$currentUser = $result->fetch_assoc();
-
-
-$stmt->close();
-
-
-/* =========================================================
-   USER DOES NOT EXIST
-========================================================= */
-
-if (!$currentUser) {
-
-    $_SESSION = [];
-
-    session_destroy();
-
-    header('Location: ' . BASE_URL . '/public/index.php');
-    exit;
-}
-
-
-/* =========================================================
-   ACCOUNT MUST BE ACTIVE
-========================================================= */
-
-if (
-    strtolower($currentUser['status']) !== 'active'
-) {
-
-    $_SESSION = [];
-
-    session_destroy();
-
-    header('Location: ' . BASE_URL . '/public/index.php');
-    exit;
-}
-
-
-/* =========================================================
-   CURRENT ROLE
-========================================================= */
-
-$currentRole = strtolower(
-    trim($currentUser['role_name'])
-);
-
-
-$isAdmin = ($currentRole === 'admin');
-
-$isStaff = ($currentRole === 'staff');
-
-
-/* =========================================================
-   ONLY ADMIN / STAFF
-========================================================= */
-
-if (!$isAdmin && !$isStaff) {
-
-    header('Location: ' . BASE_URL . '/public/index.php');
-    exit;
-}
+$currentUser = requirePureViaAdminOrStaff($conn);
+$currentRole = $_SESSION['role'];
+$isAdmin = $currentRole === 'admin';
+$isStaff = $currentRole === 'staff';
 
 
 /* =========================================================
@@ -912,3 +763,5 @@ else {
 
 
 </aside>
+
+<?php require_once __DIR__ . '/session_timeout.php'; ?>

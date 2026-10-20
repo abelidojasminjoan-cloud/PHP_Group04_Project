@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
+$passwordPolicy = securityPolicy($conn);
 
 
 /* =========================================================
@@ -157,13 +158,8 @@ try {
 
     $userId = (int) $user['id'];
 
-    if (
-        $user['status'] === 'locked' ||
-        $user['locked_until'] !== null ||
-        (int) $user['failed_login_attempts'] >= MAX_LOGIN_ATTEMPTS
-    ) {
-        // Existing timed locks also remain locked until manually unlocked.
-        $update = $conn->prepare("UPDATE users SET status = 'locked', locked_until = NULL WHERE id = ?");
+    if (isPureViaLoginLocked($conn, $user, $passwordPolicy)) {
+        $update = $conn->prepare("UPDATE users SET status = CASE WHEN status = 'active' THEN 'locked' ELSE status END, locked_until = NULL WHERE id = ?");
         $update->bind_param('i', $userId);
         $update->execute();
         $update->close();
@@ -175,19 +171,8 @@ try {
     $failedAttempts = (int) $user['failed_login_attempts'];
 
     if (!password_verify($password, $user['password'])) {
-        $failedAttempts = min(MAX_LOGIN_ATTEMPTS, $failedAttempts + 1);
-        $locked = $failedAttempts >= MAX_LOGIN_ATTEMPTS;
-        $lockedValue = $locked ? 1 : 0;
-        $update = $conn->prepare("
-            UPDATE users
-            SET failed_login_attempts = ?,
-                status = CASE WHEN ? = 1 THEN 'locked' ELSE status END,
-                locked_until = NULL
-            WHERE id = ?
-        ");
-        $update->bind_param('iii', $failedAttempts, $lockedValue, $userId);
-        $update->execute();
-        $update->close();
+        recordFailedPureViaLogin($conn, $user, $passwordPolicy);
+        $locked = $failedAttempts + 1 >= $passwordPolicy['max_login_attempts'];
 
         $reason = $locked
             ? 'Account locked.'

@@ -265,27 +265,7 @@ define(
 );
 
 
-/* =========================================================
-   CHECK SESSION TIMEOUT
-========================================================= */
-
-if (
-    isset($_SESSION['last_activity']) &&
-    (time() - $_SESSION['last_activity']) > SESSION_TIMEOUT
-) {
-
-    $_SESSION = [];
-
-    session_destroy();
-
-}
-
-
-if (session_status() === PHP_SESSION_ACTIVE) {
-
-    $_SESSION['last_activity'] = time();
-
-}
+// The database bootstrap applies the saved session timeout before authorizing requests.
 
 
 /* =========================================================

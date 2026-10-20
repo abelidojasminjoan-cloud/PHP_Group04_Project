@@ -4,27 +4,10 @@
    PUREVIA ADMIN - LOGIN ATTEMPTS
 ========================================================= */
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../includes/role-check.php';
+requirePureViaAdmin($conn);
 
 $pageTitle = 'Login Attempts';
-
-require_once __DIR__ . '/../../config/db.php';
-
-
-/* =========================================================
-   TEMPORARY ADMIN SESSION
-   Remove when final authentication is connected.
-========================================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
 
 
 /* =========================================================
@@ -128,7 +111,7 @@ $totalAttempts = count($loginAttempts);
 <body>
 
 
-<?php include("../../includes/sidemenu.php"); ?>
+<?php include __DIR__ . "/../../includes/sidemenu.php"; ?>
 
 
 <div class="admin-layout">
