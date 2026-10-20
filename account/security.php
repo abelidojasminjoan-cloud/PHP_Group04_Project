@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
+$passwordPolicy = securityPolicy($conn);
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -92,18 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($newPassword === '') {
             $fieldErrors['new_password'] = 'Please create a new password.';
-        } elseif (strlen($newPassword) < 12) {
-            $fieldErrors['new_password'] = 'Password must contain at least 12 characters.';
-        } elseif (strlen($newPassword) > 128) {
-            $fieldErrors['new_password'] = 'Password must not exceed 128 bytes.';
-        } elseif (!preg_match('/[A-Z]/', $newPassword)) {
-            $fieldErrors['new_password'] = 'Password must contain at least one uppercase letter.';
-        } elseif (!preg_match('/[a-z]/', $newPassword)) {
-            $fieldErrors['new_password'] = 'Password must contain at least one lowercase letter.';
-        } elseif (!preg_match('/[0-9]/', $newPassword)) {
-            $fieldErrors['new_password'] = 'Password must contain at least one number.';
-        } elseif (!preg_match('/[^A-Za-z0-9]/', $newPassword)) {
-            $fieldErrors['new_password'] = 'Password must contain at least one special character.';
+        } elseif ($passwordErrors = validatePureViaPassword($newPassword, $passwordPolicy)) {
+            $fieldErrors['new_password'] = $passwordErrors[0];
         } elseif ($currentPassword !== '' && hash_equals($currentPassword, $newPassword)) {
             $fieldErrors['new_password'] = 'New password must be different from your current password.';
         }
@@ -373,10 +364,10 @@ $initials = secInitials($name);
                                     type="password"
                                     id="newPassword"
                                     name="new_password"
-                                    placeholder="At least 12 characters"
+                                    placeholder="At least <?= (int) $passwordPolicy['password_min_length'] ?> characters"
                                     autocomplete="new-password"
-                                    minlength="12"
-                                    maxlength="128"
+                                    minlength="<?= (int) $passwordPolicy['password_min_length'] ?>"
+                                    maxlength="72"
                                     aria-invalid="<?= isset($fieldErrors['new_password']) ? 'true' : 'false' ?>"
                                     aria-describedby="newPasswordError newPasswordFeedback"
                                     aria-required="true"
@@ -408,13 +399,7 @@ $initials = secInitials($name);
                             <strong id="newPasswordStrength" data-level="empty" aria-live="polite" aria-atomic="true">Not set</strong>
                         </p>
                         <ul class="sec-password-checklist">
-                            <?php foreach ([
-                                'length' => 'At least 12 characters',
-                                'uppercase' => 'One uppercase letter',
-                                'lowercase' => 'One lowercase letter',
-                                'number' => 'One number',
-                                'symbol' => 'One special character'
-                            ] as $passwordRuleKey => $passwordRuleLabel): ?>
+                            <?php foreach (securityPasswordRequirements($passwordPolicy) as $passwordRuleKey => $passwordRuleLabel): ?>
                                 <li data-password-rule="<?= secEsc($passwordRuleKey) ?>" data-met="false">
                                     <div class="sec-rule-icon" aria-hidden="true">
                                         <svg class="sec-rule-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
@@ -450,8 +435,8 @@ $initials = secInitials($name);
                                     name="confirm_password"
                                     placeholder="Re-enter new password"
                                     autocomplete="new-password"
-                                    minlength="12"
-                                    maxlength="128"
+                                    minlength="<?= (int) $passwordPolicy['password_min_length'] ?>"
+                                    maxlength="72"
                                     aria-invalid="<?= isset($fieldErrors['confirm_password']) ? 'true' : 'false' ?>"
                                     aria-describedby="confirmPasswordError"
                                     aria-required="true"

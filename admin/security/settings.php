@@ -1,157 +1,46 @@
 <?php
+declare(strict_types=1);
 
-/* =========================================================
-   PUREVIA ADMIN - SECURITY SETTINGS
-========================================================= */
+require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/csrf.php';
+require_once __DIR__ . '/../../services/security-policy.php';
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
+$admin = requirePureViaAdmin($conn);
 
 $pageTitle = 'Security Settings';
-
-require_once __DIR__ . '/../../config/db.php';
-
-
-/* =========================================================
-   TEMPORARY ADMIN SESSION
-   Remove this when final authentication is connected.
-========================================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
-
-
-/* =========================================================
-   DEFAULT SECURITY SETTINGS
-========================================================= */
-
-$settings = [
-    'password_min_length' => 12,
-    'require_uppercase' => 1,
-    'require_lowercase' => 1,
-    'require_number' => 1,
-    'require_special_character' => 1,
-    'require_otp' => 1,
-
-    'session_timeout_minutes' => 30,
-    'max_login_attempts' => 3,
-    'lockout_minutes' => 15
-];
-
-
-/* =========================================================
-   LOAD SECURITY SETTINGS
-========================================================= */
-
-$settingsQuery = "
-    SELECT
-        password_min_length,
-        require_uppercase,
-        require_lowercase,
-        require_number,
-        require_special_character,
-        require_otp,
-        session_timeout_minutes,
-        max_login_attempts,
-        lockout_minutes
-    FROM security_settings
-    ORDER BY id ASC
-    LIMIT 1
-";
-
-$settingsResult = $conn->query($settingsQuery);
-
-if ($settingsResult && $settingsResult->num_rows > 0) {
-
-    $row = $settingsResult->fetch_assoc();
-
-    $settings['password_min_length'] =
-        (int) $row['password_min_length'];
-
-    $settings['require_uppercase'] =
-        (int) $row['require_uppercase'];
-
-    $settings['require_lowercase'] =
-        (int) $row['require_lowercase'];
-
-    $settings['require_number'] =
-        (int) $row['require_number'];
-
-    $settings['require_special_character'] =
-        (int) $row['require_special_character'];
-
-    $settings['require_otp'] =
-        (int) $row['require_otp'];
-
-    $settings['session_timeout_minutes'] =
-        (int) $row['session_timeout_minutes'];
-
-    $settings['max_login_attempts'] =
-        (int) $row['max_login_attempts'];
-
-    $settings['lockout_minutes'] =
-        (int) $row['lockout_minutes'];
-}
-
-/* =========================================================
-   LOAD LOCKED ACCOUNTS
-========================================================= */
+$settings = securityPolicy($conn);
+$csrfToken = securityCsrfToken();
 
 $lockedAccounts = [];
 
-$lockedQuery = "
+$sql = "
     SELECT
-        id,
-        first_name,
-        last_name,
-        email,
-        status,
-        failed_login_attempts,
-        locked_until
-    FROM users
-    WHERE status = 'locked'
-       OR (
-            locked_until IS NOT NULL
-            AND locked_until > NOW()
-       )
-    ORDER BY
-        locked_until DESC,
-        first_name ASC,
-        last_name ASC
+        u.id,
+        u.role_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.status,
+        u.failed_login_attempts,
+        u.locked_until
+    FROM users u
+    WHERE u.status = 'locked'
+       OR u.locked_until IS NOT NULL
+       OR u.failed_login_attempts >= " . (int) $settings['max_login_attempts'] . "
+    ORDER BY u.first_name ASC, u.last_name ASC
 ";
 
-$lockedResult = $conn->query($lockedQuery);
+$result = $conn->query($sql);
 
-if ($lockedResult) {
-
-    while ($row = $lockedResult->fetch_assoc()) {
-
-        $lockedAccounts[] = $row;
-    }
+while ($row = $result->fetch_assoc()) {
+    $lockedAccounts[] = $row;
 }
 
 $totalLockedAccounts = count($lockedAccounts);
 
-
-/* =========================================================
-   ADMIN INFORMATION
-========================================================= */
-
-$adminFirstName =
-    $_SESSION['first_name'] ?? 'Admin';
-
-$adminLastName =
-    $_SESSION['last_name'] ?? 'User';
-
-$adminEmail =
-    $_SESSION['email'] ?? 'admin@purevia.com';
-
+$adminFirstName = $admin['first_name'] ?? 'Admin';
+$adminLastName = $admin['last_name'] ?? '';
+$adminEmail = $admin['email'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -210,7 +99,7 @@ $adminEmail =
 <body>
 
 
-<?php include("../../includes/sidemenu.php"); ?>
+<?php include __DIR__ . "/../../includes/sidemenu.php"; ?>
 
 
 <div class="admin-layout">
@@ -316,6 +205,7 @@ $adminEmail =
                 method="POST"
                 class="security-settings-card"
             >
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
                 <h2>
                     Password Policy
@@ -335,10 +225,8 @@ $adminEmail =
                         id="passwordMinLength"
                         name="password_min_length"
                         min="8"
-                        max="128"
-                        value="<?= htmlspecialchars(
-                            $settings['password_min_length']
-                        ) ?>"
+                        max="72"
+                        value="<?= (int) $settings['password_min_length'] ?>"
                         required
                     >
 
@@ -360,18 +248,14 @@ $adminEmail =
 
                         <option
                             value="1"
-                            <?= (int) $settings[
-                                'password_require_uppercase'
-                            ] === 1 ? 'selected' : '' ?>
+                            <?= (int) $settings['require_uppercase'] === 1 ? 'selected' : '' ?>
                         >
                             Yes
                         </option>
 
                         <option
                             value="0"
-                            <?= (int) $settings[
-                                'password_require_uppercase'
-                            ] === 0 ? 'selected' : '' ?>
+                            <?= (int) $settings['require_uppercase'] === 0 ? 'selected' : '' ?>
                         >
                             No
                         </option>
@@ -467,9 +351,9 @@ $adminEmail =
                         name="password_expiry_days"
                         min="0"
                         max="365"
-                        value="<?= htmlspecialchars(
-                            $settings['require_uppercase']
-                        ) ?>"
+                        value="0"
+                        readonly
+                        title="Password expiry is not enabled."
                     >
 
                 </div>
@@ -494,6 +378,7 @@ $adminEmail =
                 method="POST"
                 class="security-settings-card"
             >
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
                 <h2>
                     Session &amp; Lockout
@@ -514,11 +399,9 @@ $adminEmail =
                         name="session_timeout_minutes"
                         min="1"
                         max="1440"
-                        value="<?= htmlspecialchars(
-                            $settings[
+                        value="<?= (int) $settings[
                                 'session_timeout_minutes'
-                            ]
-                        ) ?>"
+                            ] ?>"
                         required
                     >
 
@@ -539,9 +422,7 @@ $adminEmail =
                         name="max_login_attempts"
                         min="1"
                         max="20"
-                        value="<?= htmlspecialchars(
-                            $settings['max_login_attempts']
-                        ) ?>"
+                        value="<?= (int) $settings['max_login_attempts'] ?>"
                         required
                     >
 
@@ -560,14 +441,11 @@ $adminEmail =
                         type="number"
                         id="lockoutDuration"
                         name="lockout_duration_minutes"
-                        min="1"
+                        min="0"
                         max="1440"
-                        value="<?= htmlspecialchars(
-                            $settings[
-                                'lockout_minutes'
-                            ]
-                        ) ?>"
-                        required
+                        value="0"
+                        readonly
+                        title="Accounts remain locked until an administrator unlocks them."
                     >
 
                 </div>
@@ -585,11 +463,11 @@ $adminEmail =
                         type="number"
                         id="rememberMeDays"
                         name="remember_me_days"
-                        min="1"
+                        min="0"
                         max="90"
-                        value="<?= htmlspecialchars(
-                            $settings['remember_me_days']
-                        ) ?>"
+                        value="0"
+                        readonly
+                        title="Remember Me is not enabled."
                     >
 
                 </div>
@@ -766,40 +644,7 @@ $adminEmail =
                                 ========================== */
 
                                 $lockType = 'locked';
-
-                                if (
-                                    !empty($account['locked_until'])
-                                    &&
-                                    strtotime(
-                                        $account['locked_until']
-                                    ) > time()
-                                ) {
-
-                                    $lockType = 'temporary';
-                                }
-
-
-                                /* =========================
-                                   LOCKED UNTIL DISPLAY
-                                ========================== */
-
-                                $lockedUntilDisplay = '—';
-
-                                if (!empty($account['locked_until'])) {
-
-                                    $timestamp = strtotime(
-                                        $account['locked_until']
-                                    );
-
-                                    if ($timestamp !== false) {
-
-                                        $lockedUntilDisplay = date(
-                                            'Y-m-d H:i',
-                                            $timestamp
-                                        );
-                                    }
-                                }
-
+                                $lockedUntilDisplay = 'Until manually unlocked';
 
                                 $searchValue = strtolower(
                                     $fullName . ' '
@@ -929,6 +774,7 @@ $adminEmail =
                                             method="POST"
                                             class="unlock-form"
                                         >
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
 
                                             <input
                                                 type="hidden"

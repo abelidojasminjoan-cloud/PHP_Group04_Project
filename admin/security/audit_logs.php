@@ -4,29 +4,10 @@
    PUREVIA ADMIN - AUDIT LOGS
 ========================================================= */
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../includes/role-check.php';
+requirePureViaAdmin($conn);
 
 $pageTitle = 'Audit Logs';
-
-require_once __DIR__ . '/../../config/db.php';
-
-
-/* =========================================================
-   ADMIN ACCESS
-
-   Replace/remove this temporary session section when your
-   final authentication system is already connected.
-========================================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
 
 
 /* =========================================================
@@ -193,7 +174,7 @@ ksort($modules);
 <body>
 
 
-<?php include("../../includes/sidemenu.php"); ?>
+<?php include __DIR__ . "/../../includes/sidemenu.php"; ?>
 
 
 <div class="admin-layout">

@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const numberInputs =
                 form.querySelectorAll(
-                    'input[type="number"]'
+                    'input[type="number"]:not([readonly]):not(:disabled)'
                 );
 
 
