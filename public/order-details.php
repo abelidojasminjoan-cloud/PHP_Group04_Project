@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../services/order-cancellation.php';
+require_once __DIR__ . '/../services/order-returns.php';
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
@@ -124,6 +125,7 @@ if (!$order) {
 
 $itemStmt = $conn->prepare("
     SELECT
+        oi.id,
         oi.product_id,
         oi.product_name,
         oi.quantity,
@@ -149,6 +151,10 @@ $itemStmt->execute();
 
 $items = $itemStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $itemStmt->close();
+
+$returnRequests = orderReturnEligible($order) ? customerReturnRequests($conn, $userId) : [];
+$returnForm = orderReturnEligible($order) && !isset($returnRequests[(int) $orderId])
+    ? [(int) $orderId => orderReturnFormData($order, $items, 'odImage')] : [];
 
 $status = strtolower((string) $order['order_status']);
 $paymentStatus = strtolower((string) $order['payment_status']);
@@ -259,6 +265,7 @@ if (empty($_SESSION['csrf_token'])) {
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Poppins:wght@300;400;500;600&family=Source+Serif+4:wght@500&display=swap" rel="stylesheet">
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/order-cancellation.css">
 </head>
 
 <body>
@@ -374,63 +381,38 @@ if (empty($_SESSION['csrf_token'])) {
                 <?php if ($status === 'pending'): ?>
                     <div class="od-cancellation-actions">
                         <a class="od-contact-support" href="<?= odEsc('mailto:purevia@gmail.com?subject=' . rawurlencode('Order ' . $order['order_number'])) ?>">Contact support <?= odIcon('chevron') ?></a>
-                        <button type="button" class="od-cancel-order" id="odCancelOrder" aria-describedby="odCancellationNotice" <?= $canCancel ? '' : 'disabled' ?>>Cancel order</button>
+                        <button type="button" class="od-cancel-order" id="odCancelOrder" data-cancel-id="<?= (int) $orderId ?>" data-order-number="<?= odEsc($order['order_number']) ?>" aria-describedby="odCancellationNotice" <?= $canCancel ? '' : 'disabled' ?>>Cancel order</button>
                         <p class="od-cancellation-deadline" id="odCancellationNotice"><?= odEsc(orderCancellationNotice($order)) ?></p>
                     </div>
-                    <p class="od-error" id="odCancelError" role="alert" hidden></p>
+                <?php endif; ?>
+                <?php if ($status === 'cancelled'): ?>
+                    <button type="button" class="od-contact-support" data-cancellation-details="<?= (int) $orderId ?>">Cancellation details <?= odIcon('chevron') ?></button>
+                <?php endif; ?>
+                <?php if (orderReturnEligible($order)): ?>
+                    <button type="button" class="od-contact-support" data-return-id="<?= (int) $orderId ?>" <?= isset($returnRequests[(int) $orderId]) || !$items ? 'disabled' : '' ?>><?= isset($returnRequests[(int) $orderId]) ? 'Return requested' : 'Return item' ?></button>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 </main>
 
-<?php if ($canCancel): ?>
-
-    <!-- CANCELLATION CONFIRMATION -->
-
-    <div class="od-dialog-backdrop" id="odCancelDialog" hidden>
-
-        <div class="od-dialog"
-             role="dialog"
-             aria-modal="true"
-             aria-labelledby="odDialogTitle">
-
-            <h2 id="odDialogTitle">Cancel Order?</h2>
-
-            <p>
-                Are you sure you want to cancel
-                <?= odEsc($order['order_number']) ?>?
-                This action cannot be undone.
-            </p>
-
-            <div class="od-dialog-actions">
-
-                <button type="button" id="odKeepOrder">
-                    Keep Order
-                </button>
-
-                <button type="button" id="odConfirmCancel">
-                    Yes, Cancel Order
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-<?php endif; ?>
+<?php include __DIR__ . '/../includes/order_cancellation_modals.php'; ?>
+<?php include __DIR__ . '/../includes/order_return_modal.php'; ?>
 
 <script>
 window.PUREVIA_ORDER_DETAILS = <?= json_encode([
     'baseUrl' => BASE_URL,
     'orderId' => (int) $orderId,
-    'csrfToken' => $_SESSION['csrf_token']
+    'csrfToken' => $_SESSION['csrf_token'],
+    'cancellations' => $status === 'cancelled' ? [(int) $orderId => orderCancellationDetails($order)] : [],
+    'returns' => $returnForm
 ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 
 <script src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/order-details.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

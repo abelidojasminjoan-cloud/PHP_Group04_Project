@@ -53,6 +53,16 @@ if ($orderId === false || $orderId === null) {
     cancelResponse(false, 'Invalid order.', 422);
 }
 
+$reason = $_POST['reason'] ?? null;
+$details = $_POST['details'] ?? '';
+if (!is_string($reason) || !in_array($reason, orderCancellationReasons(), true)) {
+    cancelResponse(false, 'Please select a cancellation reason.', 422);
+}
+if (!is_string($details) || !mb_check_encoding($details, 'UTF-8') || mb_strlen($details) > 1000) {
+    cancelResponse(false, 'Additional details must be 1,000 characters or fewer.', 422);
+}
+$details = trim($details);
+
 try {
     $conn->begin_transaction();
 
@@ -102,13 +112,16 @@ try {
 
     $stmt = $conn->prepare("
         UPDATE orders
-        SET order_status = 'cancelled'
+        SET order_status = 'cancelled',
+            cancellation_reason = ?,
+            cancellation_details = ?,
+            cancelled_at = NOW()
         WHERE id = ?
           AND user_id = ?
           AND order_status = 'pending'
     ");
 
-    $stmt->bind_param('ii', $orderId, $userId);
+    $stmt->bind_param('ssii', $reason, $details, $orderId, $userId);
     $stmt->execute();
 
     if ($stmt->affected_rows !== 1) {

@@ -1,6 +1,45 @@
 <?php
 declare(strict_types=1);
 
+function orderCancellationReasons(): array
+{
+    return [
+        'Changed my mind',
+        'Ordered the wrong product or quantity',
+        'Need to change the delivery address',
+        'Found a better price',
+        'Order is taking too long',
+        'Other',
+    ];
+}
+
+function orderCancellationDetails(array $order): array
+{
+    $requested = 'Not recorded';
+    if (!empty($order['cancelled_at'])) {
+        try {
+            $requested = (new DateTimeImmutable($order['cancelled_at']))->format('M j, Y');
+        } catch (Exception $ignored) {
+        }
+    }
+
+    $refund = match ($order['payment_status'] ?? '') {
+        'refunded' => 'Your payment has been marked as refunded.',
+        'paid' => 'Please contact support for the status of your refund.',
+        default => ($order['payment_method'] ?? '') === 'cod'
+            ? 'No payment was collected for this cash-on-delivery order.'
+            : 'No verified payment is recorded for this order.',
+    };
+
+    return [
+        'number' => (string) $order['order_number'],
+        'requested' => $requested,
+        'reason' => ($order['cancellation_reason'] ?? '') ?: 'Not recorded',
+        'details' => ($order['cancellation_details'] ?? '') ?: 'No additional details provided.',
+        'refund' => $refund,
+    ];
+}
+
 function orderCancellationDeadline(array $order): ?DateTimeImmutable
 {
     $createdAt = $order['created_at'] ?? null;

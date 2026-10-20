@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../services/order-cancellation.php';
+require_once __DIR__ . '/../services/order-returns.php';
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
@@ -182,9 +183,18 @@ $tabCounts = array_fill_keys(array_keys($orderTabs), 0);
 $tabCounts['all'] = count($orders);
 $nextDelivery = null;
 $deliveryPriority = 0;
+$cancellations = [];
+$returnForms = [];
+$returnRequests = $orders ? customerReturnRequests($conn, $userId) : [];
 foreach ($orders as $order) {
     $orderTab = moTab($order);
     $tabCounts[$orderTab]++;
+    if ($orderTab === 'cancelled') {
+        $cancellations[(int) $order['id']] = orderCancellationDetails($order);
+    }
+    if (orderReturnEligible($order) && !isset($returnRequests[(int) $order['id']])) {
+        $returnForms[(int) $order['id']] = orderReturnFormData($order, $itemsByOrder[(int) $order['id']] ?? [], 'moImage');
+    }
     $priority = ['pending' => 1, 'ship' => 2, 'receive' => 3][$orderTab] ?? 0;
     if ($priority > $deliveryPriority) {
         $deliveryPriority = $priority;
@@ -234,6 +244,7 @@ $csrfToken = $_SESSION['csrf_token'];
 
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/order-cancellation.css">
 </head>
 
 <body>
@@ -289,7 +300,7 @@ $csrfToken = $_SESSION['csrf_token'];
                             id="moTab-<?= moEsc($key) ?>" role="tab" data-tab="<?= moEsc($key) ?>"
                             aria-selected="<?= $key === 'all' ? 'true' : 'false' ?>"
                             tabindex="<?= $key === 'all' ? '0' : '-1' ?>" aria-controls="moOrderList">
-                        <?= moEsc($label) ?> <span class="mo-tab-count"><?= $tabCounts[$key] ?></span>
+                        <?= moEsc($label) ?><?php if ($tabCounts[$key] > 0): ?> <span class="mo-tab-count"><?= $tabCounts[$key] ?></span><?php endif; ?>
                     </button>
                 <?php endforeach; ?>
             </div>
@@ -319,7 +330,6 @@ $csrfToken = $_SESSION['csrf_token'];
                         }
                         $buyAgainUrl = $firstProductId ? BASE_URL . '/public/product.php?id=' . $firstProductId : BASE_URL . '/public/shop.php';
                         $supportUrl = 'mailto:purevia@gmail.com?subject=' . rawurlencode('Order ' . $order['order_number']);
-                        $returnUrl = 'mailto:purevia@gmail.com?subject=' . rawurlencode('Return request: ' . $order['order_number']);
                         ?>
                         <article class="mo-order-card mo-card-<?= moEsc($tab) ?>"
                                  data-tab="<?= moEsc($tab) ?>" data-search="<?= moEsc(mb_strtolower($order['order_number'] . ' ' . $productNames)) ?>">
@@ -380,10 +390,11 @@ $csrfToken = $_SESSION['csrf_token'];
                                             <p class="mo-cancellation-deadline" id="moCancellationNotice-<?= $orderId ?>"><?= moEsc(orderCancellationNotice($order)) ?></p>
                                         </div>
                                     <?php else: ?>
+                                        <?php if ($tab === 'cancelled'): ?><button type="button" class="mo-button mo-button-outline" data-cancellation-details="<?= $orderId ?>">Cancellation details</button><?php endif; ?>
                                         <?php if ($tab === 'ship'): ?><a href="<?= moEsc($supportUrl) ?>" class="mo-button mo-button-outline">Contact support</a><?php endif; ?>
                                         <?php if ($tab === 'completed'): ?>
                                             <?php if ($firstProductId): ?><a href="<?= moEsc($buyAgainUrl) ?>#customerReviews" class="mo-button mo-button-outline">Write a review</a><?php endif; ?>
-                                            <a href="<?= moEsc($returnUrl) ?>" class="mo-button mo-button-outline">Return item</a>
+                                            <button type="button" class="mo-button mo-button-outline" data-return-id="<?= $orderId ?>" <?= isset($returnRequests[$orderId]) || !$items ? 'disabled' : '' ?>><?= isset($returnRequests[$orderId]) ? 'Return requested' : 'Return item' ?></button>
                                         <?php endif; ?>
                                         <?php if ($tab === 'returned'): ?><a href="<?= moEsc($detailsUrl) ?>" class="mo-button mo-button-outline">Return details</a><?php endif; ?>
                                         <a href="<?= moEsc($buyAgainUrl) ?>" class="mo-button mo-button-primary">Buy again</a>
@@ -404,75 +415,22 @@ $csrfToken = $_SESSION['csrf_token'];
     </div>
 </main>
 
-<!-- CANCEL CONFIRMATION MODAL -->
-
-<div class="mo-modal-overlay" id="moCancelModal" hidden>
-
-    <div class="mo-modal mo-cancel-modal"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="moCancelTitle">
-
-        <div class="mo-modal-header">
-
-            <h2 id="moCancelTitle">Cancel Order</h2>
-
-            <button type="button"
-                    class="mo-modal-close"
-                    data-close-modal
-                    aria-label="Close cancellation dialog">
-                &times;
-            </button>
-
-        </div>
-
-        <div class="mo-modal-body">
-
-            <p>
-                Are you sure you want to cancel
-                <strong id="moCancelOrderNumber"></strong>?
-            </p>
-
-            <p class="mo-cancel-note">
-                This action cannot be undone.
-            </p>
-
-            <p id="moCancelError"
-               class="mo-error"
-               role="alert"
-               hidden></p>
-
-        </div>
-
-        <div class="mo-modal-footer">
-
-            <button type="button"
-                    class="mo-modal-done"
-                    data-close-modal>
-                Keep Order
-            </button>
-
-            <button type="button"
-                    class="mo-confirm-cancel"
-                    id="moConfirmCancel">
-                Cancel Order
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
+<?php include __DIR__ . '/../includes/order_cancellation_modals.php'; ?>
+<?php include __DIR__ . '/../includes/order_return_modal.php'; ?>
 
 <script>
     window.PUREVIA_ORDERS = {
         baseUrl: <?= json_encode(BASE_URL) ?>,
-        csrfToken: <?= json_encode($csrfToken) ?>
+        csrfToken: <?= json_encode($csrfToken) ?>,
+        cancellations: <?= json_encode($cancellations, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        returns: <?= json_encode($returnForms, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
     };
 </script>
 
 <script src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/my-orders.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
