@@ -395,6 +395,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/product-favorites.css">
 </head>
 
 <body>
@@ -872,6 +873,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
                         <!-- PRODUCT IMAGE -->
 
+                        <div class="pv-product-photo">
                         <a
                             href="<?= shopEscape($productUrl) ?>"
                             class="shop-product-image"
@@ -896,6 +898,8 @@ $maxPrice = max(1, (int) ceil($maxPrice));
                             <?php endif; ?>
 
                         </a>
+                        <?php include __DIR__ . '/../includes/product_favorite_button.php'; ?>
+                        </div>
 
                         <!-- PRODUCT INFO -->
 
