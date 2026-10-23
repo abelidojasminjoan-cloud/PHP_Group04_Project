@@ -139,6 +139,7 @@ try {
         SELECT
             u.id, u.first_name, u.last_name, u.email, u.password, u.status,
             u.failed_login_attempts, u.locked_until,
+            u.role_id, u.totp_enabled_at,
             (SELECT r.role_name FROM roles r WHERE r.id = u.role_id) AS role_name
         FROM users u
         WHERE u.email = ?
@@ -193,95 +194,75 @@ try {
         rejectLogin($email, 'Your account is not currently active.');
     }
 
-    $update = $conn->prepare("
-        UPDATE users
-        SET failed_login_attempts = 0, locked_until = NULL, last_login_at = NOW()
-        WHERE id = ?
-    ");
-    $update->bind_param('i', $userId);
-    $update->execute();
-    $update->close();
-    recordLoginAttempt($conn, $userId, $email, true, null);
-    $conn->commit();
+    // Password verified, but the login is NOT complete.
+    // Successful-login updates happen after Google Authenticator.
+$conn->commit();
 } catch (Throwable $error) {
     try {
         $conn->rollback();
     } catch (Throwable $ignored) {
     }
+
     error_log('Login failed: ' . $error->getMessage());
-    rejectLogin($email, 'Unable to login right now. Please try again.');
+
+    rejectLogin(
+        $email,
+        'Unable to login right now. Please try again.'
+    );
 }
 
 
-/* =========================================================
-   CREATE SESSION
-========================================================= */
+/* =========================================
+   MANDATORY GOOGLE AUTHENTICATOR
+========================================= */
 
+// Password and account status were verified above.
+
+// Get the user ID from the verified database record,
+// NOT from the session.
+$userId = (int) $user['id'];
+
+// Regenerate the session ID for security.
 session_regenerate_id(true);
 
-
-$_SESSION['user_id'] =
-    (int) $user['id'];
-
-
-$_SESSION['role'] =
-    strtolower($user['role_name']);
-
-
-$_SESSION['first_name'] =
-    $user['first_name'];
-
-
-$_SESSION['last_name'] =
-    $user['last_name'];
-
-
-$_SESSION['name'] =
-    $user['first_name'];
-
-
-$_SESSION['email'] =
-    $user['email'];
-
-
-$_SESSION['last_activity'] =
-    time();
-
-
-/* =========================================================
-   REDIRECT BY ROLE
-========================================================= */
-
-if ($_SESSION['role'] === 'admin') {
-
-    header(
-        'Location: '
-        . BASE_URL
-        . '/admin/dashboard.php'
-    );
-
-    exit;
-}
-
-
-if ($_SESSION['role'] === 'staff') {
-
-    header(
-        'Location: '
-        . BASE_URL
-        . '/staff/dashboard.php'
-    );
-
-    exit;
-}
-
-
-/* CUSTOMER */
-
-header(
-    'Location: '
-    . BASE_URL
-    . '/public/index.php'
+// Remove any previous authenticated identity.
+unset(
+    $_SESSION['user_id'],
+    $_SESSION['role_id'],
+    $_SESSION['role'],
+    $_SESSION['first_name'],
+    $_SESSION['last_name'],
+    $_SESSION['name'],
+    $_SESSION['email'],
+    $_SESSION['last_activity'],
+    $_SESSION['2fa_verified'],
+    $_SESSION['2fa_setup_secret'],
+    $_SESSION['2fa_setup_user_id'],
+    $_SESSION['2fa_setup_expires'],
+    $_SESSION['2fa_setup_attempts']
 );
 
+// Save the pending 2FA challenge.
+$_SESSION['pending_2fa_user_id'] = $userId;
+$_SESSION['pending_2fa_started'] = time();
+$_SESSION['pending_2fa_attempts'] = 0;
+
+// First login: Set up Google Authenticator.
+if (empty($user['totp_enabled_at'])) {
+    header(
+        'Location: ' . BASE_URL .
+        '/account/setup_2fa_login.php',
+        true,
+        303
+    );
+    exit;
+}
+
+// Existing 2FA user: Verify authenticator code.
+header(
+    'Location: ' . BASE_URL .
+    '/account/verify_2fa.php',
+    true,
+    303
+);
 exit;
