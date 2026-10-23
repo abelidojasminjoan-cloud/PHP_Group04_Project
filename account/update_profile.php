@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
@@ -35,7 +34,7 @@ if (!$user) {
 
 function e(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -194,7 +193,7 @@ unset($_SESSION['profile_error']);
                 <form novalidate method="POST"
                       action="<?= BASE_URL ?>/actions/account/update_profile.php"
                       id="profileEditForm"
-                      data-field-errors="<?= e(json_encode($fieldErrors, JSON_THROW_ON_ERROR)) ?>">
+                      data-field-errors="<?= e(pvJson($fieldErrors, JSON_THROW_ON_ERROR)) ?>">
 
                     <input type="hidden"
                            name="csrf_token"
@@ -289,10 +288,10 @@ unset($_SESSION['profile_error']);
 
 </main>
 
-<script src="<?= BASE_URL ?>/assets/js/account.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/account.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

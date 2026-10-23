@@ -1,11 +1,10 @@
-
 <?php
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 
 function pdEsc(?string $value): string
 {
-    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    return pvHtml($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 function pdImage(?string $path): string
@@ -1094,22 +1093,22 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
-<script>
-window.PUREVIA_PRODUCT = <?= json_encode([
+<script nonce="<?= pvScriptNonce() ?>">
+window.PUREVIA_PRODUCT = <?= pvJson([
     'voteUrl' => BASE_URL . '/actions/reviews/vote.php',
     'csrfToken' => $csrfToken,
     'loggedIn' => $userId > 0
 ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/product_details.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script>
-window.PUREVIA_BASE_URL = <?= json_encode(BASE_URL) ?>;
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/product_details.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>">
+window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
 </script>
-<script src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

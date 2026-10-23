@@ -111,7 +111,7 @@ $adminInitial = strtoupper(
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Admin
+        <?= pvHtml($pageTitle) ?> | PureVia Admin
     </title>
 
 
@@ -475,27 +475,27 @@ $adminInitial = strtoupper(
                                     <tr
                                         class="order-row"
 
-                                        data-search="<?= htmlspecialchars(
+                                        data-search="<?= pvHtml(
                                             $searchData
                                         ) ?>"
 
-                                        data-order-id="<?= htmlspecialchars(
+                                        data-order-id="<?= pvHtml(
                                             strtolower(
                                                 $order['order_number']
                                             )
                                         ) ?>"
 
-                                        data-customer="<?= htmlspecialchars(
+                                        data-customer="<?= pvHtml(
                                             strtolower(
                                                 $customerName
                                             )
                                         ) ?>"
 
-                                        data-status="<?= htmlspecialchars(
+                                        data-status="<?= pvHtml(
                                             $orderStatus
                                         ) ?>"
 
-                                        data-payment="<?= htmlspecialchars(
+                                        data-payment="<?= pvHtml(
                                             $paymentStatus
                                         ) ?>"
                                     >
@@ -509,7 +509,7 @@ $adminInitial = strtoupper(
 
                                             <span class="order-number">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $order['order_number']
                                                 ) ?>
 
@@ -526,7 +526,7 @@ $adminInitial = strtoupper(
 
                                             <span class="order-customer">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $customerName
                                                 ) ?>
 
@@ -543,7 +543,7 @@ $adminInitial = strtoupper(
 
                                             <span class="order-date">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $orderDate
                                                 ) ?>
 
@@ -581,7 +581,7 @@ $adminInitial = strtoupper(
 
                                                 data-order-id="<?= (int) $order['id'] ?>"
 
-                                                data-original-value="<?= htmlspecialchars(
+                                                data-original-value="<?= pvHtml(
                                                     $orderStatus
                                                 ) ?>"
                                             >
@@ -651,13 +651,13 @@ $adminInitial = strtoupper(
                                             <span
                                                 class="
                                                     payment-badge
-                                                    payment-<?= htmlspecialchars(
+                                                    payment-<?= pvHtml(
                                                         $paymentStatus
                                                     ) ?>
                                                 "
                                             >
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     strtoupper(
                                                         $paymentStatus
                                                     )
@@ -755,17 +755,17 @@ $adminInitial = strtoupper(
      SIDEBAR JS
  ====================================================== -->
 
-<script src="../../assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
 
 <!-- =====================================================
     ORDERS JS
  ====================================================== -->
 
-<script src="../../assets/js/orders.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/orders.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

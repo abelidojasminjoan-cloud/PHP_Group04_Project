@@ -44,16 +44,16 @@ if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_byt
     </div>
 </main>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
-<script>
-window.PUREVIA_FAVORITES_PAGE = <?= json_encode([
+<script nonce="<?= pvScriptNonce() ?>">
+window.PUREVIA_FAVORITES_PAGE = <?= pvJson([
     'baseUrl' => BASE_URL, 'csrfToken' => $_SESSION['csrf_token'],
     'canAddToBag' => (int) ($_SESSION['user_id'] ?? 0) > 0 && ($_SESSION['role'] ?? '') === 'customer'
 ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-window.PUREVIA_BASE_URL = <?= json_encode(BASE_URL) ?>;
+window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
 </script>
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/favorites.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/favorites.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
 </body>
 </html>

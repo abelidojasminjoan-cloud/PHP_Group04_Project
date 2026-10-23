@@ -13,7 +13,7 @@ if (empty($_SESSION['user_id'])) {
 }
 
 function e(mixed $value): string {
-    return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
+    return pvHtml((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
 function maskEmail(string $email): string {
@@ -321,7 +321,7 @@ unset($_SESSION['profile_success'], $_SESSION['profile_error']);
 
                     <form novalidate
                         id="profilePhotoForm"
-                        data-field-errors="<?= e(json_encode(['profile_photo' => $photoError], JSON_THROW_ON_ERROR)) ?>"
+                        data-field-errors="<?= e(pvJson(['profile_photo' => $photoError], JSON_THROW_ON_ERROR)) ?>"
                         method="POST"
                         enctype="multipart/form-data"
                         action="<?= BASE_URL ?>/actions/account/profile_photo.php"
@@ -360,11 +360,11 @@ unset($_SESSION['profile_success'], $_SESSION['profile_error']);
     </div>
 </main>
 
-<script src="<?= BASE_URL ?>/assets/js/account.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/account.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

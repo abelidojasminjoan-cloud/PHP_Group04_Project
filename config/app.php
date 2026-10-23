@@ -6,6 +6,8 @@
 ========================================================= */
 declare(strict_types=1);
 
+require_once __DIR__ . '/../includes/output-security.php';
+
 $projectRoot = dirname(__DIR__);
 $autoload = $projectRoot . '/vendor/autoload.php';
 
@@ -54,6 +56,13 @@ define(
         '/'
     )
 );
+
+// Temporarily set TWO_FACTOR_ENABLED=false in .env for password-only testing.
+define('TWO_FACTOR_ENABLED', filter_var(
+    $_ENV['TWO_FACTOR_ENABLED'] ?? 'true',
+    FILTER_VALIDATE_BOOLEAN,
+    FILTER_NULL_ON_FAILURE
+) ?? true);
 
 /* =========================================================
    ERROR DISPLAY

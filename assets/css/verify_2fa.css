@@ -167,6 +167,30 @@ body.pv-two-factor-page {
     line-height: 1.8;
 }
 
+/* AUTHENTICATOR SETUP */
+
+.pv-authenticator-qr {
+    width: min(260px, 100%);
+    margin: 0 auto 20px;
+    border: 1px solid var(--pv-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.pv-authenticator-qr svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.pv-authenticator-qr[hidden], #qrError[hidden] { display: none; }
+
+.pv-manual-setup { margin-bottom: 25px; text-align: left; }
+.pv-manual-setup summary { color: var(--pv-green); font-size: 12px; cursor: pointer; }
+.pv-manual-setup .pv-form-group { margin: 15px 0 0; }
+.pv-setup-key { font-family: monospace; font-size: 13px; letter-spacing: 0; padding: 0 8px; }
+
 /* FORM */
 
 .pv-verify-form {

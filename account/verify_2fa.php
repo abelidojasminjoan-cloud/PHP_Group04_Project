@@ -5,6 +5,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
+
+if (!TWO_FACTOR_ENABLED) {
+    header('Location: ' . BASE_URL . '/public/login.php', true, 303);
+    exit;
+}
 require_once __DIR__ . '/../services/two_factor_auth.php';
 require_once __DIR__ . '/../services/complete_2fa_login.php';
 
@@ -286,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Escape user-controlled text for HTML.
 function pvVerifyEsc(string $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         $value,
         ENT_QUOTES,
         'UTF-8'
@@ -311,7 +316,7 @@ function pvVerifyEsc(string $value): string
         href="<?= pvVerifyEsc(BASE_URL) ?>/assets/css/verify_2fa.css"
     >
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= pvVerifyEsc(BASE_URL) ?>/assets/js/verify_2fa.js"
         defer
     ></script>

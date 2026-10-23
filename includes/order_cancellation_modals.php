@@ -16,7 +16,7 @@
                         <select id="ocReason" name="reason" aria-required="true" aria-describedby="ocReasonError">
                             <option value="">Select a reason</option>
                             <?php foreach (orderCancellationReasons() as $reason): ?>
-                                <option value="<?= htmlspecialchars($reason, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($reason, ENT_QUOTES, 'UTF-8') ?></option>
+                                <option value="<?= pvHtml($reason, ENT_QUOTES, 'UTF-8') ?>"><?= pvHtml($reason, ENT_QUOTES, 'UTF-8') ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>

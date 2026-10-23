@@ -134,7 +134,7 @@ foreach ($orders as $order) {
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Staff
+        <?= pvHtml($pageTitle) ?> | PureVia Staff
     </title>
 
 
@@ -529,28 +529,28 @@ foreach ($orders as $order) {
                                 <tr
                                     class="order-row"
 
-                                    data-search="<?= htmlspecialchars(
+                                    data-search="<?= pvHtml(
                                         $searchData
                                     ) ?>"
 
-                                    data-order-id="<?= htmlspecialchars(
+                                    data-order-id="<?= pvHtml(
                                         strtolower(
                                             $order['order_number']
                                             ?? ''
                                         )
                                     ) ?>"
 
-                                    data-customer="<?= htmlspecialchars(
+                                    data-customer="<?= pvHtml(
                                         strtolower(
                                             $customerName
                                         )
                                     ) ?>"
 
-                                    data-status="<?= htmlspecialchars(
+                                    data-status="<?= pvHtml(
                                         $orderStatus
                                     ) ?>"
 
-                                    data-payment="<?= htmlspecialchars(
+                                    data-payment="<?= pvHtml(
                                         $paymentStatus
                                     ) ?>"
                                 >
@@ -564,7 +564,7 @@ foreach ($orders as $order) {
 
                                         <span class="order-number">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $order['order_number']
                                                 ?? '—'
                                             ) ?>
@@ -582,7 +582,7 @@ foreach ($orders as $order) {
 
                                         <span class="order-customer">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $customerName
                                             ) ?>
 
@@ -599,7 +599,7 @@ foreach ($orders as $order) {
 
                                         <span class="order-date">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $orderDate
                                             ) ?>
 
@@ -640,7 +640,7 @@ foreach ($orders as $order) {
 
                                             data-order-id="<?= (int) $order['id'] ?>"
 
-                                            data-original-value="<?= htmlspecialchars(
+                                            data-original-value="<?= pvHtml(
                                                 $orderStatus
                                             ) ?>"
                                         >
@@ -710,13 +710,13 @@ foreach ($orders as $order) {
                                         <span
                                             class="
                                                 payment-badge
-                                                payment-<?= htmlspecialchars(
+                                                payment-<?= pvHtml(
                                                     $paymentStatus
                                                 ) ?>
                                             "
                                         >
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 strtoupper(
                                                     $paymentStatus
                                                 )
@@ -814,7 +814,7 @@ foreach ($orders as $order) {
          REUSE SIDEMENU JS
     ====================================================== -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/sidemenu.js"
     ></script>
 
@@ -823,12 +823,12 @@ foreach ($orders as $order) {
          REUSE ORDERS JS
     ====================================================== -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/orders.js"
     ></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

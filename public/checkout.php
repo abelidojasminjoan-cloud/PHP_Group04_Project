@@ -1,11 +1,10 @@
-
 <?php
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 
 function checkoutEsc(string|int|float|bool|null $value): string {
-    return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
+    return pvHtml((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
 function checkoutImage(?string $path): string {
@@ -317,7 +316,7 @@ function peso(float $amount): string {
                                         src="<?= checkoutEsc($image) ?>"
                                         alt="<?= checkoutEsc($item['product_name']) ?>"
                                         loading="lazy"
-                                        onerror="this.onerror=null;this.src='<?= BASE_URL ?>/assets/images/products/default-product.svg';"
+                                        data-image-fallback="<?= BASE_URL ?>/assets/images/products/default-product.svg"
                                     >
 
                                 </div>
@@ -561,8 +560,8 @@ function peso(float $amount): string {
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
-<script>
-window.PUREVIA_CHECKOUT = <?= json_encode([
+<script nonce="<?= pvScriptNonce() ?>">
+window.PUREVIA_CHECKOUT = <?= pvJson([
     'baseUrl' => BASE_URL,
     'total' => $total,
     'canCheckout' => $canCheckout,
@@ -573,11 +572,11 @@ window.PUREVIA_CHECKOUT = <?= json_encode([
 ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

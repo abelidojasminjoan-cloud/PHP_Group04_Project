@@ -61,7 +61,7 @@ function sendOtpEmail(
     string $name,
     string $otp
 ): bool {
-    $safeName = htmlspecialchars(
+    $safeName = pvHtml(
         $name,
         ENT_QUOTES,
         'UTF-8'
@@ -113,13 +113,13 @@ function sendActivationEmail(
     string $name,
     string $activationUrl
 ): bool {
-    $safeName = htmlspecialchars(
+    $safeName = pvHtml(
         $name,
         ENT_QUOTES,
         'UTF-8'
     );
 
-    $safeUrl = htmlspecialchars(
+    $safeUrl = pvHtml(
         $activationUrl,
         ENT_QUOTES,
         'UTF-8'

@@ -1,0 +1,12 @@
+/* Suitability tags share the Skin Types typography, table, and form styles. */
+.sa-suitability-page [hidden] { display: none !important; }
+.sa-suitability-page .skin-concerns-search > svg { flex-shrink: 0; color: #8c9188; }
+.sa-suitability-page .su-status-filter { padding-left: 15px; }
+.sa-suitability-page .su-tags-table { min-width: 900px; }
+.sa-suitability-page .su-tags-table th:nth-child(1) { width: 22%; }
+.sa-suitability-page .su-tags-table th:nth-child(2) { width: 43%; }
+.sa-suitability-page .su-tags-table th:nth-child(3) { width: 10%; }
+.sa-suitability-page .su-tags-table th:nth-child(4) { width: 12%; }
+.sa-suitability-page .su-tags-table th:nth-child(5) { width: 13%; }
+.sa-suitability-page .su-product-count { font-variant-numeric: lining-nums tabular-nums; }
+.sa-suitability-page .skin-concern-action-button > svg { pointer-events: none; }

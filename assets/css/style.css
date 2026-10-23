@@ -1472,6 +1472,7 @@ main {
 
 .pv-skin-quiz-button {
     display: inline-flex;
+    text-decoration: none;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
@@ -1486,6 +1487,11 @@ main {
     font-size: 16px;
     font-weight: 600;
     line-height: 1.5;
+}
+
+.pv-skin-quiz-button:hover {
+    color: #fff;
+    text-decoration: none;
 }
 
 .pv-skin-quiz-button:focus-visible {

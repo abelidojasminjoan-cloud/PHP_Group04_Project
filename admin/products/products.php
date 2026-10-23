@@ -16,7 +16,7 @@ $pageTitle = 'Products';
 
 function productEscape(?string $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         $value ?? '',
         ENT_QUOTES,
         'UTF-8'
@@ -52,7 +52,8 @@ function loadProductOptions(
     $allowed = [
         'skin_types' => 'skin_type_name',
         'skin_concerns' => 'concern_name',
-        'ingredients' => 'ingredient_name'
+        'ingredients' => 'ingredient_name',
+        'suitability_tags' => 'name'
     ];
 
     if (($allowed[$table] ?? null) !== $column) {
@@ -92,6 +93,8 @@ $ingredients = loadProductOptions(
     'ingredients',
     'ingredient_name'
 );
+
+$suitabilityTags = loadProductOptions($conn, 'suitability_tags', 'name');
 
 /* PRODUCTS */
 
@@ -363,7 +366,7 @@ include __DIR__ . '/../../includes/sidemenu.php';
                                             <img
                                                 src="<?= productEscape($image) ?>"
                                                 alt="<?= productEscape($product['product_name']) ?>"
-                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                data-hide-broken-image data-show-image-placeholder
                                             >
 
                                             <div class="product-image-fallback" style="display:none;">
@@ -752,17 +755,17 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                 <!-- SKIN MATCHING -->
 
-                <section class="product-form-section">
+                <section class="product-form-section product-skin-matching">
 
                     <h3>Skin matching &amp; formulation</h3>
 
                     <!-- SKIN TYPES -->
 
-                    <div class="form-group">
+                    <div class="form-group product-match-group">
 
-                        <label>Skin Types</label>
+                        <label class="product-match-label">Skin Types</label>
 
-                        <div class="skin-type-options">
+                        <div class="skin-type-options product-match-options" role="group" aria-label="Skin Types">
 
                             <?php foreach ($skinTypes as $item): ?>
 
@@ -784,6 +787,18 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                         </div>
 
+                    </div>
+
+                    <!-- SUITABILITY -->
+
+                    <div class="form-group product-match-group">
+                        <label class="product-match-label">Suitability</label>
+                        <input type="hidden" name="suitability_tags_present" value="1">
+                        <div class="skin-type-options product-match-options" id="suitabilityOptions" role="group" aria-label="Suitability">
+                            <?php foreach ($suitabilityTags as $item): ?>
+                                <label class="product-checkbox"><input type="checkbox" name="suitability_tag_ids[]" value="<?= (int)$item['id'] ?>"><span><?= productEscape($item['label']) ?></span></label>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
 
                     <!-- SKIN CONCERNS -->
@@ -870,6 +885,10 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                     </div>
 
+                    <div class="form-group">
+                        <label class="product-checkbox" for="productIngredientsComplete"><input type="checkbox" id="productIngredientsComplete" name="ingredients_complete" value="1"><span>All ingredients on the product label are recorded above</span></label>
+                    </div>
+
                     <!-- KEY BENEFITS -->
 
                     <div class="form-group">
@@ -892,6 +911,27 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                     </div>
 
+                </section>
+
+                <section class="product-form-section">
+                    <h3>Routine Guidance</h3>
+                    <input type="hidden" name="routine_settings_present" value="1">
+                    <div class="form-group">
+                        <label for="productRoutineRole">Routine Role</label>
+                        <select id="productRoutineRole" name="routine_role" class="form-control">
+                            <option value="none">Not assigned</option><option value="cleanser">Cleanser</option><option value="moisturizer">Moisturizer</option><option value="sunscreen">Sunscreen</option><option value="treatment">Targeted treatment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productUsagePeriod">Usage Period</label>
+                        <select id="productUsagePeriod" name="usage_period" class="form-control"><option value="both">Morning and evening</option><option value="am">Morning</option><option value="pm">Evening</option></select>
+                    </div>
+                    <div id="productRoutineDetails" hidden>
+                        <div class="form-group"><label for="productRoutineInstructions">Product Label Directions</label><textarea id="productRoutineInstructions" name="routine_instructions" class="form-control form-textarea" rows="3" maxlength="2000" placeholder="Directions from the product label"></textarea></div>
+                        <label class="product-checkbox"><input type="checkbox" id="productGentle" name="gentle" value="1"><span>Catalog guidance supports a gentle routine</span></label>
+                        <label class="product-checkbox" id="productTargetedField" hidden><input type="checkbox" id="productTargetedApproved" name="targeted_approved" value="1"><span>Usage guidance reviewed for an optional targeted routine product</span></label>
+                        <label class="product-checkbox" id="productSunscreenField" hidden><input type="checkbox" id="productSunscreenVerified" name="sunscreen_verified" value="1"><span>Label confirms broad-spectrum SPF 30+ protection</span></label>
+                    </div>
                 </section>
 
                 <!-- SIZES AND OPTIONS -->
@@ -1040,11 +1080,11 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/products.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/product_form.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/products.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/product_form.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
 </body>

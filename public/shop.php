@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
@@ -15,7 +14,7 @@ $pageTitle = 'Shop All Products | PureVia';
  */
 function shopEscape(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -1065,16 +1064,16 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/shop.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script>
-    window.PUREVIA_BASE_URL = <?= json_encode(BASE_URL) ?>;
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/shop.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>">
+    window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
