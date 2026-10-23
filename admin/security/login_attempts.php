@@ -4,27 +4,10 @@
    PUREVIA ADMIN - LOGIN ATTEMPTS
 ========================================================= */
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../includes/role-check.php';
+requirePureViaAdmin($conn);
 
 $pageTitle = 'Login Attempts';
-
-require_once __DIR__ . '/../../config/db.php';
-
-
-/* =========================================================
-   TEMPORARY ADMIN SESSION
-   Remove when final authentication is connected.
-========================================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
 
 
 /* =========================================================
@@ -74,7 +57,7 @@ $totalAttempts = count($loginAttempts);
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Admin
+        <?= pvHtml($pageTitle) ?> | PureVia Admin
     </title>
 
 
@@ -128,7 +111,7 @@ $totalAttempts = count($loginAttempts);
 <body>
 
 
-<?php include("../../includes/sidemenu.php"); ?>
+<?php include __DIR__ . "/../../includes/sidemenu.php"; ?>
 
 
 <div class="admin-layout">
@@ -276,11 +259,11 @@ $totalAttempts = count($loginAttempts);
                         <?php foreach ($browsers as $browser): ?>
 
                             <option
-                                value="<?= htmlspecialchars(
+                                value="<?= pvHtml(
                                     strtolower($browser)
                                 ) ?>"
                             >
-                                <?= htmlspecialchars($browser) ?>
+                                <?= pvHtml($browser) ?>
                             </option>
 
                         <?php endforeach; ?>
@@ -413,15 +396,15 @@ $totalAttempts = count($loginAttempts);
                             <tr
                                 class="login-attempt-row"
 
-                                data-search="<?= htmlspecialchars(
+                                data-search="<?= pvHtml(
                                     $searchValue
                                 ) ?>"
 
-                                data-result="<?= htmlspecialchars(
+                                data-result="<?= pvHtml(
                                     $resultValue
                                 ) ?>"
 
-                                data-browser="<?= htmlspecialchars(
+                                data-browser="<?= pvHtml(
                                     strtolower($browser)
                                 ) ?>"
                             >
@@ -433,7 +416,7 @@ $totalAttempts = count($loginAttempts);
 
                                     <span class="login-attempt-email">
 
-                                        <?= htmlspecialchars($email) ?>
+                                        <?= pvHtml($email) ?>
 
                                     </span>
 
@@ -448,7 +431,7 @@ $totalAttempts = count($loginAttempts);
                                         class="
                                             login-result-badge
                                             login-result-<?=
-                                                htmlspecialchars(
+                                                pvHtml(
                                                     $resultValue
                                                 )
                                             ?>
@@ -468,7 +451,7 @@ $totalAttempts = count($loginAttempts);
 
                                     <span class="login-ip-address">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $ipAddress
                                         ) ?>
 
@@ -487,7 +470,7 @@ $totalAttempts = count($loginAttempts);
 
                                         <span>
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $browser
                                             ) ?>
 
@@ -504,7 +487,7 @@ $totalAttempts = count($loginAttempts);
 
                                     <span class="login-attempt-date">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $dateDisplay
                                         ) ?>
 
@@ -523,7 +506,7 @@ $totalAttempts = count($loginAttempts);
                                             : 'login-reason-failed' ?>"
                                     >
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $reason
                                         ) ?>
 
@@ -586,12 +569,12 @@ $totalAttempts = count($loginAttempts);
 
 <!-- JAVASCRIPT -->
 
-<script src="../../assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
-<script src="../../assets/js/login_attempts.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/login_attempts.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

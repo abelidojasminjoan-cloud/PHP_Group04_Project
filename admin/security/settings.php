@@ -1,157 +1,46 @@
 <?php
+declare(strict_types=1);
 
-/* =========================================================
-   PUREVIA ADMIN - SECURITY SETTINGS
-========================================================= */
+require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/csrf.php';
+require_once __DIR__ . '/../../services/security-policy.php';
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
+$admin = requirePureViaAdmin($conn);
 
 $pageTitle = 'Security Settings';
-
-require_once __DIR__ . '/../../config/db.php';
-
-
-/* =========================================================
-   TEMPORARY ADMIN SESSION
-   Remove this when final authentication is connected.
-========================================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
-
-
-/* =========================================================
-   DEFAULT SECURITY SETTINGS
-========================================================= */
-
-$settings = [
-    'password_min_length' => 12,
-    'require_uppercase' => 1,
-    'require_lowercase' => 1,
-    'require_number' => 1,
-    'require_special_character' => 1,
-    'require_otp' => 1,
-
-    'session_timeout_minutes' => 30,
-    'max_login_attempts' => 3,
-    'lockout_minutes' => 15
-];
-
-
-/* =========================================================
-   LOAD SECURITY SETTINGS
-========================================================= */
-
-$settingsQuery = "
-    SELECT
-        password_min_length,
-        require_uppercase,
-        require_lowercase,
-        require_number,
-        require_special_character,
-        require_otp,
-        session_timeout_minutes,
-        max_login_attempts,
-        lockout_minutes
-    FROM security_settings
-    ORDER BY id ASC
-    LIMIT 1
-";
-
-$settingsResult = $conn->query($settingsQuery);
-
-if ($settingsResult && $settingsResult->num_rows > 0) {
-
-    $row = $settingsResult->fetch_assoc();
-
-    $settings['password_min_length'] =
-        (int) $row['password_min_length'];
-
-    $settings['require_uppercase'] =
-        (int) $row['require_uppercase'];
-
-    $settings['require_lowercase'] =
-        (int) $row['require_lowercase'];
-
-    $settings['require_number'] =
-        (int) $row['require_number'];
-
-    $settings['require_special_character'] =
-        (int) $row['require_special_character'];
-
-    $settings['require_otp'] =
-        (int) $row['require_otp'];
-
-    $settings['session_timeout_minutes'] =
-        (int) $row['session_timeout_minutes'];
-
-    $settings['max_login_attempts'] =
-        (int) $row['max_login_attempts'];
-
-    $settings['lockout_minutes'] =
-        (int) $row['lockout_minutes'];
-}
-
-/* =========================================================
-   LOAD LOCKED ACCOUNTS
-========================================================= */
+$settings = securityPolicy($conn);
+$csrfToken = securityCsrfToken();
 
 $lockedAccounts = [];
 
-$lockedQuery = "
+$sql = "
     SELECT
-        id,
-        first_name,
-        last_name,
-        email,
-        status,
-        failed_login_attempts,
-        locked_until
-    FROM users
-    WHERE status = 'locked'
-       OR (
-            locked_until IS NOT NULL
-            AND locked_until > NOW()
-       )
-    ORDER BY
-        locked_until DESC,
-        first_name ASC,
-        last_name ASC
+        u.id,
+        u.role_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.status,
+        u.failed_login_attempts,
+        u.locked_until
+    FROM users u
+    WHERE u.status = 'locked'
+       OR u.locked_until IS NOT NULL
+       OR u.failed_login_attempts >= " . (int) $settings['max_login_attempts'] . "
+    ORDER BY u.first_name ASC, u.last_name ASC
 ";
 
-$lockedResult = $conn->query($lockedQuery);
+$result = $conn->query($sql);
 
-if ($lockedResult) {
-
-    while ($row = $lockedResult->fetch_assoc()) {
-
-        $lockedAccounts[] = $row;
-    }
+while ($row = $result->fetch_assoc()) {
+    $lockedAccounts[] = $row;
 }
 
 $totalLockedAccounts = count($lockedAccounts);
 
-
-/* =========================================================
-   ADMIN INFORMATION
-========================================================= */
-
-$adminFirstName =
-    $_SESSION['first_name'] ?? 'Admin';
-
-$adminLastName =
-    $_SESSION['last_name'] ?? 'User';
-
-$adminEmail =
-    $_SESSION['email'] ?? 'admin@purevia.com';
-
+$adminFirstName = $admin['first_name'] ?? 'Admin';
+$adminLastName = $admin['last_name'] ?? '';
+$adminEmail = $admin['email'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -167,7 +56,7 @@ $adminEmail =
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Admin
+        <?= pvHtml($pageTitle) ?> | PureVia Admin
     </title>
 
 
@@ -210,7 +99,7 @@ $adminEmail =
 <body>
 
 
-<?php include("../../includes/sidemenu.php"); ?>
+<?php include __DIR__ . "/../../includes/sidemenu.php"; ?>
 
 
 <div class="admin-layout">
@@ -269,7 +158,7 @@ $adminEmail =
                 <i class="fa-solid fa-circle-check"></i>
 
                 <span>
-                    <?= htmlspecialchars(
+                    <?= pvHtml(
                         $_SESSION['security_success']
                     ) ?>
                 </span>
@@ -288,7 +177,7 @@ $adminEmail =
                 <i class="fa-solid fa-circle-exclamation"></i>
 
                 <span>
-                    <?= htmlspecialchars(
+                    <?= pvHtml(
                         $_SESSION['security_error']
                     ) ?>
                 </span>
@@ -312,176 +201,72 @@ $adminEmail =
             ============================================== -->
 
             <form
+                id="passwordPolicyForm"
                 action="../../actions/admin/security/update-password-policy.php"
                 method="POST"
-                class="security-settings-card"
+                class="security-settings-card password-policy-card"
             >
+                <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
+                <h2>Password Policy</h2>
 
-                <h2>
-                    Password Policy
-                </h2>
-
-
-                <!-- MINIMUM LENGTH -->
-
-                <div class="security-setting-row">
-
-                    <label for="passwordMinLength">
-                        Minimum Length
-                    </label>
-
-                    <input
-                        type="number"
-                        id="passwordMinLength"
-                        name="password_min_length"
-                        min="8"
-                        max="128"
-                        value="<?= htmlspecialchars(
-                            $settings['password_min_length']
-                        ) ?>"
-                        required
-                    >
-
+                <div class="password-policy-row">
+                    <div class="password-policy-label">
+                        <label for="passwordMinLength">Minimum password length</label>
+                        <p id="passwordLengthHelp">Allowed range: 8–64 characters</p>
+                    </div>
+                    <div class="password-policy-value">
+                        <input type="number" id="passwordMinLength" name="password_min_length" min="8" max="64" step="1" value="<?= (int) $settings['password_min_length'] ?>" aria-describedby="passwordLengthHelp" required>
+                        <span>characters</span>
+                    </div>
                 </div>
 
-
-                <!-- REQUIRE UPPERCASE -->
-
-                <div class="security-setting-row">
-
-                    <label for="passwordRequireUppercase">
-                        Require Uppercase
-                    </label>
-
-                    <select
-                        id="passwordRequireUppercase"
-                        name="password_require_uppercase"
-                    >
-
-                        <option
-                            value="1"
-                            <?= (int) $settings[
-                                'password_require_uppercase'
-                            ] === 1 ? 'selected' : '' ?>
-                        >
-                            Yes
-                        </option>
-
-                        <option
-                            value="0"
-                            <?= (int) $settings[
-                                'password_require_uppercase'
-                            ] === 0 ? 'selected' : '' ?>
-                        >
-                            No
-                        </option>
-
-                    </select>
-
+                <div class="password-policy-row">
+                    <div class="password-policy-label">
+                        <label for="passwordExpiryDays">Password expiration</label>
+                        <p id="passwordExpiryHelp">Enter 0 to disable expiration</p>
+                    </div>
+                    <div class="password-policy-value">
+                        <input type="number" id="passwordExpiryDays" name="password_expiry_days" min="0" max="365" step="1" value="<?= (int) $settings['password_expiry_days'] ?>" aria-describedby="passwordExpiryHelp" required>
+                        <span>days</span>
+                    </div>
                 </div>
 
+                <fieldset class="password-complexity">
+                    <legend>Password complexity</legend>
+                    <p>Choose Yes to require a character type, then set its minimum count.</p>
+                    <?php foreach ([
+                        'uppercase' => ['Capital letters', 'A–Z', 'uppercase'],
+                        'lowercase' => ['Small letters', 'a–z', 'lowercase'],
+                        'number' => ['Numbers', '0–9', 'number'],
+                        'special_character' => ['Special characters', '! @ # $ %', 'special'],
+                    ] as $type => [$label, $example, $inputName]): ?>
+                        <div class="password-complexity-row" data-complexity="<?= pvHtml($type) ?>">
+                            <div class="password-policy-label">
+                                <span class="password-character-title" id="passwordLabel_<?= pvHtml($type) ?>"><?= pvHtml($label) ?></span>
+                                <p><?= pvHtml($example) ?></p>
+                            </div>
+                            <div class="password-complexity-controls">
+                                <label>
+                                    <span>Required?</span>
+                                    <select name="password_require_<?= pvHtml($inputName) ?>" aria-labelledby="passwordLabel_<?= pvHtml($type) ?>" data-requirement>
+                                        <option value="1" <?= $settings['require_' . $type] ? 'selected' : '' ?>>Yes</option>
+                                        <option value="0" <?= !$settings['require_' . $type] ? 'selected' : '' ?>>No</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Minimum count</span>
+                                    <input type="number" name="password_min_<?= pvHtml($type) ?>" min="1" max="64" step="1" value="<?= (int) $settings['min_' . $type] ?>" aria-label="<?= pvHtml($label) ?> minimum count" data-minimum <?= $settings['require_' . $type] ? 'required' : 'disabled' ?>>
+                                </label>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </fieldset>
 
-                <!-- REQUIRE NUMBER -->
-
-                <div class="security-setting-row">
-
-                    <label for="passwordRequireNumber">
-                        Require Number
-                    </label>
-
-                    <select
-                        id="passwordRequireNumber"
-                        name="password_require_number"
-                    >
-
-                        <option
-                            value="1"
-                            <?= (int) $settings[
-                                'require_number'
-                            ] === 1 ? 'selected' : '' ?>
-                        >
-                            Yes
-                        </option>
-
-                        <option
-                            value="0"
-                            <?= (int) $settings[
-                                'require_number'
-                            ] === 0 ? 'selected' : '' ?>
-                        >
-                            No
-                        </option>
-
-                    </select>
-
+                <div class="password-policy-summary" role="status" aria-live="polite">
+                    <strong>Current requirement</strong>
+                    <p id="passwordPolicySummary"><?= pvHtml(securityPasswordPolicySummary($settings)) ?></p>
                 </div>
-
-
-                <!-- REQUIRE SPECIAL CHARACTER -->
-
-                <div class="security-setting-row">
-
-                    <label for="passwordRequireSpecial">
-                        Require Special Char
-                    </label>
-
-                    <select
-                        id="passwordRequireSpecial"
-                        name="password_require_special"
-                    >
-
-                        <option
-                            value="1"
-                            <?= (int) $settings[
-                                'require_special_character'
-                            ] === 1 ? 'selected' : '' ?>
-                        >
-                            Yes
-                        </option>
-
-                        <option
-                            value="0"
-                            <?= (int) $settings[
-                                'require_special_character'
-                            ] === 0 ? 'selected' : '' ?>
-                        >
-                            No
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- PASSWORD EXPIRY -->
-
-                <div class="security-setting-row">
-
-                    <label for="passwordExpiryDays">
-                        Password Expiry (days)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="passwordExpiryDays"
-                        name="password_expiry_days"
-                        min="0"
-                        max="365"
-                        value="<?= htmlspecialchars(
-                            $settings['require_uppercase']
-                        ) ?>"
-                    >
-
-                </div>
-
-
-                <button
-                    type="submit"
-                    class="security-save-button"
-                >
-                    Save Changes
-                </button>
-
+                <button type="submit" class="security-save-button">Save Password Policy</button>
             </form>
 
 
@@ -494,6 +279,7 @@ $adminEmail =
                 method="POST"
                 class="security-settings-card"
             >
+                <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
 
                 <h2>
                     Session &amp; Lockout
@@ -514,11 +300,9 @@ $adminEmail =
                         name="session_timeout_minutes"
                         min="1"
                         max="1440"
-                        value="<?= htmlspecialchars(
-                            $settings[
+                        value="<?= (int) $settings[
                                 'session_timeout_minutes'
-                            ]
-                        ) ?>"
+                            ] ?>"
                         required
                     >
 
@@ -539,9 +323,7 @@ $adminEmail =
                         name="max_login_attempts"
                         min="1"
                         max="20"
-                        value="<?= htmlspecialchars(
-                            $settings['max_login_attempts']
-                        ) ?>"
+                        value="<?= (int) $settings['max_login_attempts'] ?>"
                         required
                     >
 
@@ -560,14 +342,11 @@ $adminEmail =
                         type="number"
                         id="lockoutDuration"
                         name="lockout_duration_minutes"
-                        min="1"
+                        min="0"
                         max="1440"
-                        value="<?= htmlspecialchars(
-                            $settings[
-                                'lockout_minutes'
-                            ]
-                        ) ?>"
-                        required
+                        value="0"
+                        readonly
+                        title="Accounts remain locked until an administrator unlocks them."
                     >
 
                 </div>
@@ -585,11 +364,11 @@ $adminEmail =
                         type="number"
                         id="rememberMeDays"
                         name="remember_me_days"
-                        min="1"
+                        min="0"
                         max="90"
-                        value="<?= htmlspecialchars(
-                            $settings['remember_me_days']
-                        ) ?>"
+                        value="0"
+                        readonly
+                        title="Remember Me is not enabled."
                     >
 
                 </div>
@@ -766,40 +545,7 @@ $adminEmail =
                                 ========================== */
 
                                 $lockType = 'locked';
-
-                                if (
-                                    !empty($account['locked_until'])
-                                    &&
-                                    strtotime(
-                                        $account['locked_until']
-                                    ) > time()
-                                ) {
-
-                                    $lockType = 'temporary';
-                                }
-
-
-                                /* =========================
-                                   LOCKED UNTIL DISPLAY
-                                ========================== */
-
-                                $lockedUntilDisplay = '—';
-
-                                if (!empty($account['locked_until'])) {
-
-                                    $timestamp = strtotime(
-                                        $account['locked_until']
-                                    );
-
-                                    if ($timestamp !== false) {
-
-                                        $lockedUntilDisplay = date(
-                                            'Y-m-d H:i',
-                                            $timestamp
-                                        );
-                                    }
-                                }
-
+                                $lockedUntilDisplay = 'Until manually unlocked';
 
                                 $searchValue = strtolower(
                                     $fullName . ' '
@@ -812,11 +558,11 @@ $adminEmail =
                                 <tr
                                     class="locked-account-row"
 
-                                    data-search="<?= htmlspecialchars(
+                                    data-search="<?= pvHtml(
                                         $searchValue
                                     ) ?>"
 
-                                    data-status="<?= htmlspecialchars(
+                                    data-status="<?= pvHtml(
                                         $lockType
                                     ) ?>"
                                 >
@@ -830,7 +576,7 @@ $adminEmail =
 
                                             <div class="locked-avatar">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $initial
                                                 ) ?>
 
@@ -840,7 +586,7 @@ $adminEmail =
 
                                                 <strong>
 
-                                                    <?= htmlspecialchars(
+                                                    <?= pvHtml(
                                                         $fullName
                                                     ) ?>
 
@@ -859,7 +605,7 @@ $adminEmail =
 
                                         <span class="locked-email">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $account['email']
                                             ) ?>
 
@@ -887,7 +633,7 @@ $adminEmail =
 
                                         <span class="locked-until">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $lockedUntilDisplay
                                             ) ?>
 
@@ -904,7 +650,7 @@ $adminEmail =
                                             class="
                                                 locked-status
                                                 locked-status-<?=
-                                                    htmlspecialchars(
+                                                    pvHtml(
                                                         $lockType
                                                     )
                                                 ?>
@@ -929,6 +675,7 @@ $adminEmail =
                                             method="POST"
                                             class="unlock-form"
                                         >
+                                            <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
 
                                             <input
                                                 type="hidden"
@@ -939,7 +686,7 @@ $adminEmail =
                                             <button
                                                 type="submit"
                                                 class="unlock-account-button"
-                                                data-user-name="<?= htmlspecialchars(
+                                                data-user-name="<?= pvHtml(
                                                     $fullName
                                                 ) ?>"
                                             >
@@ -1001,12 +748,12 @@ $adminEmail =
 </div>
 
 
-<script src="../../assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
-<script src="../../assets/js/security_settings.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/security_settings.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

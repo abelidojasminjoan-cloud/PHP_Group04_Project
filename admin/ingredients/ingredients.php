@@ -6,7 +6,7 @@ $pageTitle = 'Ingredients';
 
 function ingredientEscape(?string $value): string
 {
-    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    return pvHtml($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 $adminId = (int) ($_SESSION['user_id'] ?? 0);
@@ -171,7 +171,7 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia
+        <?= pvHtml($pageTitle) ?> | PureVia
     </title>
 
 
@@ -429,11 +429,11 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
                                 <tr
                                     class="ingredient-row"
 
-                                    data-status="<?= htmlspecialchars(
+                                    data-status="<?= pvHtml(
                                         $status
                                     ) ?>"
 
-                                    data-search="<?= htmlspecialchars(
+                                    data-search="<?= pvHtml(
                                         $searchData
                                     ) ?>"
                                 >
@@ -445,7 +445,7 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
 
                                         <span class="ingredient-name">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $ingredient['name']
                                             ) ?>
 
@@ -460,7 +460,7 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
 
                                         <span class="ingredient-description">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $ingredient['description']
                                             ) ?>
 
@@ -475,7 +475,7 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
 
                                         <span class="ingredient-common">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $ingredient['common_in']
                                             ) ?>
 
@@ -491,14 +491,14 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
                                         <span
                                             class="
                                                 ingredient-status
-                                                status-<?= htmlspecialchars(
+                                                status-<?= pvHtml(
                                                     $status
                                                 ) ?>
                                             "
                                         >
 
                                             <?= strtoupper(
-                                                htmlspecialchars(
+                                                pvHtml(
                                                     $ingredient['status']
                                                 )
                                             ) ?>
@@ -527,7 +527,7 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
                                                 aria-haspopup="dialog"
                                                 aria-controls="addIngredientModal"
                                                 title="Edit ingredient"
-                                                aria-label="Edit <?= htmlspecialchars(
+                                                aria-label="Edit <?= pvHtml(
                                                     $ingredient['name']
                                                 ) ?>"
                                             >
@@ -545,15 +545,15 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
 
                                                 title="Delete ingredient"
 
-                                                aria-label="Delete <?= htmlspecialchars(
+                                                aria-label="Delete <?= pvHtml(
                                                     $ingredient['name']
                                                 ) ?>"
 
-                                                data-ingredient-id="<?= htmlspecialchars(
+                                                data-ingredient-id="<?= pvHtml(
                                                     $ingredient['id']
                                                 ) ?>"
 
-                                                data-ingredient-name="<?= htmlspecialchars(
+                                                data-ingredient-name="<?= pvHtml(
                                                     $ingredient['name']
                                                 ) ?>"
                                             >
@@ -672,15 +672,15 @@ $ingredientModalOpen = (bool) ($ingredientErrors || $ingredientFormError);
 
     <!-- SIDEBAR JS -->
 
-    <script src="../../assets/js/sidemenu.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
 
     <!-- INGREDIENT JS -->
 
-    <script src="../../assets/js/ingredients.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/ingredients.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
 </body>

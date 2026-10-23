@@ -6,6 +6,8 @@
 ========================================================= */
 declare(strict_types=1);
 
+require_once __DIR__ . '/../includes/output-security.php';
+
 $projectRoot = dirname(__DIR__);
 $autoload = $projectRoot . '/vendor/autoload.php';
 
@@ -54,6 +56,13 @@ define(
         '/'
     )
 );
+
+// Temporarily set TWO_FACTOR_ENABLED=false in .env for password-only testing.
+define('TWO_FACTOR_ENABLED', filter_var(
+    $_ENV['TWO_FACTOR_ENABLED'] ?? 'true',
+    FILTER_VALIDATE_BOOLEAN,
+    FILTER_NULL_ON_FAILURE
+) ?? true);
 
 /* =========================================================
    ERROR DISPLAY
@@ -265,27 +274,7 @@ define(
 );
 
 
-/* =========================================================
-   CHECK SESSION TIMEOUT
-========================================================= */
-
-if (
-    isset($_SESSION['last_activity']) &&
-    (time() - $_SESSION['last_activity']) > SESSION_TIMEOUT
-) {
-
-    $_SESSION = [];
-
-    session_destroy();
-
-}
-
-
-if (session_status() === PHP_SESSION_ACTIVE) {
-
-    $_SESSION['last_activity'] = time();
-
-}
+// The database bootstrap applies the saved session timeout before authorizing requests.
 
 
 /* =========================================================
@@ -295,23 +284,12 @@ if (session_status() === PHP_SESSION_ACTIVE) {
 
 /*
  * Maximum failed login attempts before
- * temporary account lockout.
+ * permanent account lockout. A locked account must be manually unlocked.
  */
 
 define(
     'MAX_LOGIN_ATTEMPTS',
     3
-);
-
-
-/*
- * Lockout duration:
- * 15 minutes
- */
-
-define(
-    'LOGIN_LOCKOUT_TIME',
-    15 * 60
 );
 
 

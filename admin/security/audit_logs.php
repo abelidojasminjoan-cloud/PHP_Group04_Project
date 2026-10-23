@@ -4,29 +4,10 @@
    PUREVIA ADMIN - AUDIT LOGS
 ========================================================= */
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
+require_once __DIR__ . '/../../includes/role-check.php';
+requirePureViaAdmin($conn);
 
 $pageTitle = 'Audit Logs';
-
-require_once __DIR__ . '/../../config/db.php';
-
-
-/* =========================================================
-   ADMIN ACCESS
-
-   Replace/remove this temporary session section when your
-   final authentication system is already connected.
-========================================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
 
 
 /* =========================================================
@@ -133,7 +114,7 @@ ksort($modules);
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Admin
+        <?= pvHtml($pageTitle) ?> | PureVia Admin
     </title>
 
 
@@ -193,7 +174,7 @@ ksort($modules);
 <body>
 
 
-<?php include("../../includes/sidemenu.php"); ?>
+<?php include __DIR__ . "/../../includes/sidemenu.php"; ?>
 
 
 <div class="admin-layout">
@@ -319,9 +300,9 @@ ksort($modules);
                         <?php foreach ($actions as $value => $label): ?>
 
                             <option
-                                value="<?= htmlspecialchars($value) ?>"
+                                value="<?= pvHtml($value) ?>"
                             >
-                                <?= htmlspecialchars(
+                                <?= pvHtml(
                                     ucwords(
                                         str_replace(
                                             '_',
@@ -371,9 +352,9 @@ ksort($modules);
                         <?php foreach ($modules as $value => $label): ?>
 
                             <option
-                                value="<?= htmlspecialchars($value) ?>"
+                                value="<?= pvHtml($value) ?>"
                             >
-                                <?= htmlspecialchars(
+                                <?= pvHtml(
                                     ucwords(
                                         str_replace(
                                             '_',
@@ -598,15 +579,15 @@ ksort($modules);
                             <tr
                                 class="audit-row"
 
-                                data-search="<?= htmlspecialchars(
+                                data-search="<?= pvHtml(
                                     $searchValue
                                 ) ?>"
 
-                                data-action="<?= htmlspecialchars(
+                                data-action="<?= pvHtml(
                                     $action
                                 ) ?>"
 
-                                data-module="<?= htmlspecialchars(
+                                data-module="<?= pvHtml(
                                     strtolower($module)
                                 ) ?>"
                             >
@@ -620,7 +601,7 @@ ksort($modules);
                                         class="
                                             audit-action-badge
                                             audit-action-<?=
-                                                htmlspecialchars(
+                                                pvHtml(
                                                     preg_replace(
                                                         '/[^a-z0-9_-]/',
                                                         '',
@@ -631,7 +612,7 @@ ksort($modules);
                                         "
                                     >
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $actionLabel
                                         ) ?>
 
@@ -646,7 +627,7 @@ ksort($modules);
 
                                     <span class="audit-module">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $moduleLabel
                                         ) ?>
 
@@ -661,7 +642,7 @@ ksort($modules);
 
                                     <span class="audit-user">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $userName
                                         ) ?>
 
@@ -676,7 +657,7 @@ ksort($modules);
 
                                     <span class="audit-date">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $dateDisplay
                                         ) ?>
 
@@ -691,7 +672,7 @@ ksort($modules);
 
                                     <span class="audit-details">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $details
                                         ) ?>
 
@@ -763,12 +744,12 @@ ksort($modules);
      JAVASCRIPT
 ========================================================= -->
 
-<script src="../../assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
-<script src="../../assets/js/audit_logs.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/audit_logs.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

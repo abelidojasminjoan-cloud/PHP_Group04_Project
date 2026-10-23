@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../services/ProductSuitability.php';
 
 function productAdminAllowed(mysqli $conn): bool
 {
@@ -67,6 +68,12 @@ function productEditData(mysqli $conn, int $productId, bool $lock = false): ?arr
         FROM product_ingredients p INNER JOIN ingredients s ON s.id = p.ingredient_id
         WHERE p.product_id = ? ORDER BY s.id
     ");
+    $product['suitability_tags'] = $read("
+        SELECT t.id, t.name AS label, t.status FROM product_suitability_tags pt
+        INNER JOIN suitability_tags t ON t.id=pt.suitability_tag_id
+        WHERE pt.product_id=? ORDER BY t.id
+    ");
+    $product['suitability_settings'] = ProductSuitability::read($conn, $productId);
     $product['revision'] = hash('sha256', json_encode($product, JSON_THROW_ON_ERROR));
     return $product;
 }

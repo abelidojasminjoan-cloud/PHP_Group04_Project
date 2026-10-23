@@ -171,7 +171,7 @@ try {
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia
+        <?= pvHtml($pageTitle) ?> | PureVia
     </title>
 
 
@@ -263,10 +263,10 @@ try {
                 <h1>Dashboard</h1>
 
                 <p>
-                    <?= htmlspecialchars($currentDate) ?>
+                    <?= pvHtml($currentDate) ?>
                     ·
-                    <?= htmlspecialchars($greeting) ?>,
-                    <?= htmlspecialchars($adminFirstName) ?>!
+                    <?= pvHtml($greeting) ?>,
+                    <?= pvHtml($adminFirstName) ?>!
                 </p>
 
             </section>
@@ -278,7 +278,7 @@ try {
             ================================== -->
 
             <?php if ($dashboardError !== null): ?>
-                <p class="alert alert-danger" role="alert"><?= htmlspecialchars($dashboardError) ?></p>
+                <p class="alert alert-danger" role="alert"><?= pvHtml($dashboardError) ?></p>
             <?php else: ?>
 
             <section class="dashboard-stats">
@@ -526,7 +526,7 @@ try {
 
                                     <td class="order-id">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $order['order_number']
                                         ) ?>
 
@@ -535,7 +535,7 @@ try {
 
                                     <td>
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $order['customer']
                                         ) ?>
 
@@ -544,7 +544,7 @@ try {
 
                                     <td class="order-date">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $order['date']
                                         ) ?>
 
@@ -566,14 +566,14 @@ try {
                                         <span
                                             class="
                                                 status-badge
-                                                status-<?= htmlspecialchars(
+                                                status-<?= pvHtml(
                                                     $orderStatusClasses[$order['status']] ?? 'pending'
                                                 ) ?>
                                             "
                                         >
 
                                             <?= strtoupper(
-                                                htmlspecialchars(
+                                                pvHtml(
                                                     $order['status']
                                                 )
                                             ) ?>
@@ -588,14 +588,14 @@ try {
                                         <span
                                             class="
                                                 payment-badge
-                                                payment-<?= htmlspecialchars(
+                                                payment-<?= pvHtml(
                                                     $order['payment']
                                                 ) ?>
                                             "
                                         >
 
                                             <?= strtoupper(
-                                                htmlspecialchars(
+                                                pvHtml(
                                                     $order['payment']
                                                 )
                                             ) ?>
@@ -647,7 +647,7 @@ try {
 
                             <p class="low-stock-product-name">
 
-                                <?= htmlspecialchars(
+                                <?= pvHtml(
                                     $product['name']
                                 ) ?>
 
@@ -794,10 +794,10 @@ try {
          JAVASCRIPT
     ====================================== -->
 
-    <script src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

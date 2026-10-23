@@ -30,3 +30,11 @@ try {
     http_response_code(500);
     exit('Unable to connect to the database.');
 }
+
+require_once __DIR__ . '/../services/security-policy.php';
+$pureViaRequestPolicy = securityPolicy($conn);
+enforcePureViaSessionTimeout(
+    $pureViaRequestPolicy,
+    !defined('PUREVIA_SESSION_STATUS_REQUEST')
+);
+enforcePureViaPasswordExpiry($conn, $pureViaRequestPolicy);

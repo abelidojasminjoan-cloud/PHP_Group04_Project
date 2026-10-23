@@ -1,0 +1,4 @@
+/* Skin Types uses the existing Skin Concerns page styles. */
+.sa-types-page [hidden] { display: none !important; }
+.sa-types-page .skin-concerns-search > svg { flex-shrink: 0; color: #8c9188; }
+.sa-types-page .skin-concern-action-button > svg { pointer-events: none; }

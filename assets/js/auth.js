@@ -45,14 +45,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const fields = Array.from(form.querySelectorAll('input:not([type="hidden"])'));
     const formError = document.querySelector('.auth-form-error');
     const registerPassword = document.getElementById('registerPassword');
+    let registering = false;
 
+    if (registerPassword) {
+        window.addEventListener('pageshow', () => {
+            registering = false;
+            form.removeAttribute('aria-busy');
+            form.querySelector('button[type="submit"]').disabled = false;
+        });
+    }
+
+    const minimumLength = registerPassword ? registerPassword.minLength : 12;
     const passwordRules = [
-        { key: 'length', test: value => value.length >= 12, message: 'Password must contain at least 12 characters.' },
+        { key: 'length', test: value => [...value].length >= minimumLength, message: `Password must contain at least ${minimumLength} characters.` },
         { key: 'uppercase', test: value => /[A-Z]/.test(value), message: 'Password must contain at least one uppercase letter.' },
         { key: 'lowercase', test: value => /[a-z]/.test(value), message: 'Password must contain at least one lowercase letter.' },
         { key: 'number', test: value => /[0-9]/.test(value), message: 'Password must contain at least one number.' },
         { key: 'symbol', test: value => /[^A-Za-z0-9]/.test(value), message: 'Password must contain at least one special character.' }
-    ];
+    ].filter(rule => !registerPassword || document.getElementById('registerPasswordFeedback')?.querySelector(`[data-password-rule="${rule.key}"]`));
+
+    for (const rule of passwordRules) {
+        if (rule.key === 'length') continue;
+        const item = (document.getElementById('registerPasswordFeedback'))?.querySelector(`[data-password-rule="${rule.key}"]`);
+        const minimum = Number(item?.dataset.minCount || 1);
+        const pattern = { uppercase: /[A-Z]/g, lowercase: /[a-z]/g, number: /[0-9]/g, symbol: /[^A-Za-z0-9]/gu }[rule.key];
+        rule.test = value => (value.match(pattern) || []).length >= minimum;
+        if (item) rule.message = item.textContent.trim() + '.';
+    }
 
     const passwordFeedback = document.getElementById('registerPasswordFeedback');
     const passwordStrength = document.getElementById('registerPasswordStrength');
@@ -121,6 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'password': {
                 if (!value) return registerPassword ? 'Please create a password.' : 'Please enter your password.';
                 if (!registerPassword) break;
+                if (new TextEncoder().encode(value).length > 72 || value.includes('\0')) return 'Password must not exceed 72 bytes or contain null characters.';
                 const unmet = passwordRules.find(rule => !rule.test(value));
                 if (unmet) return unmet.message;
                 break;
@@ -128,9 +148,6 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'confirm_password':
                 if (!value) return 'Please confirm your password.';
                 if (value !== registerPassword.value) return 'Passwords do not match.';
-                break;
-            case 'terms':
-                if (!input.checked) return 'Please agree to the Terms and Privacy Policy.';
                 break;
         }
 
@@ -146,6 +163,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener('submit', event => {
+        if (registering) {
+            event.preventDefault();
+            return;
+        }
         if (formError) formError.hidden = true;
         let firstInvalid = null;
 
@@ -158,6 +179,17 @@ document.addEventListener('DOMContentLoaded', function () {
         if (firstInvalid) {
             event.preventDefault();
             firstInvalid.focus();
+            return;
+        }
+
+        if (registerPassword && window.PureViaAuthLoading) {
+            registering = true;
+            form.setAttribute('aria-busy', 'true');
+            form.querySelector('button[type="submit"]').disabled = true;
+            window.PureViaAuthLoading.show(
+                'Creating your account',
+                'Sending a verification code to your email.'
+            );
         }
     });
 

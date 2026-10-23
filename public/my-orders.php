@@ -1,8 +1,9 @@
-
 <?php
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../services/order-cancellation.php';
+require_once __DIR__ . '/../services/order-returns.php';
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
@@ -13,7 +14,7 @@ if ($userId <= 0) {
 
 function moEsc(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -27,7 +28,7 @@ function moMoney(mixed $value): string
 
 function moImage(?string $path): string
 {
-    $fallback = BASE_URL . '/assets/images/products/default-product.jpg';
+    $fallback = BASE_URL . '/assets/images/products/default-product.svg';
     $path = trim((string) $path);
 
     if ($path === '') {
@@ -57,45 +58,49 @@ function moImage(?string $path): string
 
 function moTab(array $order): string
 {
-    $status = (string) $order['order_status'];
-    $payment = (string) $order['payment_status'];
-    $method = (string) ($order['payment_method'] ?? 'cod');
-
-    if ($status === 'cancelled') {
-        return 'cancelled';
-    }
-
-    if (in_array($status, ['delivered', 'completed'], true)) {
-        return 'completed';
-    }
-
-    if ($status === 'shipping') {
-        return 'receive';
-    }
-
-    if (in_array($status, ['confirmed', 'preparing'], true)) {
-        return 'ship';
-    }
-
-    if ($method !== 'cod' && $payment !== 'paid') {
-        return 'pay';
-    }
-
-    return 'ship';
+    return match ((string) $order['order_status']) {
+        'cancelled' => 'cancelled',
+        'returned' => 'returned',
+        'delivered', 'completed' => 'completed',
+        'shipping' => 'receive',
+        'confirmed', 'preparing' => 'ship',
+        default => 'pending'
+    };
 }
 
-function moStatusLabel(array $order): string
+function moPresentation(array $order): array
 {
-    return match ((string) $order['order_status']) {
-        'pending' => 'Pending',
-        'confirmed' => 'Confirmed',
-        'preparing' => 'Processing',
-        'shipping' => 'Shipping',
-        'delivered' => 'Delivered',
-        'completed' => 'Completed',
-        'cancelled' => 'Cancelled',
-        default => 'Pending'
+    return match (moTab($order)) {
+        'ship' => ['label' => 'To ship', 'state' => 'Being prepared', 'message' => 'Getting ready to ship', 'icon' => 'box', 'progress' => 2],
+        'receive' => ['label' => 'To receive', 'state' => 'In transit', 'message' => 'On its way to you', 'icon' => 'truck', 'progress' => 3],
+        'completed' => ['label' => 'Completed', 'state' => 'Delivered', 'message' => 'Delivery complete', 'icon' => 'bag', 'progress' => 4],
+        'cancelled' => ['label' => 'Cancelled', 'state' => 'Order cancelled', 'message' => '', 'icon' => 'box', 'progress' => 0],
+        'returned' => ['label' => 'Returned', 'state' => 'Return completed', 'message' => '', 'icon' => 'bag', 'progress' => 0],
+        default => ['label' => 'Pending', 'state' => 'Awaiting confirmation', 'message' => $order['payment_status'] === 'failed' ? 'Please review your payment' : 'Confirming shortly', 'icon' => 'box', 'progress' => 1],
     };
+}
+
+function moIcon(string $name): string
+{
+    $paths = [
+        'box' => '<path d="m12 3 9 4.5v9L12 21l-9-4.5v-9L12 3Z"/><path d="m3 7.5 9 4.5 9-4.5M12 12v9M7.5 5.25l9 4.5"/>',
+        'truck' => '<path d="M3 5h11v12H3zM14 9h4l3 4v4h-7M14 13h7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+        'bag' => '<path d="M6 7h12l1 14H5L6 7Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/>',
+        'arrow-left' => '<path d="m12 5-7 7 7 7M5 12h15"/>',
+        'chevron' => '<path d="m9 5 7 7-7 7"/>',
+        'search' => '<circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/>',
+    ];
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
+        . ($paths[$name] ?? $paths['box']) . '</svg>';
+}
+
+function moProductParts(array $item): array
+{
+    $name = (string) $item['product_name'];
+    if (preg_match('/^(.+?)\s+\(([^()]*)\)$/u', $name, $parts)) {
+        return [$parts[1], $parts[2]];
+    }
+    return [$name, moMoney($item['unit_price']) . ' each'];
 }
 
 // GET CUSTOMER ORDERS
@@ -168,6 +173,34 @@ if ($orderIds) {
     $itemStmt->close();
 }
 
+$orderTabs = [
+    'all' => 'All', 'pending' => 'Pending', 'ship' => 'To ship',
+    'receive' => 'To receive', 'completed' => 'Completed',
+    'cancelled' => 'Cancelled', 'returned' => 'Returned',
+];
+$tabCounts = array_fill_keys(array_keys($orderTabs), 0);
+$tabCounts['all'] = count($orders);
+$nextDelivery = null;
+$deliveryPriority = 0;
+$cancellations = [];
+$returnForms = [];
+$returnRequests = $orders ? customerReturnRequests($conn, $userId) : [];
+foreach ($orders as $order) {
+    $orderTab = moTab($order);
+    $tabCounts[$orderTab]++;
+    if ($orderTab === 'cancelled') {
+        $cancellations[(int) $order['id']] = orderCancellationDetails($order);
+    }
+    if (orderReturnEligible($order) && !isset($returnRequests[(int) $order['id']])) {
+        $returnForms[(int) $order['id']] = orderReturnFormData($order, $itemsByOrder[(int) $order['id']] ?? [], 'moImage');
+    }
+    $priority = ['pending' => 1, 'ship' => 2, 'receive' => 3][$orderTab] ?? 0;
+    if ($priority > $deliveryPriority) {
+        $deliveryPriority = $priority;
+        $nextDelivery = $order;
+    }
+}
+
 // CSRF TOKEN
 
 if (empty($_SESSION['csrf_token'])) {
@@ -204,140 +237,13 @@ $csrfToken = $_SESSION['csrf_token'];
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <style>
-        /* ORDER TOTAL BELOW PRODUCTS */
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Poppins:wght@300;400;500;600&family=Source+Serif+4:wght@500&display=swap" rel="stylesheet">
 
-        .mo-order-total-row {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 22px 20px;
-            background: #ffffff;
-        }
-
-        .mo-order-total-row span {
-            font-size: 12px;
-            color: #24221f;
-        }
-
-        .mo-order-total-row .mo-order-total {
-            color: #35654d;
-            font-family: 'Poppins', sans-serif;
-            font-size: 17px;
-            font-weight: 700;
-        }
-
-        /* ORDER ACTIONS */
-
-        .mo-order-actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            flex-wrap: wrap;
-            gap: 9px;
-        }
-
-        .mo-cancel-button,
-        .mo-cancellation-details-button,
-        .mo-review-button,
-        .mo-details-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 37px;
-            padding: 0 16px;
-            border-radius: 7px;
-            font-family: inherit;
-            font-size: 11px;
-            font-weight: 600;
-            line-height: 1.2;
-            text-decoration: none;
-            cursor: pointer;
-            transition:
-                background-color 0.2s ease,
-                border-color 0.2s ease,
-                color 0.2s ease;
-        }
-
-        /* CANCEL ORDER DEFAULT */
-
-        .mo-cancel-button {
-            border: 1px solid transparent;
-            background: transparent;
-            color: #c3382a;
-        }
-
-        /* CANCEL ORDER HOVER */
-
-        .mo-cancel-button:hover {
-            border-color: #c3382a;
-            background: #c3382a;
-            color: #ffffff;
-            text-decoration: none;
-        }
-
-        /* VIEW DETAILS DEFAULT */
-
-        .mo-details-button {
-            border: 1px solid #35654d;
-            background: #ffffff;
-            color: #35654d;
-        }
-
-        /* VIEW DETAILS HOVER */
-
-        .mo-details-button:hover {
-            border-color: #35654d;
-            background: #35654d;
-            color: #ffffff;
-            text-decoration: none;
-        }
-
-        /* REVIEW PRODUCTS */
-
-        .mo-review-button {
-            border: 1px solid transparent;
-            background: transparent;
-            color: #171713;
-        }
-
-        .mo-review-button:hover {
-            background: #f0eee9;
-            color: #35654d;
-            text-decoration: none;
-        }
-
-        /* ACCESSIBILITY */
-
-        .mo-cancel-button:focus-visible,
-        .mo-cancellation-details-button:focus-visible,
-        .mo-review-button:focus-visible,
-        .mo-details-button:focus-visible {
-            outline: 2px solid #35654d;
-            outline-offset: 3px;
-        }
-
-        @media (max-width: 650px) {
-            .mo-order-total-row {
-                padding: 6px 15px 18px;
-            }
-
-            .mo-order-actions {
-                gap: 8px;
-            }
-
-            .mo-cancel-button,
-            .mo-cancellation-details-button,
-            .mo-review-button,
-            .mo-details-button {
-                min-height: 35px;
-                padding: 0 12px;
-            }
-        }
-    </style>
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/order-cancellation.css">
 </head>
 
 <body>
@@ -345,455 +251,187 @@ $csrfToken = $_SESSION['csrf_token'];
 <?php include __DIR__ . '/../includes/header.php'; ?>
 
 <main class="mo-page">
-
     <div class="mo-container">
-
-        <!-- BACK TO ACCOUNT -->
-
-        <a href="<?= BASE_URL ?>/account/profile.php"
-           class="mo-back">
-            <i class="fa-solid fa-chevron-left"></i>
-            Back to Account
+        <a href="<?= BASE_URL ?>/account/profile.php" class="mo-back">
+            <?= moIcon('arrow-left') ?> Back to account
         </a>
 
-        <!-- PAGE HEADING -->
-
         <div class="mo-heading">
-
             <div>
-                <span class="mo-eyebrow">YOUR PURCHASES</span>
-
-                <h1>My Orders</h1>
-
-                <p>
-                    Track deliveries, manage cancellations,
-                    and review your products.
-                </p>
+                <span class="mo-eyebrow">Your purchases</span>
+                <h1>My orders</h1>
+                <p>Keep an eye on deliveries, review past favorites, and manage every purchase.</p>
             </div>
-
-            <span class="mo-total">
-                <?= count($orders) ?>
-                total <?= count($orders) === 1 ? 'order' : 'orders' ?>
-            </span>
-
-        </div>
-
-        <!-- ORDER TABS -->
-
-        <div class="mo-tabs"
-             role="tablist"
-             aria-label="Order status">
-
-            <button type="button"
-                    class="mo-tab active"
-                    data-tab="all"
-                    aria-selected="true">
-                All
-            </button>
-
-            <button type="button"
-                    class="mo-tab"
-                    data-tab="pay"
-                    aria-selected="false">
-                To Pay
-            </button>
-
-            <button type="button"
-                    class="mo-tab"
-                    data-tab="ship"
-                    aria-selected="false">
-                To Ship
-            </button>
-
-            <button type="button"
-                    class="mo-tab"
-                    data-tab="receive"
-                    aria-selected="false">
-                To Receive
-            </button>
-
-            <button type="button"
-                    class="mo-tab"
-                    data-tab="completed"
-                    aria-selected="false">
-                Completed
-            </button>
-
-            <button type="button"
-                    class="mo-tab"
-                    data-tab="cancelled"
-                    aria-selected="false">
-                Cancelled
-            </button>
-
-        </div>
-
-        <!-- SEARCH -->
-
-        <div class="mo-search">
-
-            <div class="mo-search-icon" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                     xmlns="http://www.w3.org/2000/svg" focusable="false">
-                    <path d="M14.9536 14.9458L21 21M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
-                          stroke="currentColor" stroke-width="2"
-                          stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+            <div class="mo-total">
+                <span class="mo-total-icon"><?= moIcon('box') ?></span>
+                <div><strong><?= count($orders) ?></strong><span>Total orders</span></div>
             </div>
-
-            <input
-                type="search"
-                id="moSearch"
-                placeholder="Search by Order ID or product name"
-                autocomplete="off"
-                aria-label="Search your orders"
-            >
-
         </div>
 
-        <!-- ORDER LIST -->
+        <section class="mo-delivery" aria-label="Next delivery">
+            <div class="mo-delivery-content">
+                <span class="mo-delivery-dot" aria-hidden="true"></span>
+                <div>
+                    <span class="mo-delivery-label">Next delivery</span>
+                    <?php if ($nextDelivery): ?>
+                        <?php
+                        $deliveryPresentation = moPresentation($nextDelivery);
+                        $deliveryItems = $itemsByOrder[(int) $nextDelivery['id']] ?? [];
+                        $deliveryName = $deliveryItems ? moProductParts($deliveryItems[0])[0] : $nextDelivery['order_number'];
+                        ?>
+                        <h2><?= moEsc($deliveryPresentation['message']) ?></h2>
+                        <p><?= moEsc($deliveryName) ?><?php if (count($deliveryItems) > 1): ?> &middot; +<?= count($deliveryItems) - 1 ?> more<?php endif; ?></p>
+                    <?php else: ?>
+                        <h2>No upcoming deliveries</h2>
+                        <p>Your next delivery will appear here.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <a class="mo-delivery-button" href="<?= BASE_URL ?><?= $nextDelivery ? '/public/order-details.php?id=' . (int) $nextDelivery['id'] : '/public/shop.php' ?>">
+                <?= $nextDelivery ? 'Track delivery' : 'Explore skincare' ?> <?= moIcon('chevron') ?>
+            </a>
+        </section>
 
-        <div class="mo-order-list" id="moOrderList">
+        <section class="mo-orders-panel" aria-label="Your orders">
+            <div class="mo-tabs" role="tablist" aria-label="Order status">
+                <?php foreach ($orderTabs as $key => $label): ?>
+                    <button type="button" class="mo-tab<?= $key === 'all' ? ' active' : '' ?>"
+                            id="moTab-<?= moEsc($key) ?>" role="tab" data-tab="<?= moEsc($key) ?>"
+                            aria-selected="<?= $key === 'all' ? 'true' : 'false' ?>"
+                            tabindex="<?= $key === 'all' ? '0' : '-1' ?>" aria-controls="moOrderList">
+                        <?= moEsc($label) ?><?php if ($tabCounts[$key] > 0): ?> <span class="mo-tab-count"><?= $tabCounts[$key] ?></span><?php endif; ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+            <div class="mo-panel-content">
+                <div class="mo-search">
+                    <span class="mo-search-icon"><?= moIcon('search') ?></span>
+                    <input type="search" id="moSearch" placeholder="Search by order ID or product"
+                           autocomplete="off" aria-label="Search your orders">
+                </div>
 
-            <?php foreach ($orders as $order): ?>
-
-                <?php
-                    $orderId = (int) $order['id'];
-                    $items = $itemsByOrder[$orderId] ?? [];
-
-                    $tab = moTab($order);
-                    $statusLabel = moStatusLabel($order);
-
-                    $paymentMethod = strtolower(
-                        (string) ($order['payment_method'] ?? 'cod')
-                    );
-
-                    $paymentLabels = [
-                        'cod' => 'Cash on Delivery',
-                        'gcash' => 'GCash',
-                        'card' => 'Credit or Debit Card',
-                        'online' => 'Online Payment'
-                    ];
-
-                    $paymentLabel = $paymentLabels[$paymentMethod]
-                        ?? ucfirst($paymentMethod);
-
-                    $location = implode(', ', array_filter([
-                        $order['city'] ?? '',
-                        $order['province'] ?? ''
-                    ]));
-
-                    $productNames = implode(
-                        ' ',
-                        array_column($items, 'product_name')
-                    );
-
-                    $canCancel =
-                        $order['order_status'] === 'pending'
-                        && $paymentMethod === 'cod'
-                        && $order['payment_status'] === 'pending';
-                ?>
-
-                <article
-                    class="mo-order-card"
-                    data-tab="<?= moEsc($tab) ?>"
-                    data-search="<?= moEsc(
-                        mb_strtolower(
-                            $order['order_number'] . ' ' . $productNames
-                        )
-                    ) ?>"
-                >
-
-                    <!-- ORDER HEADER -->
-
-                    <div class="mo-order-header">
-
-                        <div class="mo-order-identity">
-
-                            <strong class="mo-order-number">
-                                <?= moEsc($order['order_number']) ?>
-                            </strong>
-
-                            <span class="mo-order-date">
-                                Placed on
-                                <?= date(
-                                    'Y-m-d',
-                                    strtotime($order['created_at'])
-                                ) ?>
-                            </span>
-
-                        </div>
-
-                        <div class="mo-order-status-area">
-
-                            <span class="mo-status mo-status-<?= moEsc(
-                                $order['order_status']
-                            ) ?>">
-                                <?= moEsc($statusLabel) ?>
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- PURCHASED PRODUCTS -->
-
-                    <div class="mo-order-items">
-
-                        <?php foreach ($items as $item): ?>
-
-                            <?php
-                                $image = $item['gallery_image']
-                                    ?: $item['image'];
-
-                                $productId = (int) (
-                                    $item['product_id'] ?? 0
-                                );
-                            ?>
-
-                            <div class="mo-product">
-
-                                <div class="mo-product-image">
-
-                                    <img
-                                        src="<?= moEsc(moImage($image)) ?>"
-                                        alt="<?= moEsc($item['product_name']) ?>"
-                                        loading="lazy"
-                                        onerror="this.onerror=null;this.src='<?= moEsc(BASE_URL) ?>/assets/images/products/default-product.jpg';"
-                                    >
-
+                <div class="mo-order-list" id="moOrderList" role="tabpanel" aria-labelledby="moTab-all" tabindex="0">
+                    <?php foreach ($orders as $order): ?>
+                        <?php
+                        $orderId = (int) $order['id'];
+                        $items = $itemsByOrder[$orderId] ?? [];
+                        $tab = moTab($order);
+                        $presentation = moPresentation($order);
+                        $canCancel = canCancelCustomerOrder($order);
+                        $detailsUrl = BASE_URL . '/public/order-details.php?id=' . $orderId;
+                        $productNames = implode(' ', array_column($items, 'product_name'));
+                        $firstProductId = 0;
+                        foreach ($items as $item) {
+                            if ((int) $item['product_id'] > 0) {
+                                $firstProductId = (int) $item['product_id'];
+                                break;
+                            }
+                        }
+                        $buyAgainUrl = $firstProductId ? BASE_URL . '/public/product.php?id=' . $firstProductId : BASE_URL . '/public/shop.php';
+                        $supportUrl = 'mailto:purevia@gmail.com?subject=' . rawurlencode('Order ' . $order['order_number']);
+                        ?>
+                        <article class="mo-order-card mo-card-<?= moEsc($tab) ?>"
+                                 data-tab="<?= moEsc($tab) ?>" data-search="<?= moEsc(mb_strtolower($order['order_number'] . ' ' . $productNames)) ?>">
+                            <div class="mo-order-header">
+                                <div class="mo-order-identity">
+                                    <span class="mo-field-label">Order number</span>
+                                    <strong class="mo-order-number"><?= moEsc($order['order_number']) ?></strong>
                                 </div>
-
-                                <div class="mo-product-info">
-
-                                    <?php if ($productId > 0): ?>
-
-                                        <a
-                                            href="<?= BASE_URL ?>/public/product.php?id=<?= $productId ?>"
-                                            class="mo-product-name"
-                                        >
-                                            <?= moEsc($item['product_name']) ?>
-                                        </a>
-
-                                    <?php else: ?>
-
-                                        <strong class="mo-product-name">
-                                            <?= moEsc($item['product_name']) ?>
-                                        </strong>
-
-                                    <?php endif; ?>
-
-                                    <span class="mo-product-meta">
-                                        Qty: <?= (int) $item['quantity'] ?>
-                                        · <?= moMoney($item['unit_price']) ?> each
-                                    </span>
-
+                                <div class="mo-order-date">
+                                    <span class="mo-field-label">Placed on</span>
+                                    <time datetime="<?= moEsc(date('Y-m-d', strtotime($order['created_at']))) ?>"><?= moEsc(date('F j, Y', strtotime($order['created_at']))) ?></time>
                                 </div>
-
-                                <strong class="mo-product-subtotal">
-                                    <?= moMoney($item['subtotal']) ?>
-                                </strong>
-
+                                <span class="mo-status mo-status-<?= moEsc($tab) ?>"><?= moIcon($presentation['icon']) ?> <?= moEsc($presentation['label']) ?></span>
                             </div>
-
-                        <?php endforeach; ?>
-
-                    </div>
-
-                    <!-- ORDER TOTAL BELOW PRODUCTS -->
-
-                    <div class="mo-order-total-row">
-
-                        <span>Total:</span>
-
-                        <strong class="mo-order-total">
-                            <?= moMoney($order['total_amount']) ?>
-                        </strong>
-
-                    </div>
-
-                    <!-- ORDER FOOTER -->
-
-                    <div class="mo-order-footer">
-
-                        <div class="mo-order-footer-info">
-
-                            <?php if ($location !== ''): ?>
-                                <?= moEsc($location) ?>
-                                <span class="mo-footer-separator">·</span>
-                            <?php endif; ?>
-
-                            <?= moEsc($paymentLabel) ?>
-
-                            <?php if ($paymentMethod !== 'cod'): ?>
-                                <span class="mo-footer-separator">·</span>
-                                <?= moEsc(ucfirst($order['payment_status'])) ?>
-                            <?php endif; ?>
-
-                        </div>
-
-                        <div class="mo-order-actions">
-
-                            <?php if ($canCancel): ?>
-
-                                <button
-                                    type="button"
-                                    class="mo-cancel-button"
-                                    data-cancel-id="<?= $orderId ?>"
-                                    data-order-number="<?= moEsc(
-                                        $order['order_number']
-                                    ) ?>"
-                                >
-                                    Cancel Order
-                                </button>
-
-                            <?php elseif ($order['order_status'] === 'cancelled'): ?>
-
-                                <a
-                                    href="<?= BASE_URL ?>/public/order-details.php?id=<?= $orderId ?>#cancellation-details"
-                                    class="mo-cancellation-details-button"
-                                >
-                                    Cancellation Details
-                                </a>
-
-                            <?php elseif (
-                                in_array(
-                                    $order['order_status'],
-                                    ['delivered', 'completed'],
-                                    true
-                                )
-                            ): ?>
-
-                                <?php
-                                    $reviewProductId = 0;
-
-                                    foreach ($items as $item) {
-                                        if ((int) $item['product_id'] > 0) {
-                                            $reviewProductId = (int) $item['product_id'];
-                                            break;
-                                        }
-                                    }
-                                ?>
-
-                                <?php if ($reviewProductId > 0): ?>
-
-                                    <a
-                                        href="<?= BASE_URL ?>/public/product.php?id=<?= $reviewProductId ?>#customerReviews"
-                                        class="mo-review-button"
-                                    >
-                                        Review Products
-                                    </a>
-
-                                <?php endif; ?>
-
-                            <?php endif; ?>
-
-                            <!-- VIEW DETAILS PAGE -->
-
-                            <a
-                                href="<?= BASE_URL ?>/public/order-details.php?id=<?= $orderId ?>"
-                                class="mo-details-button"
-                            >
-                                View Details
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </article>
-
-            <?php endforeach; ?>
-
-        </div>
-
-        <!-- EMPTY STATE -->
-
-        <div class="mo-empty" id="moEmpty" hidden>
-
-            <i class="fa-regular fa-clipboard"></i>
-
-            <h2>No matching orders</h2>
-
-            <p>Try another status or search term.</p>
-
-        </div>
-
+                            <div class="mo-order-body">
+                                <div class="mo-order-items">
+                                    <?php foreach ($items as $item): ?>
+                                        <?php [$productName, $productMeta] = moProductParts($item); ?>
+                                        <div class="mo-product">
+                                            <div class="mo-product-image">
+                                                <img src="<?= moEsc(moImage($item['gallery_image'] ?: $item['image'])) ?>"
+                                                     alt="<?= moEsc($productName) ?>" loading="lazy" width="100" height="100"
+                                                     data-image-fallback="<?= moEsc(BASE_URL) ?>/assets/images/products/default-product.svg">
+                                            </div>
+                                            <div class="mo-product-info">
+                                                <span class="mo-product-state"><?= moEsc($presentation['state']) ?></span>
+                                                <?php if ((int) $item['product_id'] > 0): ?>
+                                                    <a href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $item['product_id'] ?>" class="mo-product-name"><?= moEsc($productName) ?></a>
+                                                <?php else: ?>
+                                                    <strong class="mo-product-name"><?= moEsc($productName) ?></strong>
+                                                <?php endif; ?>
+                                                <span class="mo-product-meta"><?= moEsc($productMeta) ?></span>
+                                                <span class="mo-product-quantity">Qty <?= (int) $item['quantity'] ?></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                    <?php if (!$items): ?><p class="mo-product-meta">Product details are available in your order.</p><?php endif; ?>
+                                </div>
+                                <div class="mo-order-update">
+                                    <?php if ($presentation['message'] !== ''): ?><span><?= moEsc($presentation['message']) ?></span><?php endif; ?>
+                                    <?php if ($tab === 'receive'): ?>
+                                        <div class="mo-delivery-progress" role="img" aria-label="In transit: delivery is on its way">
+                                            <?php for ($step = 1; $step <= 4; $step++): ?><span class="<?= $step <= $presentation['progress'] ? 'is-complete' : '' ?>"></span><?php endfor; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="mo-order-total"><span>Total</span><strong><?= moMoney($order['total_amount']) ?></strong></div>
+                            </div>
+                            <div class="mo-order-footer">
+                                <a href="<?= moEsc($detailsUrl) ?>" class="mo-details-link">View order details <?= moIcon('chevron') ?></a>
+                                <div class="mo-order-actions<?= $tab === 'pending' ? ' mo-pending-actions' : '' ?>">
+                                    <?php if ($tab === 'pending'): ?>
+                                        <a href="<?= moEsc($supportUrl) ?>" class="mo-button mo-button-outline">Contact support</a>
+                                        <div class="mo-cancellation-control">
+                                            <button type="button" class="mo-button mo-button-primary mo-cancel-order"
+                                                    data-cancel-id="<?= $orderId ?>" data-order-number="<?= moEsc($order['order_number']) ?>"
+                                                    aria-describedby="moCancellationNotice-<?= $orderId ?>" <?= $canCancel ? '' : 'disabled' ?>>Cancel order</button>
+                                            <p class="mo-cancellation-deadline" id="moCancellationNotice-<?= $orderId ?>"><?= moEsc(orderCancellationNotice($order)) ?></p>
+                                        </div>
+                                    <?php else: ?>
+                                        <?php if ($tab === 'cancelled'): ?><button type="button" class="mo-button mo-button-outline" data-cancellation-details="<?= $orderId ?>">Cancellation details</button><?php endif; ?>
+                                        <?php if ($tab === 'ship'): ?><a href="<?= moEsc($supportUrl) ?>" class="mo-button mo-button-outline">Contact support</a><?php endif; ?>
+                                        <?php if ($tab === 'completed'): ?>
+                                            <?php if ($firstProductId): ?><a href="<?= moEsc($buyAgainUrl) ?>#customerReviews" class="mo-button mo-button-outline">Write a review</a><?php endif; ?>
+                                            <button type="button" class="mo-button mo-button-outline" data-return-id="<?= $orderId ?>" <?= isset($returnRequests[$orderId]) || !$items ? 'disabled' : '' ?>><?= isset($returnRequests[$orderId]) ? 'Return requested' : 'Return item' ?></button>
+                                        <?php endif; ?>
+                                        <?php if ($tab === 'returned'): ?><a href="<?= moEsc($detailsUrl) ?>" class="mo-button mo-button-outline">Return details</a><?php endif; ?>
+                                        <a href="<?= moEsc($buyAgainUrl) ?>" class="mo-button mo-button-primary">Buy again</a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+                <div class="mo-empty" id="moEmpty" <?= $orders ? 'hidden' : '' ?>>
+                    <span class="mo-empty-icon"><?= moIcon('bag') ?></span>
+                    <h2><?= $orders ? 'No matching orders' : 'Your orders start here' ?></h2>
+                    <p><?= $orders ? 'Try another status or search term.' : 'Your purchases will appear here once you place an order.' ?></p>
+                    <a href="<?= BASE_URL ?>/public/shop.php" class="mo-button mo-button-outline">Explore skincare</a>
+                </div>
+            </div>
+        </section>
     </div>
-
 </main>
 
-<!-- CANCEL CONFIRMATION MODAL -->
+<?php include __DIR__ . '/../includes/order_cancellation_modals.php'; ?>
+<?php include __DIR__ . '/../includes/order_return_modal.php'; ?>
 
-<div class="mo-modal-overlay" id="moCancelModal" hidden>
-
-    <div class="mo-modal mo-cancel-modal"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="moCancelTitle">
-
-        <div class="mo-modal-header">
-
-            <h2 id="moCancelTitle">Cancel Order</h2>
-
-            <button type="button"
-                    class="mo-modal-close"
-                    data-close-modal
-                    aria-label="Close cancellation dialog">
-                &times;
-            </button>
-
-        </div>
-
-        <div class="mo-modal-body">
-
-            <p>
-                Are you sure you want to cancel
-                <strong id="moCancelOrderNumber"></strong>?
-            </p>
-
-            <p class="mo-cancel-note">
-                This action cannot be undone.
-            </p>
-
-            <p id="moCancelError"
-               class="mo-error"
-               role="alert"
-               hidden></p>
-
-        </div>
-
-        <div class="mo-modal-footer">
-
-            <button type="button"
-                    class="mo-modal-done"
-                    data-close-modal>
-                Keep Order
-            </button>
-
-            <button type="button"
-                    class="mo-confirm-cancel"
-                    id="moConfirmCancel">
-                Cancel Order
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script>
+<script nonce="<?= pvScriptNonce() ?>">
     window.PUREVIA_ORDERS = {
-        baseUrl: <?= json_encode(BASE_URL) ?>,
-        csrfToken: <?= json_encode($csrfToken) ?>
+        baseUrl: <?= pvJson(BASE_URL) ?>,
+        csrfToken: <?= pvJson($csrfToken) ?>,
+        cancellations: <?= pvJson($cancellations, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        returns: <?= pvJson($returnForms, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
     };
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/my-orders.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/my-orders.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

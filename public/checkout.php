@@ -1,15 +1,14 @@
-
 <?php
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 
 function checkoutEsc(string|int|float|bool|null $value): string {
-    return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
+    return pvHtml((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
 function checkoutImage(?string $path): string {
-    $fallback = BASE_URL . '/assets/images/products/default-product.jpg';
+    $fallback = BASE_URL . '/assets/images/products/default-product.svg';
     $path = trim((string) $path);
 
     if ($path === '') return $fallback;
@@ -231,6 +230,7 @@ function peso(float $amount): string {
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&amp;display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -272,112 +272,6 @@ function peso(float $amount): string {
             <input type="hidden" name="checkout_token" value="<?= checkoutEsc($_SESSION['checkout_token']) ?>">
 
             <div class="pv-checkout-left">
-
-                <!-- DELIVERY ADDRESS -->
-                <section class="pv-checkout-card">
-
-                    <div class="pv-checkout-card-heading">
-                        <div>
-                            <p class="pv-checkout-label">DELIVERY</p>
-                            <h2>Delivery Address</h2>
-                        </div>
-
-                        <button type="button"
-                                class="pv-checkout-text-button"
-                                id="pvChangeAddress"
-                                <?= !$hasAddress ? 'hidden' : '' ?>>
-                            Change
-                        </button>
-                    </div>
-
-                    <div id="pvNoAddress" <?= $hasAddress ? 'hidden' : '' ?>>
-                        <button type="button" class="pv-save-address" id="pvAddAddress">
-                            Add New Address
-                        </button>
-                        <p class="pv-checkout-muted">Add a delivery address to complete your order.</p>
-                    </div>
-
-                    <div class="pv-checkout-address"
-                         id="pvAddressPreview"
-                         <?= !$hasAddress ? 'hidden' : '' ?>>
-
-                        <div class="pv-address-icon">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </div>
-
-                        <div class="pv-address-content">
-                            <div class="pv-address-top">
-                                <strong>Delivery address</strong>
-                                <span class="pv-default-tag">
-                                    DELIVERY ADDRESS
-                                </span>
-                            </div>
-
-                            <strong id="pvAddressName">
-                                <?= checkoutEsc($customerName) ?>
-                            </strong>
-
-                            <span id="pvAddressPhone">
-                                <?= checkoutEsc($customerPhone) ?>
-                            </span>
-
-                            <p id="pvAddressText">
-                                <?= checkoutEsc($customerAddress) ?>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="pv-address-editor"
-                         id="pvAddressEditor"
-                         hidden>
-
-                        <label>
-                            Full Name
-                            <input type="text"
-                                   name="recipient_name"
-                                   id="pvRecipientName"
-                                   value="<?= checkoutEsc($customerName) ?>"
-                                   maxlength="150"
-                                   required>
-                        </label>
-
-                        <label>
-                            Phone Number
-                            <input type="tel"
-                                   name="recipient_phone"
-                                   id="pvRecipientPhone"
-                                   value="<?= checkoutEsc($customerPhone) ?>"
-                                   maxlength="30"
-                                   required>
-                        </label>
-
-                        <label>
-                            Complete Delivery Address
-                            <textarea name="shipping_address"
-                                      id="pvShippingAddress"
-                                      rows="3"
-                                      maxlength="255"
-                                      required><?= checkoutEsc($deliveryAddress['address_line1'] ?? '') ?></textarea>
-                        </label>
-
-                        <?php foreach (['address_line2' => 'Apartment / Unit (optional)', 'barangay' => 'Barangay (optional)', 'city' => 'City / Municipality', 'province' => 'Province', 'postal_code' => 'Postal Code', 'country' => 'Country'] as $field => $label): ?>
-                            <label>
-                                <?= checkoutEsc($label) ?>
-                                <input type="text" name="<?= $field ?>" id="pvDelivery_<?= $field ?>"
-                                       maxlength="<?= $field === 'postal_code' ? 20 : ($field === 'address_line2' ? 255 : 100) ?>"
-                                       value="<?= checkoutEsc($deliveryAddress[$field] ?? ($field === 'country' ? 'Philippines' : '')) ?>"
-                                       <?= in_array($field, ['city', 'province', 'postal_code', 'country'], true) ? 'required' : '' ?>>
-                            </label>
-                        <?php endforeach; ?>
-
-                        <button type="button"
-                                class="pv-save-address"
-                                id="pvSaveAddress">
-                            Save Address
-                        </button>
-                    </div>
-
-                </section>
 
                 <!-- PRODUCTS ORDERED -->
                 <section class="pv-checkout-card">
@@ -422,7 +316,7 @@ function peso(float $amount): string {
                                         src="<?= checkoutEsc($image) ?>"
                                         alt="<?= checkoutEsc($item['product_name']) ?>"
                                         loading="lazy"
-                                        onerror="this.onerror=null;this.src='<?= BASE_URL ?>/assets/images/products/default-product.jpg';"
+                                        data-image-fallback="<?= BASE_URL ?>/assets/images/products/default-product.svg"
                                     >
 
                                 </div>
@@ -471,6 +365,40 @@ function peso(float $amount): string {
 
                 </section>
 
+                <!-- DELIVERY ADDRESS -->
+                <section class="pv-checkout-card">
+                    <div class="pv-checkout-card-heading">
+                        <div><p class="pv-checkout-label">DELIVERY</p><h2>Delivery Address</h2></div>
+                    </div>
+                    <div class="pv-address-editor" id="pvAddressEditor">
+                        <div class="pv-delivery-intro"><strong>Delivery details for this order</strong><p>Enter the address where you want this order delivered.</p></div>
+                        <input type="hidden" name="recipient_name" id="pvRecipientName" value="">
+                        <input type="hidden" name="address_line2" id="pvDelivery_address_line2" value="">
+                        <div class="pv-delivery-grid">
+                            <label>First Name<input type="text" id="pvRecipientFirstName" value="" maxlength="100" autocomplete="given-name" required></label>
+                            <label>Last Name<input type="text" id="pvRecipientLastName" value="" maxlength="100" autocomplete="family-name" required></label>
+                            <label>Phone Number<input type="tel" name="recipient_phone" id="pvRecipientPhone" value="" maxlength="30" placeholder="+63 9XX XXX XXXX" autocomplete="tel" required></label>
+                            <label>Postal Code<input type="text" name="postal_code" id="pvDelivery_postal_code" value="" maxlength="20" autocomplete="postal-code" required></label>
+                            <label class="pv-delivery-full">Country<select name="country" id="pvDelivery_country" autocomplete="country-name" required><option value="Philippines">Philippines</option><?php if (!empty($deliveryAddress['country']) && $deliveryAddress['country'] !== 'Philippines'): ?><option value="<?= checkoutEsc($deliveryAddress['country']) ?>"><?= checkoutEsc($deliveryAddress['country']) ?></option><?php endif; ?></select></label>
+                            <label>Region<input type="text" id="pvDelivery_region" placeholder="Select region" list="pvCheckoutRegions" autocomplete="off" maxlength="100"><datalist id="pvCheckoutRegions"><option value="Metro Manila"><option value="Mindanao"><option value="North Luzon"><option value="South Luzon"><option value="Visayas"></datalist></label>
+                            <?php foreach (['province' => ['Province', 'Select province'], 'city' => ['City / Municipality', 'Select city'], 'barangay' => ['Barangay', 'Select barangay']] as $field => [$label, $placeholder]): ?>
+                                <label><?= checkoutEsc($label) ?><input type="text" name="<?= $field ?>" id="pvDelivery_<?= $field ?>" value="" placeholder="<?= checkoutEsc($placeholder) ?>" maxlength="100" list="pvCheckoutList_<?= $field ?>" autocomplete="<?= $field === 'province' ? 'address-level1' : ($field === 'city' ? 'address-level2' : 'address-level3') ?>" <?= $field !== 'barangay' ? 'required' : '' ?>>
+                                <datalist id="pvCheckoutList_<?= $field ?>"><?php if (!empty($deliveryAddress[$field])): ?><option value="<?= checkoutEsc($deliveryAddress[$field]) ?>"><?php endif; ?></datalist></label>
+                            <?php endforeach; ?>
+                            <label class="pv-delivery-full pv-street-field">Street Address<textarea name="shipping_address" id="pvShippingAddress" rows="3" maxlength="255" placeholder="House or unit number, building, and street" autocomplete="address-line1" required></textarea></label>
+                        </div>
+                        <div class="pv-checkout-pin">
+                            <span class="pv-checkout-pin-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+                            <div><strong>Add a Google Maps pin</strong><p>Help the courier find your exact delivery location.</p><a id="pvCheckoutPinLink" target="_blank" rel="noopener noreferrer" hidden>View pin on Google Maps</a></div>
+                            <button type="button" id="pvCheckoutLocation">Use Current Location</button>
+                        </div>
+                        <p class="pv-checkout-location-error" id="pvCheckoutLocationError" role="alert" hidden></p>
+                        <?php if ($deliveryAddress): ?>
+                            <label class="pv-use-saved-address"><input type="checkbox" id="pvUseSavedAddress">Use my saved account address</label>
+                        <?php endif; ?>
+                    </div>
+                </section>
+
                 <!-- PAYMENT METHOD -->
                 <section class="pv-checkout-card">
 
@@ -497,6 +425,39 @@ function peso(float $amount): string {
 
                             <span class="pv-payment-indicator"></span>
                         </label>
+
+                        <fieldset class="pv-card-details" id="pvCardDetails" aria-labelledby="pvCardDetailsTitle" hidden disabled>
+                            <div class="pv-card-details-intro">
+                                <strong id="pvCardDetailsTitle">Enter your card details</strong>
+                                <p>Enter the details shown on your card.</p>
+                            </div>
+                            <div class="pv-card-details-grid">
+                                <label class="pv-card-details-full" for="pvCardName">
+                                    Name on Card
+                                    <input type="text" id="pvCardName" autocomplete="cc-name" placeholder="Name as shown on card" maxlength="120">
+                                </label>
+                                <label class="pv-card-details-full" for="pvCardNumber">
+                                    Card Number
+                                    <input type="text" id="pvCardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="23">
+                                </label>
+                                <label for="pvCardExpiry">
+                                    Expiry Date
+                                    <input type="text" id="pvCardExpiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5">
+                                </label>
+                                <label for="pvCardSecurityCode">
+                                    Security Code
+                                    <input type="password" id="pvCardSecurityCode" inputmode="numeric" autocomplete="cc-csc" placeholder="CVV" maxlength="4">
+                                </label>
+                                <label for="pvCardType">
+                                    Card Type
+                                    <select id="pvCardType" autocomplete="cc-type">
+                                        <option value="visa">Visa</option>
+                                        <option value="mastercard">Mastercard</option>
+                                        <option value="jcb">JCB</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </fieldset>
 
                         <label class="pv-payment-option">
                             <input type="radio"
@@ -531,25 +492,13 @@ function peso(float $amount): string {
 
                     </div>
 
-                    <div class="pv-cod-message" id="pvCodMessage">
-                        <i class="fa-solid fa-circle-check"></i>
-
-                        <div>
-                            <strong>Cash on Delivery</strong>
-                            <p>
-                                No online payment is required. Pay in cash when
-                                your PureVia order arrives.
-                            </p>
-                        </div>
-                    </div>
-
                     <div class="pv-payment-notice"
                          id="pvPaymentNotice"
                          hidden></div>
 
                     <p class="pv-checkout-secure">
                         <i class="fa-solid fa-lock"></i>
-                        Secure checkout. PureVia never asks for your PIN or banking password.
+                        Secure payment. PureVia never stores your PIN or banking password.
                     </p>
 
                 </section>
@@ -611,19 +560,23 @@ function peso(float $amount): string {
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
-<script>
-window.PUREVIA_CHECKOUT = <?= json_encode([
+<script nonce="<?= pvScriptNonce() ?>">
+window.PUREVIA_CHECKOUT = <?= pvJson([
     'baseUrl' => BASE_URL,
     'total' => $total,
-    'canCheckout' => $canCheckout
+    'canCheckout' => $canCheckout,
+    'savedAddress' => $deliveryAddress ? array_intersect_key($deliveryAddress, array_flip([
+        'recipient_first_name', 'recipient_last_name', 'phone', 'address_line1',
+        'address_line2', 'province', 'city', 'barangay', 'postal_code', 'country'
+    ])) : null
 ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

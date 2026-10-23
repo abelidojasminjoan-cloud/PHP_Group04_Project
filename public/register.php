@@ -1,6 +1,6 @@
-
 <?php
-require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/db.php';
+$passwordPolicy = securityPolicy($conn);
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -26,7 +26,7 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 function escapeHtml(string $value): string {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return pvHtml($value, ENT_QUOTES, 'UTF-8');
 }
 ?>
 <!DOCTYPE html>
@@ -161,9 +161,9 @@ function escapeHtml(string $value): string {
                             type="password"
                             id="registerPassword"
                             name="password"
-                            placeholder="At least 12 characters"
+                            placeholder="At least <?= (int) $passwordPolicy['password_min_length'] ?> characters"
                             autocomplete="new-password"
-                            minlength="12"
+                            minlength="<?= (int) $passwordPolicy['password_min_length'] ?>"
                             aria-invalid="<?= isset($fieldErrors['password']) ? 'true' : 'false' ?>"
                             aria-describedby="registerPasswordError registerPasswordFeedback"
                         >
@@ -194,14 +194,8 @@ function escapeHtml(string $value): string {
                             <strong id="registerPasswordStrength" data-level="empty" aria-live="polite" aria-atomic="true">Not set</strong>
                         </p>
                         <ul class="auth-password-checklist">
-                            <?php foreach ([
-                                'length' => 'At least 12 characters',
-                                'uppercase' => 'One uppercase letter',
-                                'lowercase' => 'One lowercase letter',
-                                'number' => 'One number',
-                                'symbol' => 'One special character'
-                            ] as $passwordRuleKey => $passwordRuleLabel): ?>
-                                <li data-password-rule="<?= escapeHtml($passwordRuleKey) ?>" data-met="false">
+                            <?php foreach (securityPasswordRequirements($passwordPolicy) as $passwordRuleKey => $passwordRuleLabel): ?>
+                                <li data-password-rule="<?= escapeHtml($passwordRuleKey) ?>" data-min-count="<?= securityPasswordRuleMinimum($passwordPolicy, $passwordRuleKey) ?>" data-met="false">
                                     <div class="auth-rule-icon" aria-hidden="true">
                                         <svg class="auth-rule-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
                                             <!-- Font Awesome Free 7.2.0, Fonticons, Inc. https://fontawesome.com/license/free -->
@@ -231,7 +225,7 @@ function escapeHtml(string $value): string {
                             name="confirm_password"
                             placeholder="Enter your password again"
                             autocomplete="new-password"
-                            minlength="12"
+                            minlength="<?= (int) $passwordPolicy['password_min_length'] ?>"
                             aria-invalid="<?= isset($fieldErrors['confirm_password']) ? 'true' : 'false' ?>"
                             aria-describedby="registerConfirmPasswordError"
                         >
@@ -258,31 +252,30 @@ function escapeHtml(string $value): string {
                 </div>
 
                 <div class="auth-terms-field">
-                    <label class="auth-terms">
-                        <input
-                            type="checkbox"
-                            id="registerTerms"
-                            name="terms"
-                            value="1"
-                            aria-invalid="<?= isset($fieldErrors['terms']) ? 'true' : 'false' ?>"
-                            aria-describedby="registerTermsError"
-                            <?= !empty($data['terms']) ? 'checked' : '' ?>
-                        >
-                        <span>
-                            By creating and/or using your account, you agree to our
-                            <a href="<?= BASE_URL ?>/terms.php" target="_blank" rel="noopener">
-                                Terms of Use
-                            </a>
-                            and
-                            <a href="<?= BASE_URL ?>/privacy.php" target="_blank" rel="noopener">
-                                Privacy Policy
-                            </a>.
-                        </span>
-                    </label>
-                    <span class="auth-field-error" id="registerTermsError" role="alert" <?= isset($fieldErrors['terms']) ? '' : 'hidden' ?>>
-                        <?= escapeHtml($fieldErrors['terms'] ?? '') ?>
-                    </span>
+                    <p class="auth-terms">
+                        By continuing and using your account, you agree to our
+                        <a href="<?= BASE_URL ?>/terms.php" target="_blank" rel="noopener">Terms of Use</a>
+                        and <a href="<?= BASE_URL ?>/privacy.php" target="_blank" rel="noopener">Privacy Policy</a>.
+                    </p>
                 </div>
+
+                <!-- Google reCAPTCHA v2 -->
+                <div class="auth-field">
+                    <div
+                        class="g-recaptcha"
+                        data-sitekey="<?= pvHtml(
+                            $_ENV['RECAPTCHA_SITE_KEY'] ?? '',
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>"
+                    ></div>
+                </div>
+
+                <?php if (!empty($fieldErrors['captcha'])): ?>
+                    <span class="auth-field-error" role="alert">
+                        <?= escapeHtml($fieldErrors['captcha']) ?>
+                    </span>
+                <?php endif; ?>
 
                 <button type="submit" class="auth-submit">
                     Create my account
@@ -317,6 +310,8 @@ function escapeHtml(string $value): string {
 
 </main>
 
-<script src="<?= BASE_URL ?>/assets/js/auth.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/auth_loading.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/auth.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>

@@ -10,26 +10,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // ELEMENTS
     // =========================================
 
-    const changeAddress = document.getElementById("pvChangeAddress");
-    const addAddress = document.getElementById("pvAddAddress");
-    const noAddress = document.getElementById("pvNoAddress");
-    const addressCard = document.getElementById("pvAddressPreview");
     const addressEditor = document.getElementById("pvAddressEditor");
-    const saveAddress = document.getElementById("pvSaveAddress");
 
     const nameInput = document.getElementById("pvRecipientName");
     const phoneInput = document.getElementById("pvRecipientPhone");
     const addressInput = document.getElementById("pvShippingAddress");
 
-    const namePreview = document.getElementById("pvAddressName");
-    const phonePreview = document.getElementById("pvAddressPhone");
-    const addressPreview = document.getElementById("pvAddressText");
 
     const paymentOptions = document.querySelectorAll(
         ".pv-payment-option"
     );
 
     const paymentNotice = document.getElementById("pvPaymentNotice");
+    const cardDetails = document.getElementById("pvCardDetails");
     const codMessage = document.getElementById("pvCodMessage");
 
     const placeOrder = document.getElementById("pvPlaceOrder");
@@ -114,89 +107,123 @@ document.addEventListener("DOMContentLoaded", () => {
         return true;
     }
 
-    // =========================================
-    // UPDATE ADDRESS PREVIEW
-    // =========================================
+    // The visible name fields keep the existing recipient_name submission field.
+    const firstName = document.getElementById("pvRecipientFirstName");
+    const lastName = document.getElementById("pvRecipientLastName");
+    const region = document.getElementById("pvDelivery_region");
+    const province = document.getElementById("pvDelivery_province");
+    const city = document.getElementById("pvDelivery_city");
+    const barangay = document.getElementById("pvDelivery_barangay");
+    const secondLine = document.getElementById("pvDelivery_address_line2");
+    const locationButton = document.getElementById("pvCheckoutLocation");
+    const pinLink = document.getElementById("pvCheckoutPinLink");
+    const locationError = document.getElementById("pvCheckoutLocationError");
+    const useSavedAddress = document.getElementById("pvUseSavedAddress");
+    let originalSecondLine = secondLine.value;
+    let locationRequest = 0;
 
     function updateAddressPreview() {
-        if (namePreview) {
-            namePreview.textContent = nameInput.value.trim();
-        }
-
-        if (phonePreview) {
-            phonePreview.textContent = phoneInput.value.trim();
-        }
-
-        if (addressPreview) {
-            addressPreview.textContent = [addressInput.value.trim(), ...['address_line2', 'barangay', 'city', 'province', 'postal_code', 'country'].map(field => form.elements.namedItem(field)?.value.trim() || '')].filter(Boolean).join(', ');
-        }
-
-        if (addressCard) {
-            addressCard.hidden = false;
-        }
-
-        if (noAddress) {
-            noAddress.hidden = true;
-        }
-
-        if (changeAddress) {
-            changeAddress.hidden = false;
-        }
+        nameInput.value = [firstName.value.trim(), lastName.value.trim()].filter(Boolean).join(" ");
     }
 
-    // =========================================
-    // ADD ADDRESS
-    // =========================================
+    function deliveryComplete() {
+        return [firstName, lastName, phoneInput, addressInput, province, city,
+            document.getElementById("pvDelivery_postal_code"), document.getElementById("pvDelivery_country")]
+            .every(input => input.value.trim() !== "") && /^[0-9+\s()-]{7,30}$/.test(phoneInput.value.trim());
+    }
 
-    addAddress?.addEventListener("click", () => {
+    function updateLocationFields() {
+        province.disabled = !region.value.trim() && !province.value.trim();
+        city.disabled = !province.value.trim();
+        barangay.disabled = !city.value.trim();
+    }
+
+    function clearPin() {
+        locationRequest++;
+        secondLine.value = originalSecondLine;
+        pinLink.hidden = true;
+        pinLink.removeAttribute("href");
+        locationButton.disabled = false;
+        locationButton.textContent = "Use Current Location";
+        locationError.hidden = true;
+    }
+
+    if (province.value.trim() === "Metro Manila") region.value = "Metro Manila";
+    updateLocationFields();
+    updateAddressPreview();
+    useSavedAddress?.addEventListener("change", () => {
+        const saved = useSavedAddress.checked ? config.savedAddress : null;
+        firstName.value = saved?.recipient_first_name || "";
+        lastName.value = saved?.recipient_last_name || "";
+        phoneInput.value = saved?.phone || "";
+        addressInput.value = saved?.address_line1 || "";
+        originalSecondLine = saved?.address_line2 || "";
+        for (const name of ["province", "city", "barangay", "postal_code", "country"]) {
+            const input = document.getElementById(`pvDelivery_${name}`);
+            input.value = saved?.[name] || (name === "country" ? "Philippines" : "");
+            const list = document.getElementById(`pvCheckoutList_${name}`);
+            if (list) list.replaceChildren(...(saved?.[name] ? [new Option(saved[name], saved[name])] : []));
+        }
+        region.value = saved?.province === "Metro Manila" ? "Metro Manila" : "";
+        clearPin();
         clearError();
-
-        if (addressEditor) {
-            addressEditor.hidden = false;
-        }
-
-        if (noAddress) {
-            noAddress.hidden = true;
-        }
-
-        nameInput.focus();
-    });
-
-    // =========================================
-    // CHANGE ADDRESS
-    // =========================================
-
-    changeAddress?.addEventListener("click", () => {
-        if (!addressEditor) return;
-
-        addressEditor.hidden = !addressEditor.hidden;
-
-        if (!addressEditor.hidden) {
-            nameInput.focus();
-            changeAddress.textContent = "Cancel";
-        } else {
-            changeAddress.textContent = "Change";
-        }
-    });
-
-    // =========================================
-    // SAVE ADDRESS
-    // =========================================
-
-    saveAddress?.addEventListener("click", () => {
-        clearError();
-
-        if (!validateAddress()) return;
-
         updateAddressPreview();
-
-        if (addressEditor) {
-            addressEditor.hidden = true;
+        updateLocationFields();
+        updatePaymentSelection();
+    });
+    addressEditor.addEventListener("input", event => {
+        if (event.target !== useSavedAddress && useSavedAddress) useSavedAddress.checked = false;
+        updateAddressPreview();
+        if ([region, province, city, barangay, addressInput].includes(event.target)) clearPin();
+        if (event.target === region) {
+            province.value = ""; city.value = ""; barangay.value = "";
+            document.getElementById("pvCheckoutList_city").replaceChildren();
+            document.getElementById("pvCheckoutList_barangay").replaceChildren();
+        } else if (event.target === province) {
+            city.value = ""; barangay.value = "";
+            document.getElementById("pvCheckoutList_city").replaceChildren();
+            document.getElementById("pvCheckoutList_barangay").replaceChildren();
+        } else if (event.target === city) {
+            barangay.value = "";
+            document.getElementById("pvCheckoutList_barangay").replaceChildren();
         }
+        updateLocationFields();
+        updatePaymentSelection();
+    });
 
-        if (changeAddress) {
-            changeAddress.textContent = "Change";
+    locationButton.addEventListener("click", () => {
+        locationError.hidden = true;
+        if (!navigator.geolocation) {
+            locationError.textContent = "Current location is unavailable. Please enter your address.";
+            locationError.hidden = false;
+            return;
         }
+        const request = ++locationRequest;
+        locationButton.disabled = true;
+        locationButton.textContent = "Finding location...";
+        navigator.geolocation.getCurrentPosition(position => {
+            if (request !== locationRequest) return;
+            const { latitude, longitude } = position.coords;
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+                clearPin(); locationError.textContent = "Unable to find your location. Please enter your address."; locationError.hidden = false; return;
+            }
+            const url = `https://www.google.com/maps/search/?api=1&query=${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+            const notes = [originalSecondLine, `Google Maps: ${url}`].filter(Boolean).join("\n");
+            if (notes.length > 255) {
+                clearPin(); locationError.textContent = "Your delivery notes are too long to add a map pin."; locationError.hidden = false; return;
+            }
+            secondLine.value = notes;
+            pinLink.href = url;
+            pinLink.hidden = false;
+            locationButton.textContent = "Update Location";
+            locationButton.disabled = false;
+        }, () => {
+            if (request !== locationRequest) return;
+            locationButton.disabled = false;
+            locationButton.textContent = "Use Current Location";
+            locationError.textContent = "Unable to access your location. You can enter your delivery address manually.";
+            locationError.hidden = false;
+        }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
     });
 
     // =========================================
@@ -219,6 +246,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 radio === selected
             );
         });
+
+        if (cardDetails) {
+            const cardSelected = selected?.value === "card";
+            cardDetails.hidden = !cardSelected;
+            cardDetails.disabled = !cardSelected;
+        }
 
         // Show COD information only when COD is selected
         if (codMessage) {
@@ -255,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (placeOrder) {
                 placeOrder.disabled =
-                    submitting || !config.canCheckout;
+                    submitting || !config.canCheckout || !deliveryComplete();
             }
 
             return;
@@ -404,7 +437,12 @@ document.addEventListener("DOMContentLoaded", () => {
             // that the order was saved successfully.
 
             if (result.redirect_url) {
-                window.location.assign(result.redirect_url);
+                const destination = new URL(result.redirect_url, window.location.href);
+                if (destination.origin !== window.location.origin ||
+                    !['http:', 'https:'].includes(destination.protocol)) {
+                    throw new Error('Invalid order confirmation URL.');
+                }
+                window.location.assign(destination.href);
                 return;
             }
 

@@ -8,9 +8,9 @@ declare(strict_types=1);
 | 1. Validate request and CSRF token
 | 2. Validate 6-digit OTP
 | 3. Check expiration and attempts
-| 4. Activate customer account
-| 5. Send activation confirmation email
-| 6. Redirect to login page
+| 4. Verify the email and create a single-use activation link
+| 5. Send the activation link in a second email
+| 6. Show the check-your-email page
 |--------------------------------------------------------------------------
 */
 
@@ -18,16 +18,33 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../services/EmailService.php';
 
+function otpRedirect(string $path, bool $verified = false): never
+{
+    $url = BASE_URL . $path;
+
+    if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')) {
+        header('Content-Type: application/json; charset=UTF-8');
+        $result = ['redirect' => $url, 'verified' => $verified];
+        if ($path === '/public/verify-email.php' && !empty($_SESSION['otp_error'])) {
+            $result['error'] = $_SESSION['otp_error'];
+            unset($_SESSION['otp_error']);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    header('Location: ' . $url);
+    exit;
+}
+
 function redirectToOtp(): never
 {
-    header('Location: ' . BASE_URL . '/public/verify-email.php');
-    exit;
+    otpRedirect('/public/verify-email.php');
 }
 
 function redirectToLogin(): never
 {
-    header('Location: ' . BASE_URL . '/public/login.php');
-    exit;
+    otpRedirect('/public/login.php');
 }
 
 /*
@@ -70,8 +87,7 @@ $userId = (int) (
 );
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/public/register.php');
-    exit;
+    otpRedirect('/public/register.php');
 }
 
 /*
@@ -80,16 +96,18 @@ if ($userId <= 0) {
 |--------------------------------------------------------------------------
 */
 
-$otp = trim((string) ($_POST['otp'] ?? ''));
+$otp = is_string($_POST['otp'] ?? null) ? trim($_POST['otp']) : '';
 
 if (!preg_match('/^[0-9]{6}$/', $otp)) {
-    $_SESSION['otp_error'] = 'Please enter a valid 6-digit OTP.';
+    $_SESSION['otp_error'] = $otp === ''
+        ? 'Please enter your verification code.'
+        : 'Please enter a valid 6-digit verification code.';
     redirectToOtp();
 }
 
 /*
 |--------------------------------------------------------------------------
-| VERIFY OTP AND ACTIVATE ACCOUNT
+| VERIFY OTP AND PREPARE ACCOUNT ACTIVATION
 |--------------------------------------------------------------------------
 */
 
@@ -224,7 +242,7 @@ try {
         $transactionStarted = false;
 
         $_SESSION['otp_error'] =
-            'Too many incorrect attempts. Please request a new OTP.';
+            'This verification code can no longer be used. Please request a new OTP.';
 
         redirectToOtp();
     }
@@ -250,34 +268,22 @@ try {
         $conn->commit();
         $transactionStarted = false;
 
-        $remainingAttempts = 4 - $attempts;
-
-        if ($remainingAttempts > 0) {
-
-            $_SESSION['otp_error'] =
-                'Incorrect verification code. '
-                . $remainingAttempts
-                . ' attempts remaining.';
-
-        } else {
-
-            $_SESSION['otp_error'] =
-                'Too many incorrect attempts. Please request a new OTP.';
-        }
+        $_SESSION['otp_error'] = $attempts >= 4
+            ? 'This verification code can no longer be used. Please request a new OTP.'
+            : 'Incorrect verification code.';
 
         redirectToOtp();
     }
 
     /*
     |--------------------------------------------------------------------------
-    | OTP CORRECT - ACTIVATE ACCOUNT
+    | OTP CORRECT - VERIFY EMAIL, KEEP THE ACCOUNT PENDING
     |--------------------------------------------------------------------------
     */
 
     $stmt = $conn->prepare(
         "UPDATE users
          SET
-            status = 'active',
             email_verified_at = NOW()
          WHERE id = ?
            AND status = 'pending'"
@@ -286,10 +292,27 @@ try {
     $stmt->bind_param('i', $userId);
     $stmt->execute();
 
-    if ($stmt->affected_rows !== 1) {
-        throw new RuntimeException('Unable to activate account.');
-    }
+    $stmt->close();
 
+    // Store only the hash. The raw token is delivered in the second email.
+    $activationToken = bin2hex(random_bytes(32));
+    $activationHash = hash('sha256', $activationToken);
+
+    $stmt = $conn->prepare(
+        'UPDATE email_verification_tokens
+         SET used_at = NOW()
+         WHERE user_id = ? AND used_at IS NULL'
+    );
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $stmt->close();
+
+    $stmt = $conn->prepare(
+        'INSERT INTO email_verification_tokens (user_id, token_hash, expires_at)
+         VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE))'
+    );
+    $stmt->bind_param('is', $userId, $activationHash);
+    $stmt->execute();
     $stmt->close();
 
     /*
@@ -312,7 +335,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | SAVE ACCOUNT ACTIVATION
+    | SAVE EMAIL VERIFICATION AND THE ACTIVATION TOKEN
     |--------------------------------------------------------------------------
     */
 
@@ -321,15 +344,15 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | REMOVE PENDING VERIFICATION SESSION
+    | KEEP THE PENDING SESSION UNTIL THE EMAIL LINK IS USED
     |--------------------------------------------------------------------------
     */
 
-    unset($_SESSION['pending_verification_user_id']);
+    unset($_SESSION['otp_error'], $_SESSION['otp_notice']);
 
     /*
     |--------------------------------------------------------------------------
-    | SEND SECOND EMAIL - ACCOUNT ACTIVATION CONFIRMATION
+    | SEND SECOND EMAIL - SINGLE-USE ACCOUNT ACTIVATION LINK
     |--------------------------------------------------------------------------
     */
 
@@ -339,7 +362,8 @@ try {
 
         $emailSent = sendActivationEmail(
             $user['email'],
-            $user['first_name']
+            $user['first_name'],
+            APP_URL . '/actions/auth/activate-account.php?token=' . $activationToken
         );
 
     } catch (Throwable $mailError) {
@@ -352,32 +376,25 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | SHOW SUCCESS MESSAGE ON LOGIN PAGE
+    | SAVE THE ACTIVATION RESULT FOR THE CONFIRMATION PAGE
     |--------------------------------------------------------------------------
     */
 
-    if ($emailSent) {
-
-        $_SESSION['login_success'] =
-            'Your PureVia account has been activated successfully! '
-            . 'A confirmation email has been sent. Please log in.';
-
-    } else {
-
-        $_SESSION['login_success'] =
-            'Your PureVia account has been activated successfully! '
-            . 'You can now log in using your email and password.';
-    }
+    $_SESSION['account_activation'] = [
+        'user_id' => $userId,
+        'email_sent' => $emailSent,
+        'completed_at' => time()
+    ];
 
     $_SESSION['login_email'] = $user['email'];
 
     /*
     |--------------------------------------------------------------------------
-    | REDIRECT TO LOGIN
+    | REDIRECT TO THE ACTIVATION CONFIRMATION
     |--------------------------------------------------------------------------
     */
 
-    redirectToLogin();
+    otpRedirect('/public/account-activated.php', true);
 
 } catch (Throwable $e) {
 

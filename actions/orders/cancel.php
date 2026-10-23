@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../services/order-cancellation.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -32,11 +33,11 @@ if ($userId <= 0) {
     cancelResponse(false, 'Please log in first.', 401);
 }
 
-$submittedToken = (string) ($_POST['csrf_token'] ?? '');
-$sessionToken = (string) ($_SESSION['csrf_token'] ?? '');
+$submittedToken = $_POST['csrf_token'] ?? null;
+$sessionToken = $_SESSION['csrf_token'] ?? null;
 
 if (
-    $sessionToken === '' ||
+    !is_string($submittedToken) || !is_string($sessionToken) || $sessionToken === '' ||
     !hash_equals($sessionToken, $submittedToken)
 ) {
     cancelResponse(false, 'Invalid security token.', 403);
@@ -52,6 +53,16 @@ if ($orderId === false || $orderId === null) {
     cancelResponse(false, 'Invalid order.', 422);
 }
 
+$reason = $_POST['reason'] ?? null;
+$details = $_POST['details'] ?? '';
+if (!is_string($reason) || !in_array($reason, orderCancellationReasons(), true)) {
+    cancelResponse(false, 'Please select a cancellation reason.', 422);
+}
+if (!is_string($details) || !mb_check_encoding($details, 'UTF-8') || mb_strlen($details) > 1000) {
+    cancelResponse(false, 'Additional details must be 1,000 characters or fewer.', 422);
+}
+$details = trim($details);
+
 try {
     $conn->begin_transaction();
 
@@ -60,6 +71,7 @@ try {
             o.id,
             o.order_status,
             o.payment_status,
+            o.created_at,
             (
                 SELECT p.payment_method
                 FROM payments p
@@ -86,29 +98,30 @@ try {
         cancelResponse(false, 'Order not found.', 404);
     }
 
-    if (
-        $order['order_status'] !== 'pending' ||
-        $order['payment_status'] !== 'pending' ||
-        $order['payment_method'] !== 'cod'
-    ) {
+    if (!canCancelCustomerOrder($order)) {
         $conn->rollback();
 
         cancelResponse(
             false,
-            'This order can no longer be cancelled online.',
+            orderCancellationEligible($order)
+                ? 'The cancellation deadline has passed. Please contact support.'
+                : 'This order can no longer be cancelled online.',
             409
         );
     }
 
     $stmt = $conn->prepare("
         UPDATE orders
-        SET order_status = 'cancelled'
+        SET order_status = 'cancelled',
+            cancellation_reason = ?,
+            cancellation_details = ?,
+            cancelled_at = NOW()
         WHERE id = ?
           AND user_id = ?
           AND order_status = 'pending'
     ");
 
-    $stmt->bind_param('ii', $orderId, $userId);
+    $stmt->bind_param('ssii', $reason, $details, $orderId, $userId);
     $stmt->execute();
 
     if ($stmt->affected_rows !== 1) {
@@ -125,6 +138,15 @@ try {
     $stmt->close();
 
     $conn->commit();
+
+    try {
+        require_once __DIR__ . '/../../services/OrderStatusEmail.php';
+        if (!OrderStatusEmail::send($conn, $orderId, $userId, $order['order_status'], 'cancelled', $order['payment_status'], $order['payment_status'])) {
+            error_log('PureVia cancellation email was not sent for order ' . $orderId . '.');
+        }
+    } catch (Throwable $mailError) {
+        error_log('PureVia cancellation email failed for order ' . $orderId . ': ' . $mailError->getMessage());
+    }
 
     cancelResponse(true, 'Your order has been cancelled.');
 

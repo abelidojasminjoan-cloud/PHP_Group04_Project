@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
@@ -15,7 +14,7 @@ $pageTitle = 'Shop All Products | PureVia';
  */
 function shopEscape(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -395,6 +394,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/product-favorites.css">
 </head>
 
 <body>
@@ -872,6 +872,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
                         <!-- PRODUCT IMAGE -->
 
+                        <div class="pv-product-photo">
                         <a
                             href="<?= shopEscape($productUrl) ?>"
                             class="shop-product-image"
@@ -896,6 +897,8 @@ $maxPrice = max(1, (int) ceil($maxPrice));
                             <?php endif; ?>
 
                         </a>
+                        <?php include __DIR__ . '/../includes/product_favorite_button.php'; ?>
+                        </div>
 
                         <!-- PRODUCT INFO -->
 
@@ -1061,16 +1064,16 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/shop.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script>
-    window.PUREVIA_BASE_URL = <?= json_encode(BASE_URL) ?>;
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/shop.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>">
+    window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

@@ -54,3 +54,4 @@ Install the following:
 4. Create a Database for the System Project PureVia and import the SQL database file
 5. Open a browser and go to "https://localhost//PureVia/"
 6. Then the PureVia website should be accessible now
+

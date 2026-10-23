@@ -1,0 +1,21 @@
+.pv-product-photo { position: relative; width: 100%; }
+.pv-product-favorite {
+    position: absolute;
+    z-index: 2;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #d9d0c5;
+    border-radius: 50%;
+    background: #fff;
+    color: #3b3b34;
+    cursor: pointer;
+}
+.pv-product-favorite svg { display: block; width: 19px; height: 19px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pv-product-favorite[aria-pressed="true"] { color: #c73728; }
+.pv-product-favorite[aria-pressed="true"] svg { fill: currentColor; }
+.pv-product-favorite:focus-visible { outline: 2px solid #38634e; outline-offset: 3px; }
