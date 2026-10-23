@@ -1,12 +1,26 @@
 <?php
 declare(strict_types=1);
 
-// PUREVIA - COMPLETE LOGIN AFTER GOOGLE AUTHENTICATOR
+// Shared login completion, including password-only testing when explicitly enabled.
 
 function pvCompleteTwoFactorLogin(
     mysqli $conn,
     int $userId
 ): string {
+    return pvCompleteLogin($conn, $userId, true);
+}
+
+function pvCompletePasswordLogin(mysqli $conn, int $userId): string
+{
+    return pvCompleteLogin($conn, $userId, false);
+}
+
+function pvCompleteLogin(mysqli $conn, int $userId, bool $secondFactorVerified): string
+{
+    if (!$secondFactorVerified && TWO_FACTOR_ENABLED) {
+        throw new RuntimeException('Authenticator verification is required.');
+    }
+    $requireEnrolled = $secondFactorVerified ? 1 : 0;
 
     // The user must have passed password verification.
     $pendingId = (int) (
@@ -47,12 +61,12 @@ function pvCompleteTwoFactorLogin(
                 ON r.id = u.role_id
             WHERE u.id = ?
               AND u.status = 'active'
-              AND u.totp_enabled_at IS NOT NULL
+              AND (? = 0 OR u.totp_enabled_at IS NOT NULL)
             LIMIT 1
             FOR UPDATE
         ");
 
-        $stmt->bind_param('i', $userId);
+        $stmt->bind_param('ii', $userId, $requireEnrolled);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
         $stmt->close();
@@ -101,7 +115,7 @@ function pvCompleteTwoFactorLogin(
             );
         }
 
-        // Update only after successful second-factor verification.
+        // Update only after completing all currently required login checks.
         $stmt = $conn->prepare("
             UPDATE users
             SET failed_login_attempts = 0,
@@ -109,10 +123,10 @@ function pvCompleteTwoFactorLogin(
                 last_login_at = NOW()
             WHERE id = ?
               AND status = 'active'
-              AND totp_enabled_at IS NOT NULL
+              AND (? = 0 OR totp_enabled_at IS NOT NULL)
         ");
 
-        $stmt->bind_param('i', $userId);
+        $stmt->bind_param('ii', $userId, $requireEnrolled);
         $stmt->execute();
         $stmt->close();
 
@@ -193,7 +207,7 @@ function pvCompleteTwoFactorLogin(
 
     $_SESSION['email'] = $user['email'];
     $_SESSION['last_activity'] = time();
-    $_SESSION['2fa_verified'] = true;
+    $_SESSION['2fa_verified'] = $secondFactorVerified;
 
     if ($role === 'admin') {
         return BASE_URL . '/admin/dashboard.php';

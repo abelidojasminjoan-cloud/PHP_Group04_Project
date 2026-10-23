@@ -57,6 +57,8 @@ Install the following:
 
 ## Authenticator setup
 
+For password-only account testing, set `TWO_FACTOR_ENABLED=false` in `.env`. This temporarily disables authenticator setup and challenges for all roles. Set it back to `true` to restore the authenticator requirement; existing enrolled secrets and recovery codes are preserved.
+
 Apply `database/migrations/20261024_two_factor_auth.sql` after importing the database. The existing login flow requires these authenticator fields and recovery-code storage. Set `TOTP_ENCRYPTION_KEY` in the private `.env` to a base64-encoded random 32-byte key. Preserve that key across deployments so enrolled authenticator secrets remain readable. After password verification, existing accounts enroll in Google Authenticator before completing their first login.
 
 ## Skin Match and admin setup

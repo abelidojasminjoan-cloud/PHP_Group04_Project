@@ -213,7 +213,7 @@ $conn->commit();
 
 
 /* =========================================
-   MANDATORY GOOGLE AUTHENTICATOR
+   COMPLETE LOGIN OR START GOOGLE AUTHENTICATOR
 ========================================= */
 
 // Password and account status were verified above.
@@ -246,6 +246,18 @@ unset(
 $_SESSION['pending_2fa_user_id'] = $userId;
 $_SESSION['pending_2fa_started'] = time();
 $_SESSION['pending_2fa_attempts'] = 0;
+
+if (!TWO_FACTOR_ENABLED) {
+    require_once __DIR__ . '/../../services/complete_2fa_login.php';
+    try {
+        $redirect = pvCompletePasswordLogin($conn, $userId);
+    } catch (Throwable $error) {
+        error_log('Login completion failed: ' . $error->getMessage());
+        rejectLogin($email, 'Unable to login right now. Please try again.');
+    }
+    header('Location: ' . $redirect, true, 303);
+    exit;
+}
 
 // First login: Set up Google Authenticator.
 if (empty($user['totp_enabled_at'])) {
