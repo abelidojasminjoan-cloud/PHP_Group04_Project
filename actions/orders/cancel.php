@@ -139,6 +139,15 @@ try {
 
     $conn->commit();
 
+    try {
+        require_once __DIR__ . '/../../services/OrderStatusEmail.php';
+        if (!OrderStatusEmail::send($conn, $orderId, $userId, $order['order_status'], 'cancelled', $order['payment_status'], $order['payment_status'])) {
+            error_log('PureVia cancellation email was not sent for order ' . $orderId . '.');
+        }
+    } catch (Throwable $mailError) {
+        error_log('PureVia cancellation email failed for order ' . $orderId . ': ' . $mailError->getMessage());
+    }
+
     cancelResponse(true, 'Your order has been cancelled.');
 
 } catch (Throwable $error) {

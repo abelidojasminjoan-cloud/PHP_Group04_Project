@@ -195,7 +195,7 @@ function escapeHtml(string $value): string {
                         </p>
                         <ul class="auth-password-checklist">
                             <?php foreach (securityPasswordRequirements($passwordPolicy) as $passwordRuleKey => $passwordRuleLabel): ?>
-                                <li data-password-rule="<?= escapeHtml($passwordRuleKey) ?>" data-met="false">
+                                <li data-password-rule="<?= escapeHtml($passwordRuleKey) ?>" data-min-count="<?= securityPasswordRuleMinimum($passwordPolicy, $passwordRuleKey) ?>" data-met="false">
                                     <div class="auth-rule-icon" aria-hidden="true">
                                         <svg class="auth-rule-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
                                             <!-- Font Awesome Free 7.2.0, Fonticons, Inc. https://fontawesome.com/license/free -->

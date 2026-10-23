@@ -4,6 +4,9 @@ Options -Indexes
     Header always set X-Content-Type-Options "nosniff"
     Header always set Content-Security-Policy "default-src 'none'; sandbox"
 </IfModule>
-<FilesMatch "(?i)\.(php[0-9]?|phtml|phar|html?|xhtml|shtml|svg|xml|js|mjs)$">
+<FilesMatch "(?i)^(?!.*\.(?:jpe?g|png|webp)$)">
     Require all denied
+</FilesMatch>
+<FilesMatch "(?i)\.(?:jpe?g|png|webp)$">
+    SetHandler default-handler
 </FilesMatch>

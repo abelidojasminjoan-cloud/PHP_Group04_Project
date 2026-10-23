@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/product_data.php';
+require_once __DIR__ . '/../../services/SecureUpload.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -198,6 +199,9 @@ try {
             'Please check the product details.'
         );
     }
+
+    // Scan uploads before acquiring product/database locks.
+    $validatedUploads = SecureUpload::images($_FILES['product_images'] ?? null);
 
     $conn->begin_transaction();
     $transactionStarted = true;
@@ -473,107 +477,22 @@ try {
         ];
     }
 
-    /* UPLOADED IMAGES */
+    /* UPLOADED IMAGES: validated and scanned before the transaction. */
 
-    $uploads = $_FILES['product_images'] ?? null;
-
-    if (
-        $uploads &&
-        isset($uploads['error']) &&
-        is_array($uploads['error'])
-    ) {
-
-        foreach ($uploads['error'] as $index => $uploadError) {
-
-            if ($uploadError === UPLOAD_ERR_NO_FILE) {
-                continue;
-            }
-
-            if ($uploadError !== UPLOAD_ERR_OK) {
-                throw new RuntimeException('Image upload failed.');
-            }
-
-            $images[] = [
-                'type' => 'file',
-                'key' => 'file:' . $index,
-                'value' => $index
-            ];
-        }
+    foreach ($validatedUploads as $index => $uploadedImage) {
+        $images[] = ['type' => 'file', 'key' => 'file:' . $index, 'value' => $index];
     }
-
-    if (count($images) + count($resolvedByKey) > 10) {
-        throw new RuntimeException(
-            'A maximum of 10 product images is allowed.'
-        );
+    if (count($images) + count($resolvedByKey) > SecureUpload::MAX_IMAGES) {
+        throw new RuntimeException('A maximum of 10 product images is allowed.');
     }
-
-    $uploadFolder = __DIR__ . '/../../uploads/products';
-
-    if (
-        $uploads &&
-        !is_dir($uploadFolder) &&
-        !mkdir($uploadFolder, 0755, true) &&
-        !is_dir($uploadFolder)
-    ) {
-        throw new RuntimeException(
-            'Unable to create product image folder.'
-        );
-    }
-
-    $fileInfo = new finfo(FILEINFO_MIME_TYPE);
-
     foreach ($images as $image) {
-
         if ($image['type'] === 'url') {
             $resolvedByKey[$image['key']] = $image['value'];
             continue;
         }
-
-        $index = $image['value'];
-        $temporaryFile = $uploads['tmp_name'][$index];
-        $fileSize = (int) $uploads['size'][$index];
-
-        if (
-            !is_uploaded_file($temporaryFile) ||
-            $fileSize <= 0 ||
-            $fileSize > 5 * 1024 * 1024
-        ) {
-            throw new RuntimeException(
-                'Each uploaded image must be under 5 MB.'
-            );
-        }
-
-        $mime = $fileInfo->file($temporaryFile);
-
-        $extensions = [
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/webp' => 'webp'
-        ];
-
-        $extension = $extensions[$mime] ?? null;
-
-        if (!$extension) {
-            throw new RuntimeException(
-                'Only JPG, PNG, and WebP images are allowed.'
-            );
-        }
-
-        $filename = bin2hex(random_bytes(16))
-            . '.'
-            . $extension;
-
-        $destination = $uploadFolder . '/' . $filename;
-
-        if (!move_uploaded_file($temporaryFile, $destination)) {
-            throw new RuntimeException(
-                'Unable to save uploaded image.'
-            );
-        }
-
-        $savedFiles[] = $destination;
-
-        $resolvedByKey[$image['key']] = 'uploads/products/' . $filename;
+        $stored = SecureUpload::store($validatedUploads[$image['value']], 'products');
+        $savedFiles[] = $stored['path'];
+        $resolvedByKey[$image['key']] = $stored['relative_path'];
     }
 
     // Keep the thumbnail order (including mixed existing images, URLs, and uploads).

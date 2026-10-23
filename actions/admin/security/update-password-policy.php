@@ -20,18 +20,21 @@ $length = filter_var(
 );
 
 if (
-    $length === false || $length === null || $length < 8 || $length > 72
+    $length === false || $length === null || $length < 8 || $length > 64
 ) {
     securityRedirect('Invalid password policy values.', false);
 }
 
 $fields = [
     'require_uppercase' => 'password_require_uppercase',
+    'require_lowercase' => 'password_require_lowercase',
     'require_number' => 'password_require_number',
     'require_special_character' => 'password_require_special'
 ];
 
 $values = [];
+$counts = [];
+$totalRequired = 0;
 
 foreach ($fields as $column => $input) {
     $value = $_POST[$input] ?? null;
@@ -41,6 +44,25 @@ foreach ($fields as $column => $input) {
     }
 
     $values[$column] = (int) $value;
+    $type = substr($column, strlen('require_'));
+    $count = filter_var($_POST['password_min_' . $type] ?? null, FILTER_VALIDATE_INT);
+    // Disabled count controls are not submitted; retain their previous value.
+    if ($value === '0' && !isset($_POST['password_min_' . $type])) {
+        $count = securityPolicy($conn)['min_' . $type];
+    }
+    if ($count === false || $count === null || $count < 1 || $count > 64) {
+        securityRedirect('Minimum character counts must be between 1 and 64.', false);
+    }
+    $counts[$type] = $count;
+    $totalRequired += (int) $value * $count;
+}
+
+$expiry = filter_var($_POST['password_expiry_days'] ?? null, FILTER_VALIDATE_INT);
+if ($expiry === false || $expiry === null || $expiry < 0 || $expiry > 365) {
+    securityRedirect('Password expiration must be between 0 and 365 days.', false);
+}
+if ($totalRequired > 72) {
+    securityRedirect('The combined character counts cannot exceed the 72-byte password limit.', false);
 }
 
 try {
@@ -51,17 +73,29 @@ try {
         "UPDATE security_settings
          SET password_min_length = ?,
              require_uppercase = ?,
+             require_lowercase = ?,
              require_number = ?,
-             require_special_character = ?
+             require_special_character = ?,
+             min_uppercase = ?,
+             min_lowercase = ?,
+             min_number = ?,
+             min_special_character = ?,
+             password_expiry_days = ?
          WHERE id = ?"
     );
 
     $stmt->bind_param(
-        'iiiii',
+        'iiiiiiiiiii',
         $length,
         $values['require_uppercase'],
+        $values['require_lowercase'],
         $values['require_number'],
         $values['require_special_character'],
+        $counts['uppercase'],
+        $counts['lowercase'],
+        $counts['number'],
+        $counts['special_character'],
+        $expiry,
         $settingId
     );
 

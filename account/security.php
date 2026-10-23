@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
                 // A concurrent password change must not be overwritten.
                 $update = $conn->prepare("
-                    UPDATE users SET password = ?
+                    UPDATE users SET password = ?, password_changed_at = NOW()
                     WHERE id = ? AND password = ? AND role_id = 3 AND status = 'active'
                 ");
                 $oldHash = $user['password'];
@@ -400,7 +400,7 @@ $initials = secInitials($name);
                         </p>
                         <ul class="sec-password-checklist">
                             <?php foreach (securityPasswordRequirements($passwordPolicy) as $passwordRuleKey => $passwordRuleLabel): ?>
-                                <li data-password-rule="<?= secEsc($passwordRuleKey) ?>" data-met="false">
+                                <li data-password-rule="<?= secEsc($passwordRuleKey) ?>" data-min-count="<?= securityPasswordRuleMinimum($passwordPolicy, $passwordRuleKey) ?>" data-met="false">
                                     <div class="sec-rule-icon" aria-hidden="true">
                                         <svg class="sec-rule-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="currentColor" focusable="false">
                                             <!-- Font Awesome Free 7.2.0, Fonticons, Inc. https://fontawesome.com/license/free -->

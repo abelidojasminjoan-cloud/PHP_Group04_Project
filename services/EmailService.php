@@ -11,7 +11,8 @@ function sendPureViaMail(
     string $name,
     string $subject,
     string $html,
-    string $plain
+    string $plain,
+    ?int $timeout = null
 ): bool {
     $config = require __DIR__ . '/../config/mail.php';
 
@@ -34,6 +35,10 @@ function sendPureViaMail(
         $mail->Password = $config['password'];
         $mail->Port = (int) $config['port'];
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        if ($timeout !== null) {
+            $mail->Timeout = max(1, min(30, $timeout));
+            $mail->getSMTPInstance()->Timelimit = $mail->Timeout;
+        }
 
         $mail->CharSet = 'UTF-8';
 

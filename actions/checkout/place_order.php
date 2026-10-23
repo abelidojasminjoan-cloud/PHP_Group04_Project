@@ -630,6 +630,18 @@ try {
             $_SESSION['checkout_token']
         );
 
+        // Persist completion before SMTP, so a checkout retry cannot send a second receipt.
+        session_write_close();
+        try {
+            require_once __DIR__ . '/../../services/OrderReceipt.php';
+            if (!OrderReceipt::send($conn, $orderId, $userId)) {
+                error_log('PureVia order receipt was not sent for order ' . $orderId . '.');
+            }
+        } catch (Throwable $mailError) {
+            // The order is already committed; an email failure must not undo it.
+            error_log('PureVia order receipt failed for order ' . $orderId . ': ' . $mailError->getMessage());
+        }
+
         checkoutReply(
             200,
             true,
