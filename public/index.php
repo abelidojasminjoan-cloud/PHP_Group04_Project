@@ -784,7 +784,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         specific concerns.
                     </p>
                 </div>
-                <button type="button" class="pv-skin-quiz-button">
+                <button type="button" class="pv-skin-quiz-button" onclick="window.location.href='<?= BASE_URL ?>/skin-match.php'">
                     Start Skin Quiz <span aria-hidden="true">&rarr;</span>
                 </button>
             </div>

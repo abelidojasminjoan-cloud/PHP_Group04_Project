@@ -52,7 +52,8 @@ function loadProductOptions(
     $allowed = [
         'skin_types' => 'skin_type_name',
         'skin_concerns' => 'concern_name',
-        'ingredients' => 'ingredient_name'
+        'ingredients' => 'ingredient_name',
+        'suitability_tags' => 'name'
     ];
 
     if (($allowed[$table] ?? null) !== $column) {
@@ -92,6 +93,8 @@ $ingredients = loadProductOptions(
     'ingredients',
     'ingredient_name'
 );
+
+$suitabilityTags = loadProductOptions($conn, 'suitability_tags', 'name');
 
 /* PRODUCTS */
 
@@ -828,6 +831,17 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                     </div>
 
+                    <div class="form-group">
+                        <label for="suitabilitySearch">Suitability</label>
+                        <input type="hidden" name="suitability_tags_present" value="1">
+                        <input type="search" id="suitabilitySearch" class="form-control checkbox-search" placeholder="Search suitability...">
+                        <div class="checkbox-list" id="suitabilityOptions">
+                            <?php foreach ($suitabilityTags as $item): ?>
+                                <label class="product-checkbox"><input type="checkbox" name="suitability_tag_ids[]" value="<?= (int)$item['id'] ?>"><span><?= productEscape($item['label']) ?></span></label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
                     <!-- INGREDIENTS -->
 
                     <div class="form-group">
@@ -870,6 +884,10 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                     </div>
 
+                    <div class="form-group">
+                        <label class="product-checkbox" for="productIngredientsComplete"><input type="checkbox" id="productIngredientsComplete" name="ingredients_complete" value="1"><span>All ingredients on the product label are recorded above</span></label>
+                    </div>
+
                     <!-- KEY BENEFITS -->
 
                     <div class="form-group">
@@ -892,6 +910,27 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                     </div>
 
+                </section>
+
+                <section class="product-form-section">
+                    <h3>Routine Guidance</h3>
+                    <input type="hidden" name="routine_settings_present" value="1">
+                    <div class="form-group">
+                        <label for="productRoutineRole">Routine Role</label>
+                        <select id="productRoutineRole" name="routine_role" class="form-control">
+                            <option value="none">Not assigned</option><option value="cleanser">Cleanser</option><option value="moisturizer">Moisturizer</option><option value="sunscreen">Sunscreen</option><option value="treatment">Targeted treatment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productUsagePeriod">Usage Period</label>
+                        <select id="productUsagePeriod" name="usage_period" class="form-control"><option value="both">Morning and evening</option><option value="am">Morning</option><option value="pm">Evening</option></select>
+                    </div>
+                    <div id="productRoutineDetails" hidden>
+                        <div class="form-group"><label for="productRoutineInstructions">Product Label Directions</label><textarea id="productRoutineInstructions" name="routine_instructions" class="form-control form-textarea" rows="3" maxlength="2000" placeholder="Directions from the product label"></textarea></div>
+                        <label class="product-checkbox"><input type="checkbox" id="productGentle" name="gentle" value="1"><span>Catalog guidance supports a gentle routine</span></label>
+                        <label class="product-checkbox" id="productTargetedField" hidden><input type="checkbox" id="productTargetedApproved" name="targeted_approved" value="1"><span>Usage guidance reviewed for an optional targeted routine product</span></label>
+                        <label class="product-checkbox" id="productSunscreenField" hidden><input type="checkbox" id="productSunscreenVerified" name="sunscreen_verified" value="1"><span>Label confirms broad-spectrum SPF 30+ protection</span></label>
+                    </div>
                 </section>
 
                 <!-- SIZES AND OPTIONS -->

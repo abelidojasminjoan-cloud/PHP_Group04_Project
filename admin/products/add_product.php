@@ -72,7 +72,8 @@ function validProductIds(
     $allowedTables = [
         'skin_types',
         'skin_concerns',
-        'ingredients'
+        'ingredients',
+        'suitability_tags'
     ];
 
     if (!in_array($table, $allowedTables, true)) {
@@ -375,7 +376,7 @@ try {
 
     /* SKIN MATCHING */
 
-    foreach (['skin_type_ids', 'concern_ids', 'ingredient_ids'] as $field) {
+    foreach (['skin_type_ids', 'concern_ids', 'ingredient_ids', 'suitability_tag_ids'] as $field) {
         if (isset($_POST[$field]) && !is_array($_POST[$field])) {
             throw new RuntimeException('Invalid product selections.');
         }
@@ -407,6 +408,11 @@ try {
             : [],
         array_map('intval', array_column($existingProduct['ingredients'] ?? [], 'id'))
     );
+
+    if (isset($_POST['suitability_tags_present']) && $_POST['suitability_tags_present'] !== '1') throw new RuntimeException('Invalid suitability selections.');
+    $existingSuitabilityIds = array_map('intval', array_column($existingProduct['suitability_tags'] ?? [], 'id'));
+    $suitabilityTagIds = validProductIds($conn, 'suitability_tags', isset($_POST['suitability_tags_present']) ? ($_POST['suitability_tag_ids'] ?? []) : $existingSuitabilityIds, $existingSuitabilityIds);
+    $routineSettings = ProductSuitability::fromForm($_POST, $ingredientIds);
 
     /* IMAGE URLS */
 
@@ -637,6 +643,8 @@ try {
         $stmt->close();
     }
 
+    if ($routineSettings !== null) ProductSuitability::save($conn, $productId, $routineSettings);
+
     /* SAVE VARIANTS WITHOUT REPLACING EXISTING IDS */
 
     $updateVariant = $conn->prepare("
@@ -702,7 +710,8 @@ try {
         $relations = [
             'product_skin_types' => ['skin_type_id', $skinTypeIds, $existingProduct['skin_types']],
             'product_concerns' => ['concern_id', $concernIds, $existingProduct['concerns']],
-            'product_ingredients' => ['ingredient_id', $ingredientIds, $existingProduct['ingredients']]
+            'product_ingredients' => ['ingredient_id', $ingredientIds, $existingProduct['ingredients']],
+            'product_suitability_tags' => ['suitability_tag_id', $suitabilityTagIds, $existingProduct['suitability_tags']]
         ];
         foreach ($relations as $table => [$column, $selectedIds, $oldItems]) {
             $oldIds = array_map('intval', array_column($oldItems, 'id'));
@@ -788,6 +797,14 @@ try {
         $stmt->execute();
     }
 
+    $stmt->close();
+
+    $stmt = $conn->prepare('INSERT INTO product_suitability_tags(product_id,suitability_tag_id) VALUES(?,?)');
+    foreach ($suitabilityTagIds as $suitabilityTagId) {
+        if (in_array($suitabilityTagId, $existingSuitabilityIds, true)) continue;
+        $stmt->bind_param('ii', $productId, $suitabilityTagId);
+        $stmt->execute();
+    }
     $stmt->close();
 
     /* SAVE IMAGES */

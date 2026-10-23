@@ -172,6 +172,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setupCheckboxSearch("concernSearch", "concernOptions");
     setupCheckboxSearch("ingredientSearch", "ingredientOptions");
+    setupCheckboxSearch("suitabilitySearch", "suitabilityOptions");
+
+    function updateRoutineFields() {
+        const role = document.getElementById('productRoutineRole').value;
+        document.getElementById('productRoutineDetails').hidden = role === 'none';
+        document.getElementById('productTargetedField').hidden = role !== 'treatment';
+        document.getElementById('productSunscreenField').hidden = role !== 'sunscreen';
+    }
+    document.getElementById('productRoutineRole').addEventListener('change', () => {
+        const role = document.getElementById('productRoutineRole').value;
+        if (role !== 'treatment') document.getElementById('productTargetedApproved').checked = false;
+        if (role !== 'sunscreen') document.getElementById('productSunscreenVerified').checked = false;
+        updateRoutineFields();
+    });
 
     /* DYNAMIC PRODUCT SIZES */
 
@@ -281,6 +295,7 @@ document.addEventListener("DOMContentLoaded", function () {
         form.removeAttribute('aria-busy');
         formError.remove();
         form.querySelectorAll('.product-checkbox').forEach(option => { option.hidden = false; });
+        updateRoutineFields();
         title.textContent = editing ? 'Edit Product' : 'Add New Product';
         subtitle.textContent = 'Fill in the details and add all available sizes';
         submitButton.textContent = editing ? 'Save Changes' : 'Add Product';
@@ -299,7 +314,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const fields = {
             productName: product.product_name, productCode: product.product_code,
             productCategory: product.category_id, productStatus: product.status,
-            productDescription: product.description ?? '', keyBenefits: product.benefits.join('\n')
+            productDescription: product.description ?? '', keyBenefits: product.benefits.join('\n'),
+            productRoutineRole: product.suitability_settings.routine_role,
+            productUsagePeriod: product.suitability_settings.usage_period,
+            productRoutineInstructions: product.suitability_settings.routine_instructions ?? ''
         };
         const category = document.getElementById('productCategory');
         if (![...category.options].some(option => option.value === String(product.category_id))) {
@@ -308,10 +326,13 @@ document.addEventListener("DOMContentLoaded", function () {
             category.add(option);
         }
         Object.entries(fields).forEach(([id, value]) => { document.getElementById(id).value = value; });
+        for (const [id, key] of Object.entries({ productIngredientsComplete: 'ingredients_complete', productGentle: 'gentle', productTargetedApproved: 'targeted_approved', productSunscreenVerified: 'sunscreen_verified' })) document.getElementById(id).checked = Number(product.suitability_settings[key]) === 1;
+        updateRoutineFields();
         const selections = [
             ['skin_type_ids[]', '.skin-type-options', product.skin_types],
             ['concern_ids[]', '#concernOptions', product.concerns],
-            ['ingredient_ids[]', '#ingredientOptions', product.ingredients]
+            ['ingredient_ids[]', '#ingredientOptions', product.ingredients],
+            ['suitability_tag_ids[]', '#suitabilityOptions', product.suitability_tags]
         ];
         selections.forEach(([name, selector, items]) => {
             items.forEach(item => {
