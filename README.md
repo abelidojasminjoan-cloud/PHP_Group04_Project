@@ -55,6 +55,10 @@ Install the following:
 5. Open a browser and go to "https://localhost//PureVia/"
 6. Then the PureVia website should be accessible now
 
+## Authenticator setup
+
+Apply `database/migrations/20261024_two_factor_auth.sql` after importing the database. The existing login flow requires these authenticator fields and recovery-code storage. Set `TOTP_ENCRYPTION_KEY` in the private `.env` to a base64-encoded random 32-byte key. Preserve that key across deployments so enrolled authenticator secrets remain readable. After password verification, existing accounts enroll in Google Authenticator before completing their first login.
+
 ## Skin Match and admin setup
 
 After importing the database on a new installation, apply `database/migrations/20261021_skin_match_admin.sql`, followed by `database/migrations/20261021_suitability_tags.sql`. These migrations are additive and repeatable. They preserve existing profiles and product links, add stable quiz keys for the four primary skin types, and create suitability metadata, assessment history, and reusable suitability tags.
@@ -66,5 +70,3 @@ After importing the database on a new installation, apply `database/migrations/2
 - Add/Edit Product includes suitability tag selections, Routine Role, Usage Period, and ingredient completeness confirmation alongside the existing skin-type, concern, and ingredient selections. Unverified ingredient lists are excluded when a customer has selected ingredients to avoid. Suitability labels are assigned by administrators, not inferred from ingredient records.
 - Routine products require an assigned routine role. Sunscreen labels must be confirmed as broad-spectrum SPF 30+. Optional targeted products need reviewed directions and approval; they are omitted when frequent reactions or high sensitivity are reported.
 - Analytics count saved quiz completions once per assessment token. Profile edits and previews do not inflate totals. Usefulness averages come from customer ratings; missing ratings display a dash. Result clarity describes questionnaire results, not medical certainty.
-
-Run `C:\xampp\php\php.exe tests/skin-match/run.php` for the isolated backend checks. See `tests/skin-match/README.md` for coverage and scoring notes.

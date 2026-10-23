@@ -48,7 +48,7 @@ if ($showRecovery) {
     }
 
     $stmt = $conn->prepare("
-        SELECT id, totp_enabled_at
+        SELECT id, email, totp_enabled_at
         FROM users
         WHERE id = ?
           AND status = 'active'
@@ -87,6 +87,17 @@ if ($showRecovery) {
             $_SESSION['2fa_setup_expires'],
             $_SESSION['2fa_setup_attempts']
         );
+    }
+
+    if ($setupSecret !== '') {
+        $setupUri = 'otpauth://totp/' . rawurlencode('PureVia:' . $user['email']) . '?' .
+            http_build_query([
+                'secret' => $setupSecret,
+                'issuer' => 'PureVia',
+                'algorithm' => 'SHA1',
+                'digits' => 6,
+                'period' => 30,
+            ], '', '&', PHP_QUERY_RFC3986);
     }
 }
 
@@ -216,26 +227,29 @@ function pvSetupEsc(string $value): string
         <?php else: ?>
 
             <p class="pv-verify-description">
-                In Google Authenticator, choose
-                Add account → Enter a setup key.
-                Use PureVia as the account name.
+                In Google Authenticator, tap + and choose Scan a QR code.
+                Scan below, then enter the six-digit code from the app.
             </p>
+
+            <div id="authenticatorQr" class="pv-authenticator-qr"
+                 data-uri="<?= pvSetupEsc($setupUri) ?>"></div>
+            <p id="qrError" class="pv-input-error" role="alert" hidden>
+                Unable to display the QR code. Use the setup key below instead.
+            </p>
+
+            <details id="manualSetup" class="pv-manual-setup">
+                <summary>Can't scan? Enter a setup key instead</summary>
+                <div class="pv-form-group">
+                    <label for="setupKey">Your Setup Key</label>
+                    <input id="setupKey" class="pv-code-input pv-setup-key"
+                           type="text" value="<?= pvSetupEsc($setupSecret) ?>" readonly>
+                    <p class="pv-input-hint">Choose a time-based key and use PureVia as the account name.</p>
+                </div>
+            </details>
 
             <form method="POST"
                   action="<?= pvSetupEsc(BASE_URL) ?>/actions/account/confirm_2fa.php"
                   class="pv-verify-form">
-
-                <div class="pv-form-group">
-                    <label for="setupKey">
-                        Your Setup Key
-                    </label>
-
-                    <input id="setupKey"
-                           class="pv-code-input"
-                           type="text"
-                           value="<?= pvSetupEsc($setupSecret) ?>"
-                           readonly>
-                </div>
 
                 <input type="hidden"
                        name="csrf_token"
@@ -282,5 +296,9 @@ function pvSetupEsc(string $value): string
 </p>
 
 </main>
+<?php if (!$showRecovery && $setupSecret !== ''): ?>
+<script src="<?= pvSetupEsc(BASE_URL) ?>/assets/js/qrcodegen.js" defer></script>
+<script src="<?= pvSetupEsc(BASE_URL) ?>/assets/js/authenticator-setup.js" defer></script>
+<?php endif; ?>
 </body>
 </html>

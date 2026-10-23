@@ -755,17 +755,17 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                 <!-- SKIN MATCHING -->
 
-                <section class="product-form-section">
+                <section class="product-form-section product-skin-matching">
 
                     <h3>Skin matching &amp; formulation</h3>
 
                     <!-- SKIN TYPES -->
 
-                    <div class="form-group">
+                    <div class="form-group product-match-group">
 
-                        <label>Skin Types</label>
+                        <label class="product-match-label">Skin Types</label>
 
-                        <div class="skin-type-options">
+                        <div class="skin-type-options product-match-options" role="group" aria-label="Skin Types">
 
                             <?php foreach ($skinTypes as $item): ?>
 
@@ -787,6 +787,18 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                         </div>
 
+                    </div>
+
+                    <!-- SUITABILITY -->
+
+                    <div class="form-group product-match-group">
+                        <label class="product-match-label">Suitability</label>
+                        <input type="hidden" name="suitability_tags_present" value="1">
+                        <div class="skin-type-options product-match-options" id="suitabilityOptions" role="group" aria-label="Suitability">
+                            <?php foreach ($suitabilityTags as $item): ?>
+                                <label class="product-checkbox"><input type="checkbox" name="suitability_tag_ids[]" value="<?= (int)$item['id'] ?>"><span><?= productEscape($item['label']) ?></span></label>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
 
                     <!-- SKIN CONCERNS -->
@@ -829,17 +841,6 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                         </div>
 
-                    </div>
-
-                    <div class="form-group">
-                        <label for="suitabilitySearch">Suitability</label>
-                        <input type="hidden" name="suitability_tags_present" value="1">
-                        <input type="search" id="suitabilitySearch" class="form-control checkbox-search" placeholder="Search suitability...">
-                        <div class="checkbox-list" id="suitabilityOptions">
-                            <?php foreach ($suitabilityTags as $item): ?>
-                                <label class="product-checkbox"><input type="checkbox" name="suitability_tag_ids[]" value="<?= (int)$item['id'] ?>"><span><?= productEscape($item['label']) ?></span></label>
-                            <?php endforeach; ?>
-                        </div>
                     </div>
 
                     <!-- INGREDIENTS -->

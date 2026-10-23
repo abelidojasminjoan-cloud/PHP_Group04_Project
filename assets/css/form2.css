@@ -444,6 +444,30 @@
     accent-color: var(--form-green);
 }
 
+.product-skin-matching > h3 {
+    font-size: 16px;
+    margin-bottom: 24px;
+}
+
+.product-match-group { margin-bottom: 28px; }
+.form-group > .product-match-label { font-size: 14px; margin-bottom: 14px; }
+
+.product-match-options {
+    gap: 16px;
+    padding: 5px 8px;
+}
+
+.product-match-options .product-checkbox {
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.product-match-options .product-checkbox input {
+    width: 20px;
+    height: 20px;
+}
+
 .checkbox-search {
     margin-bottom: 8px;
 }

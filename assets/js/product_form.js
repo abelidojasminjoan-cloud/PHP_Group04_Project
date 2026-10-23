@@ -172,7 +172,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setupCheckboxSearch("concernSearch", "concernOptions");
     setupCheckboxSearch("ingredientSearch", "ingredientOptions");
-    setupCheckboxSearch("suitabilitySearch", "suitabilityOptions");
 
     function updateRoutineFields() {
         const role = document.getElementById('productRoutineRole').value;
