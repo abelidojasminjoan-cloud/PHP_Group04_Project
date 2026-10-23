@@ -32,7 +32,9 @@ try {
 }
 
 require_once __DIR__ . '/../services/security-policy.php';
+$pureViaRequestPolicy = securityPolicy($conn);
 enforcePureViaSessionTimeout(
-    securityPolicy($conn),
+    $pureViaRequestPolicy,
     !defined('PUREVIA_SESSION_STATUS_REQUEST')
 );
+enforcePureViaPasswordExpiry($conn, $pureViaRequestPolicy);

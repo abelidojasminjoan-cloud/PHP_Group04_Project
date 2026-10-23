@@ -57,12 +57,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const minimumLength = registerPassword ? registerPassword.minLength : 12;
     const passwordRules = [
-        { key: 'length', test: value => new TextEncoder().encode(value).length >= minimumLength, message: `Password must contain at least ${minimumLength} characters.` },
+        { key: 'length', test: value => [...value].length >= minimumLength, message: `Password must contain at least ${minimumLength} characters.` },
         { key: 'uppercase', test: value => /[A-Z]/.test(value), message: 'Password must contain at least one uppercase letter.' },
         { key: 'lowercase', test: value => /[a-z]/.test(value), message: 'Password must contain at least one lowercase letter.' },
         { key: 'number', test: value => /[0-9]/.test(value), message: 'Password must contain at least one number.' },
         { key: 'symbol', test: value => /[^A-Za-z0-9]/.test(value), message: 'Password must contain at least one special character.' }
     ].filter(rule => !registerPassword || document.getElementById('registerPasswordFeedback')?.querySelector(`[data-password-rule="${rule.key}"]`));
+
+    for (const rule of passwordRules) {
+        if (rule.key === 'length') continue;
+        const item = (document.getElementById('registerPasswordFeedback'))?.querySelector(`[data-password-rule="${rule.key}"]`);
+        const minimum = Number(item?.dataset.minCount || 1);
+        const pattern = { uppercase: /[A-Z]/g, lowercase: /[a-z]/g, number: /[0-9]/g, symbol: /[^A-Za-z0-9]/gu }[rule.key];
+        rule.test = value => (value.match(pattern) || []).length >= minimum;
+        if (item) rule.message = item.textContent.trim() + '.';
+    }
 
     const passwordFeedback = document.getElementById('registerPasswordFeedback');
     const passwordStrength = document.getElementById('registerPasswordStrength');

@@ -554,6 +554,11 @@ CREATE TABLE `security_settings` (
   `require_lowercase` tinyint(1) NOT NULL DEFAULT 1,
   `require_number` tinyint(1) NOT NULL DEFAULT 1,
   `require_special_character` tinyint(1) NOT NULL DEFAULT 1,
+  `min_uppercase` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `min_lowercase` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `min_number` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `min_special_character` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `password_expiry_days` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
   `require_otp` tinyint(1) NOT NULL DEFAULT 1,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -645,6 +650,7 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `phone` varchar(30) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
+  `password_changed_at` datetime DEFAULT NULL,
   `status` enum('pending','active','inactive','locked') NOT NULL DEFAULT 'pending',
   `email_verified_at` datetime DEFAULT NULL,
   `failed_login_attempts` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,

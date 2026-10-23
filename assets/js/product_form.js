@@ -600,7 +600,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 continue;
             }
 
-            if (file.size > 5 * 1024 * 1024) {
+            if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
 
                 alert("Each image must be 5 MB or smaller.");
                 continue;

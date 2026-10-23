@@ -4,6 +4,38 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    const passwordPolicyForm = document.getElementById('passwordPolicyForm');
+    if (passwordPolicyForm) {
+        const length = document.getElementById('passwordMinLength');
+        const expiry = document.getElementById('passwordExpiryDays');
+        const summary = document.getElementById('passwordPolicySummary');
+        const rows = passwordPolicyForm.querySelectorAll('[data-complexity]');
+        const labels = { uppercase: 'capital', lowercase: 'small', number: 'number', special_character: 'special' };
+
+        function updatePasswordPolicy() {
+            const parts = ['At least ' + (length.value || '0') + ' characters'];
+            let total = 0;
+            rows.forEach(row => {
+                const required = row.querySelector('[data-requirement]').value === '1';
+                const count = row.querySelector('[data-minimum]');
+                count.disabled = !required;
+                count.required = required;
+                count.setCustomValidity('');
+                if (required) {
+                    total += Number(count.value);
+                    parts.push((count.value || '0') + ' ' + labels[row.dataset.complexity]);
+                }
+            });
+            length.setCustomValidity(total > 72 ? 'The combined character counts cannot exceed the 72-byte password limit.' : '');
+            const days = Number(expiry.value);
+            parts.push(days === 0 ? 'does not expire' : 'expires every ' + days + (days === 1 ? ' day' : ' days'));
+            summary.textContent = parts.join(' · ');
+        }
+        passwordPolicyForm.addEventListener('input', updatePasswordPolicy);
+        passwordPolicyForm.addEventListener('change', updatePasswordPolicy);
+        updatePasswordPolicy();
+    }
+
 
     /* =====================================================
        ELEMENTS

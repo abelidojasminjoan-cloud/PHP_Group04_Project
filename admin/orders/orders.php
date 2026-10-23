@@ -4,7 +4,7 @@
    PUREVIA ADMIN - ORDERS
 ========================================================= */
 
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 require_once __DIR__ . '/../../config/app.php';
 
 $pageTitle = "Orders";
@@ -30,6 +30,11 @@ $_SESSION['email'] =
 ========================================================= */
 
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/csrf.php';
+require_once __DIR__ . '/../../services/AdminOrder.php';
+requirePureViaAdmin($conn);
+$csrfToken = csrfToken();
 
 
 /* =========================================================
@@ -137,7 +142,7 @@ $adminInitial = strtoupper(
     >
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Playfair+Display:wght@600;700&display=swap"
         rel="stylesheet"
     >
 
@@ -170,7 +175,7 @@ $adminInitial = strtoupper(
 </head>
 
 
-<body>
+<body class="orders-admin-page">
 
 
     <!-- =====================================================
@@ -280,31 +285,10 @@ $adminInitial = strtoupper(
                             class="orders-filter-select"
                             aria-label="Filter by order status"
                         >
-
-                            <option value="all">
-                                All Status
-                            </option>
-
-                            <option value="pending">
-                                Pending
-                            </option>
-
-                            <option value="processing">
-                                Processing
-                            </option>
-
-                            <option value="shipped">
-                                Shipped
-                            </option>
-
-                            <option value="delivered">
-                                Delivered
-                            </option>
-
-                            <option value="cancelled">
-                                Cancelled
-                            </option>
-
+                            <option value="all">All Status</option>
+                            <?php foreach (AdminOrder::STATUSES as $value => $label): ?>
+                                <option value="<?= pvHtml($value) ?>"><?= pvHtml($label) ?></option>
+                            <?php endforeach; ?>
                         </select>
 
                         <i
@@ -326,31 +310,10 @@ $adminInitial = strtoupper(
                             "
                             aria-label="Filter by payment status"
                         >
-
-                            <option value="all">
-                                All Payment
-                            </option>
-
-                            <option value="pending">
-                                Pending
-                            </option>
-
-                            <option value="verified">
-                                Verified
-                            </option>
-
-                            <option value="paid">
-                                Paid
-                            </option>
-
-                            <option value="failed">
-                                Failed
-                            </option>
-
-                            <option value="refunded">
-                                Refunded
-                            </option>
-
+                            <option value="all">All Payment</option>
+                            <?php foreach (AdminOrder::PAYMENTS as $value => $label): ?>
+                                <option value="<?= pvHtml($value) ?>"><?= pvHtml($label) ?></option>
+                            <?php endforeach; ?>
                         </select>
 
                         <i
@@ -390,7 +353,7 @@ $adminInitial = strtoupper(
 
                                 <th>PAYMENT</th>
 
-                                <th>SAVE</th>
+                                <th>ACTIONS</th>
 
                             </tr>
 
@@ -474,6 +437,7 @@ $adminInitial = strtoupper(
 
                                     <tr
                                         class="order-row"
+                                        data-record-id="<?= (int) $order['id'] ?>"
 
                                         data-search="<?= pvHtml(
                                             $searchData
@@ -570,129 +534,9 @@ $adminInitial = strtoupper(
                                         </td>
 
 
-                                        <!-- =====================
-                                             ORDER STATUS
-                                        ====================== -->
-
-                                        <td>
-
-                                            <select
-                                                class="order-status-select"
-
-                                                data-order-id="<?= (int) $order['id'] ?>"
-
-                                                data-original-value="<?= pvHtml(
-                                                    $orderStatus
-                                                ) ?>"
-                                            >
-
-
-                                                <option
-                                                    value="pending"
-                                                    <?= $orderStatus === 'pending'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Pending
-                                                </option>
-
-
-                                                <option
-                                                    value="processing"
-                                                    <?= $orderStatus === 'processing'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Processing
-                                                </option>
-
-
-                                                <option
-                                                    value="shipped"
-                                                    <?= $orderStatus === 'shipped'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Shipped
-                                                </option>
-
-
-                                                <option
-                                                    value="delivered"
-                                                    <?= $orderStatus === 'delivered'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Delivered
-                                                </option>
-
-
-                                                <option
-                                                    value="cancelled"
-                                                    <?= $orderStatus === 'cancelled'
-                                                        ? 'selected'
-                                                        : '' ?>
-                                                >
-                                                    Cancelled
-                                                </option>
-
-
-                                            </select>
-
-                                        </td>
-
-
-                                        <!-- =====================
-                                             PAYMENT
-                                        ====================== -->
-
-                                        <td>
-
-                                            <span
-                                                class="
-                                                    payment-badge
-                                                    payment-<?= pvHtml(
-                                                        $paymentStatus
-                                                    ) ?>
-                                                "
-                                            >
-
-                                                <?= pvHtml(
-                                                    strtoupper(
-                                                        $paymentStatus
-                                                    )
-                                                ) ?>
-
-                                            </span>
-
-                                        </td>
-
-
-                                        <!-- =====================
-                                             SAVE
-                                        ====================== -->
-
-                                        <td>
-
-                                            <div class="order-save-area">
-
-                                                <button
-                                                    type="button"
-                                                    class="order-save-button"
-                                                    data-order-id="<?= (int) $order['id'] ?>"
-                                                    hidden
-                                                >
-                                                    Save
-                                                </button>
-
-                                                <span class="order-save-empty">
-                                                    —
-                                                </span>
-
-                                            </div>
-
-                                        </td>
-
+                                        <td><span class="order-status-badge order-state-<?= pvHtml($orderStatus) ?>"><?= pvHtml(strtoupper(AdminOrder::STATUSES[$orderStatus] ?? $orderStatus)) ?></span></td>
+                                        <td><span class="payment-badge payment-<?= pvHtml($paymentStatus) ?>"><?= pvHtml(strtoupper(AdminOrder::PAYMENTS[$paymentStatus] ?? $paymentStatus)) ?></span></td>
+                                        <td><button type="button" class="order-view-button" data-order-record="<?= (int) $order['id'] ?>" aria-haspopup="dialog" aria-controls="adminOrderModal">View Details</button></td>
 
                                     </tr>
 
@@ -750,6 +594,42 @@ $adminInitial = strtoupper(
 
     </div>
 
+
+
+<div class="admin-order-modal" id="adminOrderModal" hidden>
+    <div class="aom-backdrop" data-order-close></div>
+    <section class="aom-dialog" role="dialog" aria-modal="true" aria-labelledby="aomTitle" aria-describedby="aomNumber" tabindex="-1">
+        <header class="aom-header">
+            <div><h2 id="aomTitle">Order Details</h2><p id="aomNumber"></p></div>
+            <button type="button" class="aom-dismiss" data-order-close aria-label="Close order details">&times;</button>
+        </header>
+        <form id="adminOrderForm" class="aom-form">
+            <div class="aom-body">
+                <p id="aomError" class="aom-error" role="alert" hidden></p>
+                <p id="aomLoading" class="aom-loading" role="status">Loading order details...</p>
+                <div id="aomContent" hidden>
+                    <div class="aom-overview">
+                        <div><span>Customer</span><strong id="aomCustomer"></strong><small id="aomCustomerId"></small></div>
+                        <div><span>Order Date</span><strong id="aomDate"></strong><small id="aomItemCount"></small></div>
+                        <div><span>Order Total</span><strong id="aomTotal"></strong><small id="aomMethod"></small></div>
+                    </div>
+                    <section class="aom-panel aom-items"><header><h3>Items Ordered</h3><span id="aomProductCount"></span></header><div id="aomItems"></div></section>
+                    <div class="aom-columns">
+                        <section class="aom-panel"><header><h3>Delivery Details</h3></header><div class="aom-panel-body"><strong id="aomRecipient"></strong><p id="aomPhone"></p><div id="aomAddress"></div></div></section>
+                        <section class="aom-panel"><header><h3>Payment Summary</h3></header><div class="aom-panel-body"><dl class="aom-totals"><div><dt>Subtotal</dt><dd id="aomSubtotal"></dd></div><div><dt>Shipping</dt><dd id="aomShipping"></dd></div><div class="aom-grand-total"><dt>Total</dt><dd id="aomSummaryTotal"></dd></div></dl></div></section>
+                    </div>
+                    <div class="aom-status-controls">
+                        <label for="aomStatus">Order Status<select id="aomStatus" name="status" required><?php foreach (AdminOrder::STATUSES as $value=>$label): ?><option value="<?= pvHtml($value) ?>"><?= pvHtml($label) ?></option><?php endforeach; ?></select></label>
+                        <label for="aomPayment">Payment Status<select id="aomPayment" name="payment_status" required><?php foreach (AdminOrder::PAYMENTS as $value=>$label): ?><option value="<?= pvHtml($value) ?>"><?= pvHtml($label) ?></option><?php endforeach; ?></select></label>
+                    </div>
+                </div>
+            </div>
+            <footer class="aom-footer"><button type="button" class="aom-close" data-order-close>Close</button><button type="submit" id="aomSave" class="aom-save" disabled>Save Changes</button></footer>
+        </form>
+    </section>
+</div>
+<script nonce="<?= pvScriptNonce() ?>">window.PUREVIA_ADMIN_ORDERS=<?= pvJson(['baseUrl'=>BASE_URL,'endpoint'=>BASE_URL.'/actions/admin/orders/order.php','csrfToken'=>$csrfToken,'statuses'=>AdminOrder::STATUSES,'payments'=>AdminOrder::PAYMENTS]) ?>;</script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/admin-order-details.js"></script>
 
 <!-- =====================================================
      SIDEBAR JS
