@@ -214,9 +214,6 @@ $conn->commit();
 
 /* =========================================
    COMPLETE LOGIN OR START GOOGLE AUTHENTICATOR
-========================================= */
-
-// Password and account status were verified above.
 
 // Get the user ID from the verified database record,
 // NOT from the session.
