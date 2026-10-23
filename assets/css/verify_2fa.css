@@ -1,0 +1,441 @@
+
+/* =========================================
+   PUREVIA - TWO-FACTOR VERIFICATION
+   Customer Authentication Page
+========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap');
+
+:root {
+    --pv-background: #f8f6f0;
+    --pv-card: #faf8f2;
+    --pv-white: #ffffff;
+
+    --pv-green: #53634b;
+    --pv-green-dark: #293126;
+    --pv-green-hover: #3e4a39;
+
+    --pv-text: #30332c;
+    --pv-muted: #777a73;
+    --pv-border: #ddd5ca;
+
+    --pv-error: #9d3c32;
+    --pv-error-bg: #f8e9e6;
+}
+
+/* RESET */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+}
+
+body.pv-two-factor-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    background:
+        radial-gradient(
+            circle at 15% 12%,
+            #e9e9df 0%,
+            transparent 38%
+        ),
+        var(--pv-background);
+
+    color: var(--pv-text);
+    font-family: 'DM Sans', Arial, sans-serif;
+}
+
+/* MAIN PAGE */
+
+.pv-verify-layout {
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 24px;
+    padding: 45px 20px;
+}
+
+/* VERIFICATION CARD */
+
+.pv-verify-card {
+    width: 100%;
+    max-width: 490px;
+
+    padding: 44px 46px 30px;
+
+    border: 1px solid var(--pv-border);
+    border-radius: 20px;
+
+    background: var(--pv-card);
+
+    box-shadow:
+        0 18px 55px rgba(34, 39, 29, 0.08);
+
+    text-align: center;
+}
+
+/* BRAND */
+
+.pv-brand {
+    display: inline-block;
+
+    color: var(--pv-green-dark);
+
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 32px;
+    font-weight: 500;
+
+    letter-spacing: -1px;
+    text-decoration: none;
+}
+
+.pv-brand:hover {
+    color: var(--pv-green);
+}
+
+.pv-brand-divider {
+    width: 40px;
+    height: 1px;
+
+    margin: 17px auto 27px;
+
+    background: var(--pv-border);
+}
+
+/* SECURITY ICON */
+
+.pv-security-icon {
+    width: 62px;
+    height: 62px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 23px;
+
+    border: 1px solid #d1dacb;
+    border-radius: 50%;
+
+    background: #e8eee4;
+    color: var(--pv-green);
+}
+
+/* TYPOGRAPHY */
+
+.pv-verify-eyebrow {
+    margin-bottom: 12px;
+
+    color: var(--pv-green);
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.pv-verify-title {
+    margin-bottom: 14px;
+
+    color: var(--pv-text);
+
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 33px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.pv-verify-description {
+    max-width: 350px;
+
+    margin: 0 auto 30px;
+
+    color: var(--pv-muted);
+
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.8;
+}
+
+/* FORM */
+
+.pv-verify-form {
+    width: 100%;
+    text-align: left;
+}
+
+.pv-form-group {
+    width: 100%;
+    margin-bottom: 22px;
+}
+
+.pv-form-group label {
+    display: block;
+
+    margin-bottom: 10px;
+
+    color: #373a34;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* CODE FIELD */
+
+.pv-code-input {
+    width: 100%;
+    height: 53px;
+
+    padding: 0 16px;
+
+    outline: none;
+
+    border: 1px solid #bfc7ba;
+    border-radius: 8px;
+
+    background: #fbfaf6;
+
+    color: var(--pv-text);
+
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 2px;
+
+    text-align: center;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.pv-code-input::placeholder {
+    color: #a0a299;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.pv-code-input:hover {
+    border-color: #8e9c87;
+}
+
+.pv-code-input:focus {
+    border-color: var(--pv-green);
+
+    box-shadow:
+        0 0 0 3px rgba(83, 99, 75, 0.12);
+}
+
+.pv-code-input[aria-invalid="true"] {
+    border-color: var(--pv-error);
+}
+
+/* INPUT HELP */
+
+.pv-input-hint {
+    margin-top: 10px;
+
+    color: var(--pv-muted);
+
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.pv-input-error {
+    margin-top: 9px;
+
+    color: var(--pv-error);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.pv-input-error[hidden] {
+    display: none;
+}
+
+/* PRIMARY BUTTON */
+
+.pv-verify-button {
+    width: 100%;
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    padding: 12px 20px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: var(--pv-green-dark);
+    color: var(--pv-white);
+
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.pv-verify-button:hover:not(:disabled) {
+    background: var(--pv-green-hover);
+    transform: translateY(-1px);
+}
+
+.pv-verify-button:focus-visible,
+.pv-back-link:focus-visible,
+.pv-brand:focus-visible {
+    outline: 3px solid #879b7c;
+    outline-offset: 3px;
+}
+
+.pv-verify-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.pv-verify-button span {
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* SERVER ERROR MESSAGE */
+
+.pv-verify-alert {
+    margin-bottom: 20px;
+
+    padding: 13px 15px;
+
+    border: 1px solid #d7aaa3;
+    border-radius: 7px;
+
+    background: var(--pv-error-bg);
+    color: var(--pv-error);
+
+    font-size: 12px;
+    line-height: 1.6;
+    text-align: left;
+}
+
+/* SECURITY NOTE */
+
+.pv-security-note {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-top: 27px;
+    padding: 17px;
+
+    border-radius: 9px;
+
+    background: #eaece4;
+
+    text-align: left;
+}
+
+.pv-security-note-icon {
+    flex-shrink: 0;
+
+    color: var(--pv-green);
+
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.pv-security-note p {
+    color: #656c60;
+
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+/* FOOTER */
+
+.pv-card-footer {
+    margin-top: 26px;
+    padding-top: 22px;
+
+    border-top: 1px solid var(--pv-border);
+}
+
+.pv-back-link {
+    color: var(--pv-green);
+
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pv-back-link:hover {
+    color: var(--pv-green-dark);
+    text-decoration: underline;
+}
+
+.pv-page-footer {
+    color: #8b9386;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    letter-spacing: 1.6px;
+    text-align: center;
+}
+
+/* MOBILE RESPONSIVENESS */
+
+@media (max-width: 600px) {
+
+    .pv-verify-layout {
+        padding: 25px 15px;
+    }
+
+    .pv-verify-card {
+        padding: 35px 24px 27px;
+        border-radius: 16px;
+    }
+
+    .pv-brand {
+        font-size: 29px;
+    }
+
+    .pv-verify-title {
+        font-size: 28px;
+    }
+
+    .pv-verify-description {
+        font-size: 12px;
+    }
+
+    .pv-code-input {
+        height: 50px;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pv-verify-button,
+    .pv-code-input {
+        transition: none;
+    }
+}
