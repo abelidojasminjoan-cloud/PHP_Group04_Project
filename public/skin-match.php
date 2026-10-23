@@ -16,7 +16,7 @@ $_SESSION['skin_assessment_tokens'][$sqToken]=['origin'=>$sqOrigin,'expires'=>ti
 $sqChoices=SkinProfile::choices($conn);
 $sqBoot=['baseUrl'=>BASE_URL,'csrfToken'=>$_SESSION['csrf_token'],'assessmentToken'=>$sqToken,'canSave'=>$sqCustomer,'questions'=>skinQuestions(),'choices'=>$sqChoices,'guided'=>($_GET['path']??'')==='guided',
     'edit'=>isset($_GET['edit']),'saved'=>$sqSaved?['profile'=>$sqSaved,'matches'=>SkinMatcher::match($conn,$sqSaved),'saved'=>true]:null];
-function sqEsc(mixed $value):string{return htmlspecialchars((string)$value,ENT_QUOTES,'UTF-8');}
+function sqEsc(mixed $value):string{return pvHtml((string)$value,ENT_QUOTES,'UTF-8');}
 function sqQuestion(string $key,array $definition):void {?>
     <fieldset class="sq-question" data-question="<?= sqEsc($key) ?>"><legend><?= sqEsc($definition[0]) ?></legend><div class="sq-options">
         <?php foreach($definition[1] as $index=>$label):?><label class="sq-choice"><input type="radio" name="<?= sqEsc($key) ?>" value="<?= chr(65+$index) ?>"><span><?= sqEsc($label) ?></span></label><?php endforeach; ?>
@@ -93,6 +93,6 @@ function sqQuestion(string $key,array $definition):void {?>
     </div>
 </main>
 <?php include __DIR__.'/../includes/footer.php'; ?>
-<script>window.PUREVIA_SKIN_QUIZ=<?= json_encode($sqBoot,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;window.PUREVIA_BASE_URL=<?= json_encode(BASE_URL) ?>;</script>
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script><script src="<?= BASE_URL ?>/assets/js/search.js"></script><script src="<?= BASE_URL ?>/assets/js/skin-quiz.js"></script>
+<script nonce="<?= pvScriptNonce() ?>">window.PUREVIA_SKIN_QUIZ=<?= pvJson($sqBoot,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;window.PUREVIA_BASE_URL=<?= pvJson(BASE_URL) ?>;</script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script><script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script><script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/skin-quiz.js"></script>
 </body></html>

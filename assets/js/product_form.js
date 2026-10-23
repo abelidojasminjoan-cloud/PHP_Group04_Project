@@ -457,7 +457,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             removeButton.type = "button";
             removeButton.className = "product-image-remove";
-            removeButton.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            const removeIcon = document.createElement('i');
+            removeIcon.className = 'fa-solid fa-xmark';
+            removeButton.append(removeIcon);
 
             removeButton.setAttribute(
                 "aria-label",

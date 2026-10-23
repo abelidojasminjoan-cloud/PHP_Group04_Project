@@ -19,7 +19,7 @@ if (
 
 function inventoryEscape(?string $value): string
 {
-    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    return pvHtml($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 /* LOAD INVENTORY PER PRODUCT VARIANT */
@@ -527,10 +527,10 @@ $defaultThreshold = 15;
 
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/inventory.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/inventory.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

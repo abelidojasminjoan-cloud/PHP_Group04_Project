@@ -27,7 +27,7 @@ if (!$orderId) {
 
 function odEsc(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -325,7 +325,7 @@ if (empty($_SESSION['csrf_token'])) {
                                 <div class="od-item-image">
                                     <img src="<?= odEsc(odImage($item['gallery_image'] ?: $item['image'])) ?>"
                                          alt="<?= odEsc($productName) ?>" loading="lazy" width="158" height="168"
-                                         onerror="this.onerror=null;this.src='<?= odEsc(BASE_URL) ?>/assets/images/products/default-product.svg';">
+                                         data-image-fallback="<?= odEsc(BASE_URL) ?>/assets/images/products/default-product.svg">
                                     <span class="od-image-brand">PureVia</span>
                                 </div>
                                 <div class="od-item-info">
@@ -399,8 +399,8 @@ if (empty($_SESSION['csrf_token'])) {
 <?php include __DIR__ . '/../includes/order_cancellation_modals.php'; ?>
 <?php include __DIR__ . '/../includes/order_return_modal.php'; ?>
 
-<script>
-window.PUREVIA_ORDER_DETAILS = <?= json_encode([
+<script nonce="<?= pvScriptNonce() ?>">
+window.PUREVIA_ORDER_DETAILS = <?= pvJson([
     'baseUrl' => BASE_URL,
     'orderId' => (int) $orderId,
     'csrfToken' => $_SESSION['csrf_token'],
@@ -409,12 +409,12 @@ window.PUREVIA_ORDER_DETAILS = <?= json_encode([
 ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/order-details.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-details.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

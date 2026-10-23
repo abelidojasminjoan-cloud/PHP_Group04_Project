@@ -152,7 +152,7 @@ while ($category = $categoryResult->fetch_assoc()) {
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia
+        <?= pvHtml($pageTitle) ?> | PureVia
     </title>
 
 
@@ -321,12 +321,12 @@ while ($category = $categoryResult->fetch_assoc()) {
                             <?php foreach ($categories as $category): ?>
 
                                 <option
-                                    value="<?= htmlspecialchars(
+                                    value="<?= pvHtml(
                                         strtolower($category)
                                     ) ?>"
                                 >
 
-                                    <?= htmlspecialchars($category) ?>
+                                    <?= pvHtml($category) ?>
 
                                 </option>
 
@@ -516,17 +516,17 @@ while ($category = $categoryResult->fetch_assoc()) {
                             <tr
                                 class="inventory-row"
 
-                                data-search="<?= htmlspecialchars(
+                                data-search="<?= pvHtml(
                                     $searchData
                                 ) ?>"
 
-                                data-category="<?= htmlspecialchars(
+                                data-category="<?= pvHtml(
                                     strtolower(
                                         $item['category']
                                     )
                                 ) ?>"
 
-                                data-stock-level="<?= htmlspecialchars(
+                                data-stock-level="<?= pvHtml(
                                     $stockLevel
                                 ) ?>"
                             >
@@ -540,7 +540,7 @@ while ($category = $categoryResult->fetch_assoc()) {
 
                                     <span class="inventory-product-name">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $item['product']
                                         ) ?>
 
@@ -557,7 +557,7 @@ while ($category = $categoryResult->fetch_assoc()) {
 
                                     <span class="inventory-sku">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $item['sku']
                                         ) ?>
 
@@ -574,7 +574,7 @@ while ($category = $categoryResult->fetch_assoc()) {
 
                                     <span class="inventory-category">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $item['category']
                                         ) ?>
 
@@ -592,7 +592,7 @@ while ($category = $categoryResult->fetch_assoc()) {
                                     <span
                                         class="
                                             inventory-stock
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $stockLevel
                                             ) ?>
                                         "
@@ -629,12 +629,12 @@ while ($category = $categoryResult->fetch_assoc()) {
                                 <td>
 
                                     <span
-                                        class="inventory-stock-status <?= htmlspecialchars(
+                                        class="inventory-stock-status <?= pvHtml(
                                             $stockLevel
                                         ) ?>"
                                     >
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $stockStatusText
                                         ) ?>
 
@@ -651,7 +651,7 @@ while ($category = $categoryResult->fetch_assoc()) {
 
                                     <span class="inventory-date">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $lastRestocked
                                         ) ?>
 
@@ -677,7 +677,7 @@ while ($category = $categoryResult->fetch_assoc()) {
 
                                             title="Update stock"
 
-                                            aria-label="Update stock for <?= htmlspecialchars(
+                                            aria-label="Update stock for <?= pvHtml(
                                                 $item['product']
                                             ) ?>"
                                         >
@@ -751,16 +751,16 @@ while ($category = $categoryResult->fetch_assoc()) {
          SHARED JS
     ====================================================== -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/sidemenu.js"
     ></script>
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/inventory.js"
     ></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

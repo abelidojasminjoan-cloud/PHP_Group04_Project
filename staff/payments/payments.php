@@ -136,7 +136,7 @@ sort($paymentMethods);
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Staff
+        <?= pvHtml($pageTitle) ?> | PureVia Staff
     </title>
 
 
@@ -318,12 +318,12 @@ sort($paymentMethods);
                             <?php foreach ($paymentMethods as $method): ?>
 
                                 <option
-                                    value="<?= htmlspecialchars(
+                                    value="<?= pvHtml(
                                         strtolower($method)
                                     ) ?>"
                                 >
 
-                                    <?= htmlspecialchars(
+                                    <?= pvHtml(
                                         ucwords(
                                             str_replace(
                                                 '_',
@@ -637,15 +637,15 @@ sort($paymentMethods);
                                 <tr
                                     class="payment-row"
 
-                                    data-search="<?= htmlspecialchars(
+                                    data-search="<?= pvHtml(
                                         $searchValue
                                     ) ?>"
 
-                                    data-method="<?= htmlspecialchars(
+                                    data-method="<?= pvHtml(
                                         $paymentMethod
                                     ) ?>"
 
-                                    data-status="<?= htmlspecialchars(
+                                    data-status="<?= pvHtml(
                                         $paymentStatus
                                     ) ?>"
                                 >
@@ -657,7 +657,7 @@ sort($paymentMethods);
 
                                         <span class="payment-id">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $paymentDisplayId
                                             ) ?>
 
@@ -672,7 +672,7 @@ sort($paymentMethods);
 
                                         <span class="payment-order">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $payment['order_number']
                                                 ?? '—'
                                             ) ?>
@@ -688,7 +688,7 @@ sort($paymentMethods);
 
                                         <span class="payment-customer">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $customerName
                                             ) ?>
 
@@ -722,7 +722,7 @@ sort($paymentMethods);
 
                                         <span class="payment-method">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $paymentMethodDisplay
                                             ) ?>
 
@@ -742,7 +742,7 @@ sort($paymentMethods);
                                                 $paymentReference !== ''
                                             ): ?>
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $paymentReference
                                                 ) ?>
 
@@ -764,7 +764,7 @@ sort($paymentMethods);
 
                                         <span class="payment-date">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $paymentDate
                                             ) ?>
 
@@ -780,13 +780,13 @@ sort($paymentMethods);
                                         <span
                                             class="
                                                 payment-status-badge
-                                                payment-status-<?= htmlspecialchars(
+                                                payment-status-<?= pvHtml(
                                                     $paymentStatus
                                                 ) ?>
                                             "
                                         >
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $paymentStatusDisplay
                                             ) ?>
 
@@ -913,19 +913,19 @@ sort($paymentMethods);
 
     <!-- REUSE SIDEMENU JS -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/sidemenu.js"
     ></script>
 
 
     <!-- REUSE PAYMENTS JS -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/payments.js"
     ></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

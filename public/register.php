@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../config/db.php';
 $passwordPolicy = securityPolicy($conn);
@@ -27,7 +26,7 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 function escapeHtml(string $value): string {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return pvHtml($value, ENT_QUOTES, 'UTF-8');
 }
 ?>
 <!DOCTYPE html>
@@ -264,7 +263,7 @@ function escapeHtml(string $value): string {
                 <div class="auth-field">
                     <div
                         class="g-recaptcha"
-                        data-sitekey="<?= htmlspecialchars(
+                        data-sitekey="<?= pvHtml(
                             $_ENV['RECAPTCHA_SITE_KEY'] ?? '',
                             ENT_QUOTES,
                             'UTF-8'
@@ -311,8 +310,8 @@ function escapeHtml(string $value): string {
 
 </main>
 
-<script src="<?= BASE_URL ?>/assets/js/auth_loading.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/auth.js"></script>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/auth_loading.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/auth.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>

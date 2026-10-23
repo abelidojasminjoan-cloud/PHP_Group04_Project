@@ -20,6 +20,8 @@ products and provides relevant product information to help customers make inform
 - Security Tools
 
 # System Features
+See [the website XSS review](docs/XSS-REVIEW.md) for output encoding, browser policy, upload protections, and verification details.
+
 - Checkout and Order Placement 
 - Shopping Cart
 - Skin Type Matching

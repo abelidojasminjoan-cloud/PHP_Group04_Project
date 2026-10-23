@@ -207,6 +207,7 @@ else {
 }
 
 ?>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/image-fallbacks.js"></script>
 
 
 <!-- =========================================================
@@ -252,7 +253,7 @@ else {
     <div class="sidebar-brand">
 
         <a
-            href="<?= htmlspecialchars($dashboardUrl) ?>"
+            href="<?= pvHtml($dashboardUrl) ?>"
             class="sidebar-logo"
         >
 
@@ -266,7 +267,7 @@ else {
 
 
         <p class="sidebar-subtitle">
-            <?= htmlspecialchars($panelName) ?>
+            <?= pvHtml($panelName) ?>
         </p>
 
     </div>
@@ -704,7 +705,7 @@ else {
 
             <div class="sidebar-avatar">
 
-                <?= htmlspecialchars($sidebarInitial) ?>
+                <?= pvHtml($sidebarInitial) ?>
 
             </div>
 
@@ -717,14 +718,14 @@ else {
 
                 <p class="sidebar-user-name">
 
-                    <?= htmlspecialchars($sidebarFullName) ?>
+                    <?= pvHtml($sidebarFullName) ?>
 
                 </p>
 
 
                 <p class="sidebar-user-email">
 
-                    <?= htmlspecialchars($sidebarEmail) ?>
+                    <?= pvHtml($sidebarEmail) ?>
 
                 </p>
 
@@ -736,7 +737,7 @@ else {
                         : 'sidebar-role-staff' ?>"
                 >
 
-                    <?= htmlspecialchars(
+                    <?= pvHtml(
                         ucfirst($currentRole)
                     ) ?>
 

@@ -56,7 +56,7 @@ $adminEmail = $admin['email'] ?? '';
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Admin
+        <?= pvHtml($pageTitle) ?> | PureVia Admin
     </title>
 
 
@@ -158,7 +158,7 @@ $adminEmail = $admin['email'] ?? '';
                 <i class="fa-solid fa-circle-check"></i>
 
                 <span>
-                    <?= htmlspecialchars(
+                    <?= pvHtml(
                         $_SESSION['security_success']
                     ) ?>
                 </span>
@@ -177,7 +177,7 @@ $adminEmail = $admin['email'] ?? '';
                 <i class="fa-solid fa-circle-exclamation"></i>
 
                 <span>
-                    <?= htmlspecialchars(
+                    <?= pvHtml(
                         $_SESSION['security_error']
                     ) ?>
                 </span>
@@ -205,7 +205,7 @@ $adminEmail = $admin['email'] ?? '';
                 method="POST"
                 class="security-settings-card"
             >
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
 
                 <h2>
                     Password Policy
@@ -378,7 +378,7 @@ $adminEmail = $admin['email'] ?? '';
                 method="POST"
                 class="security-settings-card"
             >
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
 
                 <h2>
                     Session &amp; Lockout
@@ -657,11 +657,11 @@ $adminEmail = $admin['email'] ?? '';
                                 <tr
                                     class="locked-account-row"
 
-                                    data-search="<?= htmlspecialchars(
+                                    data-search="<?= pvHtml(
                                         $searchValue
                                     ) ?>"
 
-                                    data-status="<?= htmlspecialchars(
+                                    data-status="<?= pvHtml(
                                         $lockType
                                     ) ?>"
                                 >
@@ -675,7 +675,7 @@ $adminEmail = $admin['email'] ?? '';
 
                                             <div class="locked-avatar">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $initial
                                                 ) ?>
 
@@ -685,7 +685,7 @@ $adminEmail = $admin['email'] ?? '';
 
                                                 <strong>
 
-                                                    <?= htmlspecialchars(
+                                                    <?= pvHtml(
                                                         $fullName
                                                     ) ?>
 
@@ -704,7 +704,7 @@ $adminEmail = $admin['email'] ?? '';
 
                                         <span class="locked-email">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $account['email']
                                             ) ?>
 
@@ -732,7 +732,7 @@ $adminEmail = $admin['email'] ?? '';
 
                                         <span class="locked-until">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $lockedUntilDisplay
                                             ) ?>
 
@@ -749,7 +749,7 @@ $adminEmail = $admin['email'] ?? '';
                                             class="
                                                 locked-status
                                                 locked-status-<?=
-                                                    htmlspecialchars(
+                                                    pvHtml(
                                                         $lockType
                                                     )
                                                 ?>
@@ -774,7 +774,7 @@ $adminEmail = $admin['email'] ?? '';
                                             method="POST"
                                             class="unlock-form"
                                         >
-                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
 
                                             <input
                                                 type="hidden"
@@ -785,7 +785,7 @@ $adminEmail = $admin['email'] ?? '';
                                             <button
                                                 type="submit"
                                                 class="unlock-account-button"
-                                                data-user-name="<?= htmlspecialchars(
+                                                data-user-name="<?= pvHtml(
                                                     $fullName
                                                 ) ?>"
                                             >
@@ -847,12 +847,12 @@ $adminEmail = $admin['email'] ?? '';
 </div>
 
 
-<script src="../../assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
-<script src="../../assets/js/security_settings.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/security_settings.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

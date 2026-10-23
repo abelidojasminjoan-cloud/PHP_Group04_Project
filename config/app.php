@@ -6,6 +6,8 @@
 ========================================================= */
 declare(strict_types=1);
 
+require_once __DIR__ . '/../includes/output-security.php';
+
 $projectRoot = dirname(__DIR__);
 $autoload = $projectRoot . '/vendor/autoload.php';
 

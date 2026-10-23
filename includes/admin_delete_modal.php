@@ -23,4 +23,4 @@
         </form>
     </div>
 </div>
-<script src="<?= BASE_URL ?>/assets/js/admin_delete.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/admin_delete.js"></script>

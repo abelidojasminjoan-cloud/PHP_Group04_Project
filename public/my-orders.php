@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . '/../config/app.php';
@@ -15,7 +14,7 @@ if ($userId <= 0) {
 
 function moEsc(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -352,7 +351,7 @@ $csrfToken = $_SESSION['csrf_token'];
                                             <div class="mo-product-image">
                                                 <img src="<?= moEsc(moImage($item['gallery_image'] ?: $item['image'])) ?>"
                                                      alt="<?= moEsc($productName) ?>" loading="lazy" width="100" height="100"
-                                                     onerror="this.onerror=null;this.src='<?= moEsc(BASE_URL) ?>/assets/images/products/default-product.svg';">
+                                                     data-image-fallback="<?= moEsc(BASE_URL) ?>/assets/images/products/default-product.svg">
                                             </div>
                                             <div class="mo-product-info">
                                                 <span class="mo-product-state"><?= moEsc($presentation['state']) ?></span>
@@ -418,21 +417,21 @@ $csrfToken = $_SESSION['csrf_token'];
 <?php include __DIR__ . '/../includes/order_cancellation_modals.php'; ?>
 <?php include __DIR__ . '/../includes/order_return_modal.php'; ?>
 
-<script>
+<script nonce="<?= pvScriptNonce() ?>">
     window.PUREVIA_ORDERS = {
-        baseUrl: <?= json_encode(BASE_URL) ?>,
-        csrfToken: <?= json_encode($csrfToken) ?>,
-        cancellations: <?= json_encode($cancellations, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
-        returns: <?= json_encode($returnForms, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+        baseUrl: <?= pvJson(BASE_URL) ?>,
+        csrfToken: <?= pvJson($csrfToken) ?>,
+        cancellations: <?= pvJson($cancellations, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        returns: <?= pvJson($returnForms, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
     };
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/my-orders.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/my-orders.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

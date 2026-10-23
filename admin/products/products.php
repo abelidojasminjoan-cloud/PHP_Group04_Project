@@ -16,7 +16,7 @@ $pageTitle = 'Products';
 
 function productEscape(?string $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         $value ?? '',
         ENT_QUOTES,
         'UTF-8'
@@ -366,7 +366,7 @@ include __DIR__ . '/../../includes/sidemenu.php';
                                             <img
                                                 src="<?= productEscape($image) ?>"
                                                 alt="<?= productEscape($product['product_name']) ?>"
-                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                                data-hide-broken-image data-show-image-placeholder
                                             >
 
                                             <div class="product-image-fallback" style="display:none;">
@@ -1080,11 +1080,11 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/products.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/product_form.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/products.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/product_form.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
 </body>

@@ -13,6 +13,9 @@ header('Cache-Control: no-store, private');
 header('Referrer-Policy: no-referrer');
 
 $loginUrl = BASE_URL . '/public/login.php';
+$continueUrl = BASE_URL . '/public/index.php';
+$setupSecret = '';
+$setupUri = '';
 
 // Display recovery codes after successful enrollment.
 $showRecovery = (
@@ -115,7 +118,7 @@ unset($_SESSION['2fa_error']);
 
 function pvSetupEsc(string $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         $value,
         ENT_QUOTES,
         'UTF-8'
@@ -302,8 +305,8 @@ function pvSetupEsc(string $value): string
 
 </main>
 <?php if (!$showRecovery && $setupSecret !== ''): ?>
-<script src="<?= pvSetupEsc(BASE_URL) ?>/assets/js/qrcodegen.js" defer></script>
-<script src="<?= pvSetupEsc(BASE_URL) ?>/assets/js/authenticator-setup.js" defer></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= pvSetupEsc(BASE_URL) ?>/assets/js/qrcodegen.js" defer></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= pvSetupEsc(BASE_URL) ?>/assets/js/authenticator-setup.js" defer></script>
 <?php endif; ?>
 </body>
 </html>

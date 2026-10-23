@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Escape user-controlled text for HTML.
 function pvVerifyEsc(string $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         $value,
         ENT_QUOTES,
         'UTF-8'
@@ -316,7 +316,7 @@ function pvVerifyEsc(string $value): string
         href="<?= pvVerifyEsc(BASE_URL) ?>/assets/css/verify_2fa.css"
     >
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= pvVerifyEsc(BASE_URL) ?>/assets/js/verify_2fa.js"
         defer
     ></script>

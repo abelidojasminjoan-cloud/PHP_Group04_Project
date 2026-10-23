@@ -437,7 +437,12 @@ document.addEventListener("DOMContentLoaded", () => {
             // that the order was saved successfully.
 
             if (result.redirect_url) {
-                window.location.assign(result.redirect_url);
+                const destination = new URL(result.redirect_url, window.location.href);
+                if (destination.origin !== window.location.origin ||
+                    !['http:', 'https:'].includes(destination.protocol)) {
+                    throw new Error('Invalid order confirmation URL.');
+                }
+                window.location.assign(destination.href);
                 return;
             }
 

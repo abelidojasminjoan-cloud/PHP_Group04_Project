@@ -9,7 +9,7 @@ if (empty($_SESSION['user_id'])) {
 
 $sessionTimeoutPolicy = securityPolicy($conn);
 ?>
-<script
+<script nonce="<?= pvScriptNonce() ?>"
     src="<?= BASE_URL ?>/assets/js/session_timeout.js"
     data-session-check-url="<?= BASE_URL ?>/actions/auth/session-status.php"
     data-login-url="<?= BASE_URL ?>/public/login.php"

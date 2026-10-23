@@ -14,7 +14,7 @@ if (empty($_SESSION['user_id'])) {
 
 function e(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -878,8 +878,8 @@ $jsonFlags = JSON_HEX_TAG |
     </section>
 </div>
 
-<script>
-window.PUREVIA_ADDRESS_CONFIG = <?= json_encode([
+<script nonce="<?= pvScriptNonce() ?>">
+window.PUREVIA_ADDRESS_CONFIG = <?= pvJson([
     'baseUrl' => BASE_URL,
     'addresses' => $addressJson,
     'defaultForm' => $defaultForm,
@@ -890,12 +890,12 @@ window.PUREVIA_ADDRESS_CONFIG = <?= json_encode([
 ], $jsonFlags) ?>;
 </script>
 
-<script src="<?= BASE_URL ?>/assets/js/account.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/addresses-modal.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/account.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/addresses-modal.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

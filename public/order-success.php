@@ -36,7 +36,7 @@ if (!$order) {
 
 function orderEsc(mixed $value): string
 {
-    return htmlspecialchars(
+    return pvHtml(
         (string) $value,
         ENT_QUOTES,
         'UTF-8'
@@ -157,7 +157,7 @@ function orderEsc(mixed $value): string
 
 </main>
 
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

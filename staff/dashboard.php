@@ -328,7 +328,7 @@ $pageTitle = 'Staff Dashboard';
 
                 <p>
                     Welcome back,
-                    <?= htmlspecialchars($staffFirstName) ?>!
+                    <?= pvHtml($staffFirstName) ?>!
                 </p>
 
             </section>
@@ -536,13 +536,13 @@ $pageTitle = 'Staff Dashboard';
                                     <div class="staff-order-left">
 
                                         <p class="staff-order-number">
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $order['order_number']
                                             ) ?>
                                         </p>
 
                                         <p class="staff-order-customer">
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $customerName
                                             ) ?>
                                         </p>
@@ -565,11 +565,11 @@ $pageTitle = 'Staff Dashboard';
                                         <span
                                             class="
                                                 staff-status
-                                                staff-status-<?= htmlspecialchars($status) ?>
+                                                staff-status-<?= pvHtml($status) ?>
                                             "
                                         >
                                             <?= strtoupper(
-                                                htmlspecialchars($status)
+                                                pvHtml($status)
                                             ) ?>
                                         </span>
 
@@ -663,7 +663,7 @@ $pageTitle = 'Staff Dashboard';
 
                                     <p class="staff-low-stock-name">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $product['product_name']
                                         ) ?>
 
@@ -757,12 +757,12 @@ $pageTitle = 'Staff Dashboard';
          SIDEMENU JAVASCRIPT
     ====================================================== -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/sidemenu.js"
     ></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

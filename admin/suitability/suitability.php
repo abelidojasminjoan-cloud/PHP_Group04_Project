@@ -48,7 +48,7 @@ require __DIR__.'/../skin/_header.php';
                 <td><span class="skin-concern-name"><?= saEsc($tag['name']) ?></span></td>
                 <td><span class="skin-concern-description"><?= saEsc($tag['description']?:'—') ?></span></td>
                 <td class="su-product-count"><?= (int)$tag['product_count'] ?></td>
-                <td><span class="skin-concern-status status-<?= saEsc($tag['status']) ?>"><?= strtoupper($tag['status']) ?></span></td>
+                <td><span class="skin-concern-status status-<?= saEsc($tag['status']) ?>"><?= saEsc(strtoupper($tag['status'])) ?></span></td>
                 <td><div class="skin-concern-actions">
                     <button type="button" class="skin-concern-action-button edit-concern-button" data-sa-tag="<?= (int)$tag['id'] ?>" aria-label="Edit <?= saEsc($tag['name']) ?>" title="Edit suitability" aria-haspopup="dialog" aria-controls="saModal"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-7M16 3l5 5M10 14l-1 4 4-1L22 8a2 2 0 0 0-5-5Z"/></svg></button>
                     <button type="button" class="skin-concern-action-button delete-concern-button" data-sa-tag-delete="<?= (int)$tag['id'] ?>" aria-label="Delete <?= saEsc($tag['name']) ?>" title="Delete suitability" aria-haspopup="dialog" aria-controls="saModal"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>

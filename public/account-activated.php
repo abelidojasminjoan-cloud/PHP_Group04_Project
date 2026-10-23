@@ -62,17 +62,17 @@ unset($_SESSION['otp_error']);
 
             <?php if ($error !== ''): ?>
                 <div class="auth-alert auth-alert-error" role="alert">
-                    <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
+                    <?= pvHtml($error, ENT_QUOTES, 'UTF-8') ?>
                 </div>
             <?php endif; ?>
 
             <div class="auth-alert <?= ($activation['email_sent'] ?? false) === true ? 'auth-alert-success' : 'auth-alert-error' ?>" role="status">
-                <?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?>
+                <?= pvHtml($message, ENT_QUOTES, 'UTF-8') ?>
             </div>
 
             <?php if (($activation['email_sent'] ?? false) !== true): ?>
                 <form class="auth-form" method="POST" action="<?= BASE_URL ?>/actions/auth/resend-otp.php">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="csrf_token" value="<?= pvHtml($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                     <button type="submit" class="auth-submit">Request a new code</button>
                 </form>
             <?php endif; ?>
