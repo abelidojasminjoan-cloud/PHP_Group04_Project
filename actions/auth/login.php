@@ -214,7 +214,7 @@ $conn->commit();
 
 /* =========================================
    COMPLETE LOGIN OR START GOOGLE AUTHENTICATOR
-
+========================================== */
 // Get the user ID from the verified database record,
 // NOT from the session.
 $userId = (int) $user['id'];
