@@ -374,8 +374,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (actionContainer) {
 
-                actionContainer.innerHTML =
-                    '<span class="payment-no-action">—</span>';
+                const noAction = document.createElement('span');
+                noAction.className = 'payment-no-action';
+                noAction.textContent = '—';
+                actionContainer.replaceChildren(noAction);
 
             }
 

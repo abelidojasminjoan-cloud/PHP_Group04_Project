@@ -57,7 +57,7 @@ $totalAttempts = count($loginAttempts);
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Admin
+        <?= pvHtml($pageTitle) ?> | PureVia Admin
     </title>
 
 
@@ -259,11 +259,11 @@ $totalAttempts = count($loginAttempts);
                         <?php foreach ($browsers as $browser): ?>
 
                             <option
-                                value="<?= htmlspecialchars(
+                                value="<?= pvHtml(
                                     strtolower($browser)
                                 ) ?>"
                             >
-                                <?= htmlspecialchars($browser) ?>
+                                <?= pvHtml($browser) ?>
                             </option>
 
                         <?php endforeach; ?>
@@ -396,15 +396,15 @@ $totalAttempts = count($loginAttempts);
                             <tr
                                 class="login-attempt-row"
 
-                                data-search="<?= htmlspecialchars(
+                                data-search="<?= pvHtml(
                                     $searchValue
                                 ) ?>"
 
-                                data-result="<?= htmlspecialchars(
+                                data-result="<?= pvHtml(
                                     $resultValue
                                 ) ?>"
 
-                                data-browser="<?= htmlspecialchars(
+                                data-browser="<?= pvHtml(
                                     strtolower($browser)
                                 ) ?>"
                             >
@@ -416,7 +416,7 @@ $totalAttempts = count($loginAttempts);
 
                                     <span class="login-attempt-email">
 
-                                        <?= htmlspecialchars($email) ?>
+                                        <?= pvHtml($email) ?>
 
                                     </span>
 
@@ -431,7 +431,7 @@ $totalAttempts = count($loginAttempts);
                                         class="
                                             login-result-badge
                                             login-result-<?=
-                                                htmlspecialchars(
+                                                pvHtml(
                                                     $resultValue
                                                 )
                                             ?>
@@ -451,7 +451,7 @@ $totalAttempts = count($loginAttempts);
 
                                     <span class="login-ip-address">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $ipAddress
                                         ) ?>
 
@@ -470,7 +470,7 @@ $totalAttempts = count($loginAttempts);
 
                                         <span>
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $browser
                                             ) ?>
 
@@ -487,7 +487,7 @@ $totalAttempts = count($loginAttempts);
 
                                     <span class="login-attempt-date">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $dateDisplay
                                         ) ?>
 
@@ -506,7 +506,7 @@ $totalAttempts = count($loginAttempts);
                                             : 'login-reason-failed' ?>"
                                     >
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $reason
                                         ) ?>
 
@@ -569,12 +569,12 @@ $totalAttempts = count($loginAttempts);
 
 <!-- JAVASCRIPT -->
 
-<script src="../../assets/js/sidemenu.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
-<script src="../../assets/js/login_attempts.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/login_attempts.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

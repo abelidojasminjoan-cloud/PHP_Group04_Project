@@ -121,8 +121,7 @@ if ($result) {
 /* =========================================================
    LOAD PRODUCT VARIANTS / SIZES
 
-   If your product_variants table stores variant_name
-   such as 15ML, 30ML, 100ML, etc.
+   Use the size column maintained by Add/Edit Product.
 ========================================================= */
 
 if (!empty($products)) {
@@ -130,7 +129,7 @@ if (!empty($products)) {
     $variantResult = $conn->query("
         SELECT
             product_id,
-            variant_name
+            size_capacity AS variant_name
         FROM product_variants
         ORDER BY product_id ASC, id ASC
     ");
@@ -446,13 +445,13 @@ function staffProductImage(?string $image): string
                             <?php foreach ($categories as $category): ?>
 
                                 <option
-                                    value="<?= htmlspecialchars(
+                                    value="<?= pvHtml(
                                         strtolower(
                                             $category['category_name']
                                         )
                                     ) ?>"
                                 >
-                                    <?= htmlspecialchars(
+                                    <?= pvHtml(
                                         $category['category_name']
                                     ) ?>
                                 </option>
@@ -590,15 +589,15 @@ function staffProductImage(?string $image): string
                                     <tr
                                         class="product-row"
 
-                                        data-category="<?= htmlspecialchars(
+                                        data-category="<?= pvHtml(
                                             $category
                                         ) ?>"
 
-                                        data-status="<?= htmlspecialchars(
+                                        data-status="<?= pvHtml(
                                             $status
                                         ) ?>"
 
-                                        data-search="<?= htmlspecialchars(
+                                        data-search="<?= pvHtml(
                                             $searchData
                                         ) ?>"
                                     >
@@ -616,14 +615,14 @@ function staffProductImage(?string $image): string
                                                 <div class="product-image">
 
                                                     <img
-                                                        src="<?= htmlspecialchars(
+                                                        src="<?= pvHtml(
                                                             $imageUrl
                                                         ) ?>"
-                                                        alt="<?= htmlspecialchars(
+                                                        alt="<?= pvHtml(
                                                             $product['product_name']
                                                         ) ?>"
                                                         loading="lazy"
-                                                        onerror="this.style.display='none';"
+                                                        data-hide-broken-image
                                                     >
 
                                                 </div>
@@ -631,7 +630,7 @@ function staffProductImage(?string $image): string
 
                                                 <p class="product-name">
 
-                                                    <?= htmlspecialchars(
+                                                    <?= pvHtml(
                                                         $product['product_name']
                                                     ) ?>
 
@@ -649,7 +648,7 @@ function staffProductImage(?string $image): string
 
                                         <td class="product-sku">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $product['product_code']
                                             ) ?>
 
@@ -662,7 +661,7 @@ function staffProductImage(?string $image): string
 
                                         <td class="product-category">
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $categoryName
                                             ) ?>
 
@@ -685,7 +684,7 @@ function staffProductImage(?string $image): string
 
                                                         <span class="size-badge">
 
-                                                            <?= htmlspecialchars(
+                                                            <?= pvHtml(
                                                                 $variant
                                                             ) ?>
 
@@ -759,14 +758,14 @@ function staffProductImage(?string $image): string
                                             <span
                                                 class="
                                                     product-status
-                                                    status-<?= htmlspecialchars(
+                                                    status-<?= pvHtml(
                                                         $status
                                                     ) ?>
                                                 "
                                             >
 
                                                 <?= strtoupper(
-                                                    htmlspecialchars($status)
+                                                    pvHtml($status)
                                                 ) ?>
 
                                             </span>
@@ -835,7 +834,7 @@ function staffProductImage(?string $image): string
          SAME SIDEMENU JS
     ====================================================== -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/sidemenu.js"
     ></script>
 
@@ -844,12 +843,12 @@ function staffProductImage(?string $image): string
          SAME PRODUCTS JS USED BY ADMIN
     ====================================================== -->
 
-    <script
+    <script nonce="<?= pvScriptNonce() ?>"
         src="<?= BASE_URL ?>/assets/js/products.js"
     ></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

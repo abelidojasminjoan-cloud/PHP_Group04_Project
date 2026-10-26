@@ -140,67 +140,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 "variant-row";
 
 
-            row.innerHTML = `
-
-                <input
-                    type="text"
-                    name="size_capacity[]"
-                    class="form-control"
-                    placeholder="e.g. 30ml, 1 sheet"
-                    maxlength="100"
-                    required
-                >
-
-
-                <input
-                    type="text"
-                    name="variant_label[]"
-                    class="form-control"
-                    placeholder="e.g. Regular, Trial"
-                    maxlength="100"
-                >
-
-
-                <div class="price-input">
-
-                    <span>₱</span>
-
-                    <input
-                        type="number"
-                        name="variant_price[]"
-                        class="form-control"
-                        placeholder="0.00"
-                        min="0"
-                        step="0.01"
-                        required
-                    >
-
-                </div>
-
-
-                <input
-                    type="number"
-                    name="variant_stock[]"
-                    class="form-control"
-                    value="0"
-                    min="0"
-                    step="1"
-                    required
-                >
-
-
-                <button
-                    type="button"
-                    class="variant-remove"
-                    aria-label="Remove size"
-                >
-
-                    <i class="fa-solid fa-xmark"></i>
-
-                </button>
-
-            `;
-
+            function input(attributes) {
+                const field = document.createElement('input');
+                Object.entries(attributes).forEach(([key, value]) => field.setAttribute(key, value));
+                return field;
+            }
+            const size = input({ type: 'text', name: 'size_capacity[]', class: 'form-control', placeholder: 'e.g. 30ml, 1 sheet', maxlength: '100', required: '' });
+            const label = input({ type: 'text', name: 'variant_label[]', class: 'form-control', placeholder: 'e.g. Regular, Trial', maxlength: '100' });
+            const priceBox = document.createElement('div');
+            priceBox.className = 'price-input';
+            const currency = document.createElement('span');
+            currency.textContent = '\u20b1';
+            priceBox.append(currency, input({ type: 'number', name: 'variant_price[]', class: 'form-control', placeholder: '0.00', min: '0', step: '0.01', required: '' }));
+            const stock = input({ type: 'number', name: 'variant_stock[]', class: 'form-control', value: '0', min: '0', step: '1', required: '' });
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'variant-remove';
+            remove.setAttribute('aria-label', 'Remove size');
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-xmark';
+            remove.append(icon);
+            row.append(size, label, priceBox, stock, remove);
 
             return row;
         }

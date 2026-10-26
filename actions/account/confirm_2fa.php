@@ -5,6 +5,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
+
+if (!TWO_FACTOR_ENABLED) {
+    header('Location: ' . BASE_URL . '/public/login.php', true, 303);
+    exit;
+}
 require_once __DIR__ . '/../../services/two_factor_auth.php';
 require_once __DIR__ . '/../../services/complete_2fa_login.php';
 

@@ -743,6 +743,11 @@ CREATE TABLE `security_settings` (
   `require_lowercase` tinyint(1) NOT NULL DEFAULT 1,
   `require_number` tinyint(1) NOT NULL DEFAULT 1,
   `require_special_character` tinyint(1) NOT NULL DEFAULT 1,
+  `min_uppercase` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `min_lowercase` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `min_number` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `min_special_character` tinyint(3) UNSIGNED NOT NULL DEFAULT 1,
+  `password_expiry_days` smallint(5) UNSIGNED NOT NULL DEFAULT 0,
   `require_otp` tinyint(1) NOT NULL DEFAULT 1,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)

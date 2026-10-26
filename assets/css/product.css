@@ -1,3 +1,15 @@
+/* Routine controls are scoped to the product form. */
+#productRoutineDetails[hidden], #productTargetedField[hidden], #productSunscreenField[hidden] { display: none !important; }
+#addProductForm label[for="productIngredientsComplete"],
+#productRoutineDetails label.product-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
 /* =========================================================
    PUREVIA ADMIN PRODUCTS
 ========================================================= */

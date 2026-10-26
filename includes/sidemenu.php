@@ -207,6 +207,7 @@ else {
 }
 
 ?>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/image-fallbacks.js"></script>
 
 
 <!-- =========================================================
@@ -252,7 +253,7 @@ else {
     <div class="sidebar-brand">
 
         <a
-            href="<?= htmlspecialchars($dashboardUrl) ?>"
+            href="<?= pvHtml($dashboardUrl) ?>"
             class="sidebar-logo"
         >
 
@@ -266,7 +267,7 @@ else {
 
 
         <p class="sidebar-subtitle">
-            <?= htmlspecialchars($panelName) ?>
+            <?= pvHtml($panelName) ?>
         </p>
 
     </div>
@@ -534,6 +535,13 @@ else {
 
 
 
+            <div class="sidebar-section">
+                <p class="sidebar-section-title">SKIN MATCH</p>
+                <a href="<?= $adminBase ?>/skin-types/skin-types.php" class="sidebar-link <?= sidebarActive('/skin-types/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">◉</span><span>Skin Types</span></span></a>
+                <a href="<?= $adminBase ?>/suitability/suitability.php" class="sidebar-link <?= sidebarActive('/suitability/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">✓</span><span>Suitability Management</span></span></a>
+                <a href="<?= $adminBase ?>/quiz-analytics/quiz-analytics.php" class="sidebar-link <?= sidebarActive('/quiz-analytics/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">▥</span><span>Quiz Analytics</span></span></a>
+            </div>
+
             <!-- =================================================
                 OPERATIONS
                 ADMIN ONLY
@@ -697,7 +705,7 @@ else {
 
             <div class="sidebar-avatar">
 
-                <?= htmlspecialchars($sidebarInitial) ?>
+                <?= pvHtml($sidebarInitial) ?>
 
             </div>
 
@@ -710,14 +718,14 @@ else {
 
                 <p class="sidebar-user-name">
 
-                    <?= htmlspecialchars($sidebarFullName) ?>
+                    <?= pvHtml($sidebarFullName) ?>
 
                 </p>
 
 
                 <p class="sidebar-user-email">
 
-                    <?= htmlspecialchars($sidebarEmail) ?>
+                    <?= pvHtml($sidebarEmail) ?>
 
                 </p>
 
@@ -729,7 +737,7 @@ else {
                         : 'sidebar-role-staff' ?>"
                 >
 
-                    <?= htmlspecialchars(
+                    <?= pvHtml(
                         ucfirst($currentRole)
                     ) ?>
 

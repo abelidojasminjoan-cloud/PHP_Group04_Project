@@ -22,7 +22,7 @@ if (empty($_SESSION['user_id'])) {
 ========================================= */
 
 function e(mixed $value): string {
-    return htmlspecialchars(
+    return pvHtml(
         (string) ($value ?? ''),
         ENT_QUOTES,
         'UTF-8'
@@ -365,7 +365,7 @@ $currentGender = (string) ($user['gender'] ?? '');
                         method="POST"
                         action="<?= BASE_URL ?>/actions/account/update_profile.php"
                         id="profileEditForm"
-                        data-field-errors="<?= e(json_encode($fieldErrors, JSON_THROW_ON_ERROR)) ?>"
+                        data-field-errors="<?= e(pvJson($fieldErrors, JSON_THROW_ON_ERROR)) ?>"
                     >
 
                         <input
@@ -587,7 +587,7 @@ $currentGender = (string) ($user['gender'] ?? '');
 
                     <form novalidate
                         id="profilePhotoForm"
-                        data-field-errors="<?= e(json_encode(['profile_photo' => $photoError], JSON_THROW_ON_ERROR)) ?>"
+                        data-field-errors="<?= e(pvJson(['profile_photo' => $photoError], JSON_THROW_ON_ERROR)) ?>"
                         method="POST"
                         enctype="multipart/form-data"
                         action="<?= BASE_URL ?>/actions/account/profile_photo.php"
@@ -632,11 +632,11 @@ $currentGender = (string) ($user['gender'] ?? '');
 
 </main>
 
-<script src="<?= BASE_URL ?>/assets/js/account.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/account.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

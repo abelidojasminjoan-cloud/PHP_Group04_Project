@@ -128,7 +128,7 @@ $totalUsers = count($users);
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia
+        <?= pvHtml($pageTitle) ?> | PureVia
     </title>
 
 
@@ -361,8 +361,8 @@ $totalUsers = count($users);
 
                                 <tr
                                     class="user-row"
-                                    data-role="<?= htmlspecialchars($role) ?>"
-                                    data-search="<?= htmlspecialchars(
+                                    data-role="<?= pvHtml($role) ?>"
+                                    data-search="<?= pvHtml(
                                         strtolower(
                                             $user['name'] . ' ' .
                                             $user['email'] . ' ' .
@@ -382,11 +382,11 @@ $totalUsers = count($users);
                                             <div
                                                 class="
                                                     user-avatar
-                                                    avatar-<?= htmlspecialchars($role) ?>
+                                                    avatar-<?= pvHtml($role) ?>
                                                 "
                                             >
 
-                                                <?= htmlspecialchars($initial) ?>
+                                                <?= pvHtml($initial) ?>
 
                                             </div>
 
@@ -395,7 +395,7 @@ $totalUsers = count($users);
 
                                                 <p class="user-name">
 
-                                                    <?= htmlspecialchars(
+                                                    <?= pvHtml(
                                                         $user['name']
                                                     ) ?>
 
@@ -404,7 +404,7 @@ $totalUsers = count($users);
 
                                                 <p class="user-email">
 
-                                                    <?= htmlspecialchars(
+                                                    <?= pvHtml(
                                                         $user['email']
                                                     ) ?>
 
@@ -422,7 +422,7 @@ $totalUsers = count($users);
 
                                     <td class="user-phone">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $user['phone']
                                         ) ?>
 
@@ -437,7 +437,7 @@ $totalUsers = count($users);
                                         <span
                                             class="
                                                 role-badge
-                                                role-<?= htmlspecialchars($role) ?>
+                                                role-<?= pvHtml($role) ?>
                                             "
                                         >
 
@@ -456,7 +456,7 @@ $totalUsers = count($users);
                                             <?php endif; ?>
 
 
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $user['role']
                                             ) ?>
 
@@ -473,12 +473,12 @@ $totalUsers = count($users);
                                         <span
                                             class="
                                                 user-status
-                                                status-<?= htmlspecialchars($status) ?>
+                                                status-<?= pvHtml($status) ?>
                                             "
                                         >
 
                                             <?= strtoupper(
-                                                htmlspecialchars(
+                                                pvHtml(
                                                     $user['status']
                                                 )
                                             ) ?>
@@ -493,7 +493,7 @@ $totalUsers = count($users);
 
                                     <td class="joined-date">
 
-                                        <?= htmlspecialchars(
+                                        <?= pvHtml(
                                             $user['joined']
                                         ) ?>
 
@@ -510,7 +510,7 @@ $totalUsers = count($users);
                                                 href="./edit.php?id=<?= urlencode($user['id']) ?>"
                                                 class="action-button edit-button"
                                                 title="Edit user"
-                                                aria-label="Edit <?= htmlspecialchars($user['name']) ?>"
+                                                aria-label="Edit <?= pvHtml($user['name']) ?>"
                                             >
                                                 <i class="fa-regular fa-pen-to-square"></i>
                                             </a>
@@ -521,9 +521,9 @@ $totalUsers = count($users);
                                                 type="button"
                                                 class="action-button delete-button"
                                                 title="Delete user"
-                                                aria-label="Delete <?= htmlspecialchars($user['name']) ?>"
-                                                data-user-id="<?= htmlspecialchars($user['id']) ?>"
-                                                data-user-name="<?= htmlspecialchars($user['name']) ?>"
+                                                aria-label="Delete <?= pvHtml($user['name']) ?>"
+                                                data-user-id="<?= pvHtml($user['id']) ?>"
+                                                data-user-name="<?= pvHtml($user['name']) ?>"
                                             >
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
@@ -577,11 +577,11 @@ $totalUsers = count($users);
          SIDEBAR JS
     ====================================== -->
 
-    <script src="../../assets/js/sidemenu.js"></script>
-    <script src="../../assets/js/user.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/user.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
 </body>

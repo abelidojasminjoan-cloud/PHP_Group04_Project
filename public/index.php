@@ -215,19 +215,19 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                     class="product-image-wrapper"
                                 >
                                     <img
-                                        src="<?= htmlspecialchars(
+                                        src="<?= pvHtml(
                                             $productImage,
                                             ENT_QUOTES,
                                             'UTF-8'
                                         ) ?>"
-                                        alt="<?= htmlspecialchars(
+                                        alt="<?= pvHtml(
                                             $product['product_name'],
                                             ENT_QUOTES,
                                             'UTF-8'
                                         ) ?>"
                                         class="product-image"
                                         loading="lazy"
-                                        onerror="this.onerror=null;this.src='<?= BASE_URL ?>/assets/images/products/default-product.jpg';"
+                                        data-image-fallback="<?= BASE_URL ?>/assets/images/products/default-product.jpg"
                                     >
                                 </a>
                                 <?php include __DIR__ . '/../includes/product_favorite_button.php'; ?>
@@ -240,14 +240,14 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                             <a
                                                 href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $product['id'] ?>"
                                             >
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $product['product_name']
                                                 ) ?>
                                             </a>
                                         </h3>
 
                                         <p class="product-description">
-                                            <?= htmlspecialchars(
+                                            <?= pvHtml(
                                                 $product['description'] ?? ''
                                             ) ?>
                                         </p>
@@ -279,7 +279,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                             <input
                                                 type="hidden"
                                                 name="csrf_token"
-                                                value="<?= htmlspecialchars(
+                                                value="<?= pvHtml(
                                                     $_SESSION['csrf_token'],
                                                     ENT_QUOTES,
                                                     'UTF-8'
@@ -326,7 +326,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                                         aria-pressed="<?= $isSelected ? 'true' : 'false' ?>"
                                                         <?= !$inStock ? 'disabled' : '' ?>
                                                     >
-                                                        <?= htmlspecialchars(
+                                                        <?= pvHtml(
                                                             $variant['size_capacity'],
                                                             ENT_QUOTES,
                                                             'UTF-8'
@@ -343,7 +343,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                                 <div class="product-rating">
                                                     <span class="stars">★★★★★</span>
                                                     <span class="review-count">
-                                                        <?= htmlspecialchars(
+                                                        <?= pvHtml(
                                                             $product['category_name'],
                                                             ENT_QUOTES,
                                                             'UTF-8'
@@ -388,7 +388,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <title><?= pvHtml($pageTitle) ?></title>
 
     <!-- Main Website CSS -->
     <!-- Bootstrap 5 CSS -->
@@ -573,7 +573,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                 </g>
                             </svg>
                         </div>
-                        <span><?= htmlspecialchars($benefit, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= pvHtml($benefit, ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -782,9 +782,9 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         specific concerns.
                     </p>
                 </div>
-                <button type="button" class="pv-skin-quiz-button">
+                <a class="pv-skin-quiz-button" href="<?= BASE_URL ?>/skin-match.php">
                     Start Skin Quiz <span aria-hidden="true">&rarr;</span>
-                </button>
+                </a>
             </div>
         </section>
 
@@ -857,7 +857,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                     <i class="fa-solid fa-circle-exclamation"></i>
 
                     <span>
-                        <?= htmlspecialchars($loginError) ?>
+                        <?= pvHtml($loginError) ?>
                     </span>
 
                 </div>
@@ -875,7 +875,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                 <input
                     type="hidden"
                     name="csrf_token"
-                    value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"
+                    value="<?= pvHtml($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"
                 >
 
 
@@ -891,7 +891,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         type="email"
                         id="loginEmail"
                         name="email"
-                        value="<?= htmlspecialchars($loginEmail) ?>"
+                        value="<?= pvHtml($loginEmail) ?>"
                         autocomplete="email"
                         required
                     >
@@ -1039,7 +1039,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                     <i class="fa-solid fa-circle-exclamation"></i>
 
                     <span>
-                        <?= htmlspecialchars($registerError) ?>
+                        <?= pvHtml($registerError) ?>
                     </span>
 
                 </div>
@@ -1057,7 +1057,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                 <input
                     type="hidden"
                     name="csrf_token"
-                    value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"
+                    value="<?= pvHtml($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"
                 >
 
                 <!-- NAME ROW -->
@@ -1074,7 +1074,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                             type="text"
                             id="registerFirstName"
                             name="first_name"
-                            value="<?= htmlspecialchars($registerFirstName) ?>"
+                            value="<?= pvHtml($registerFirstName) ?>"
                             maxlength="100"
                             autocomplete="given-name"
                             required
@@ -1093,7 +1093,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                             type="text"
                             id="registerLastName"
                             name="last_name"
-                            value="<?= htmlspecialchars($registerLastName) ?>"
+                            value="<?= pvHtml($registerLastName) ?>"
                             maxlength="100"
                             autocomplete="family-name"
                             required
@@ -1116,7 +1116,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         type="email"
                         id="registerEmail"
                         name="email"
-                        value="<?= htmlspecialchars($registerEmail) ?>"
+                        value="<?= pvHtml($registerEmail) ?>"
                         autocomplete="email"
                         required
                     >
@@ -1237,15 +1237,15 @@ function renderHomeProductCard(array $product, array $homeVariants): void
     <!-- =====================================
          JAVASCRIPT
     ====================================== -->
-    <script src="<?= BASE_URL ?>/assets/js/main.js"></script>
-    <script src="<?= BASE_URL ?>/assets/js/search.js"></script>
-    <script>
-        window.PUREVIA_BASE_URL = <?= json_encode(BASE_URL) ?>;
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>">
+        window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
     </script>
-    <script src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
     
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

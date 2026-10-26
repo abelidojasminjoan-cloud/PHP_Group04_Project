@@ -155,7 +155,7 @@ $adminInitial = strtoupper(
     >
 
     <title>
-        <?= htmlspecialchars($pageTitle) ?> | PureVia Admin
+        <?= pvHtml($pageTitle) ?> | PureVia Admin
     </title>
 
 
@@ -332,11 +332,11 @@ $adminInitial = strtoupper(
                             <?php foreach ($paymentMethods as $method): ?>
 
                                 <option
-                                    value="<?= htmlspecialchars(
+                                    value="<?= pvHtml(
                                         strtolower($method)
                                     ) ?>"
                                 >
-                                    <?= htmlspecialchars(
+                                    <?= pvHtml(
                                         ucwords(
                                             str_replace(
                                                 '_',
@@ -621,15 +621,15 @@ $adminInitial = strtoupper(
                                     <tr
                                         class="payment-row"
 
-                                        data-search="<?= htmlspecialchars(
+                                        data-search="<?= pvHtml(
                                             $searchValue
                                         ) ?>"
 
-                                        data-method="<?= htmlspecialchars(
+                                        data-method="<?= pvHtml(
                                             $paymentMethod
                                         ) ?>"
 
-                                        data-status="<?= htmlspecialchars(
+                                        data-status="<?= pvHtml(
                                             $paymentStatus
                                         ) ?>"
                                     >
@@ -641,7 +641,7 @@ $adminInitial = strtoupper(
 
                                             <span class="payment-id">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $paymentDisplayId
                                                 ) ?>
 
@@ -656,7 +656,7 @@ $adminInitial = strtoupper(
 
                                             <span class="payment-order">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $payment['order_number']
                                                 ) ?>
 
@@ -671,7 +671,7 @@ $adminInitial = strtoupper(
 
                                             <span class="payment-customer">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $customerName
                                                 ) ?>
 
@@ -702,7 +702,7 @@ $adminInitial = strtoupper(
 
                                             <span class="payment-method">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $paymentMethodDisplay
                                                 ) ?>
 
@@ -721,7 +721,7 @@ $adminInitial = strtoupper(
                                                     $paymentReference !== ''
                                                 ): ?>
 
-                                                    <?= htmlspecialchars(
+                                                    <?= pvHtml(
                                                         $paymentReference
                                                     ) ?>
 
@@ -742,7 +742,7 @@ $adminInitial = strtoupper(
 
                                             <span class="payment-date">
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $paymentDate
                                                 ) ?>
 
@@ -758,13 +758,13 @@ $adminInitial = strtoupper(
                                             <span
                                                 class="
                                                     payment-status-badge
-                                                    payment-status-<?= htmlspecialchars(
+                                                    payment-status-<?= pvHtml(
                                                         $paymentStatus
                                                     ) ?>
                                                 "
                                             >
 
-                                                <?= htmlspecialchars(
+                                                <?= pvHtml(
                                                     $paymentStatusDisplay
                                                 ) ?>
 
@@ -888,15 +888,15 @@ $adminInitial = strtoupper(
 
     <!-- SIDEMENU JS -->
 
-    <script src="../../assets/js/sidemenu.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
 
 
     <!-- PAYMENTS JS -->
 
-    <script src="../../assets/js/payments.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/payments.js"></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

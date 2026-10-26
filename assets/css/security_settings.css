@@ -328,6 +328,188 @@ body {
     transform: translateY(-1px);
 }
 
+.password-policy-card .password-policy-row,
+.password-policy-card .password-complexity-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 19px 0;
+    border-bottom: 1px solid var(--security-border);
+}
+
+.password-policy-label {
+    min-width: 0;
+}
+
+.password-policy-label > label,
+.password-character-title,
+.password-complexity legend {
+    color: #11130f;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.password-policy-label p,
+.password-complexity > p {
+    margin: 7px 0 0;
+    color: #8b8279;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.password-policy-value {
+    display: flex;
+    align-items: center;
+    flex: 0 0 176px;
+    gap: 8px;
+}
+
+.password-policy-value > span,
+.password-complexity-controls label > span {
+    color: #8b8279;
+    font-size: 10px;
+}
+
+.password-policy-card input[type="number"],
+.password-policy-card select {
+    height: 42px;
+    min-width: 0;
+    border: 1px solid var(--security-border);
+    border-radius: 10px;
+    padding: 0 11px;
+    background-color: #fff;
+    color: #11130f;
+    font: inherit;
+    font-size: 13px;
+}
+
+.password-policy-value input[type="number"] {
+    width: 100px;
+    height: 46px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.password-policy-card input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.password-policy-card input::-webkit-inner-spin-button,
+.password-policy-card input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.password-policy-card :is(input, select):focus-visible {
+    outline: 2px solid #386b4e;
+    outline-offset: 2px;
+}
+
+.password-complexity {
+    min-width: 0;
+    margin: 22px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.password-complexity legend {
+    float: none;
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.password-complexity-controls {
+    display: grid;
+    grid-template-columns: 110px 120px;
+    gap: 13px;
+}
+
+.password-complexity-controls label {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.password-complexity-controls input {
+    width: 100%;
+    text-align: right;
+}
+
+.password-complexity-controls select {
+    width: 100%;
+    cursor: pointer;
+    appearance: none;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b8279' d='M1 1h10L6 7z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+}
+
+.password-complexity-controls input:disabled {
+    background: #f4f1eb;
+    color: #999086;
+}
+
+.password-policy-card .password-complexity-row:last-child {
+    border-bottom: 0;
+}
+
+.password-policy-summary {
+    margin-top: 8px;
+    padding: 21px 16px 17px;
+    border-radius: 10px;
+    background: #ede9e1;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.password-policy-summary strong {
+    color: #38644b;
+    font-weight: 600;
+}
+
+.password-policy-summary p {
+    margin: 7px 0 0;
+    overflow-wrap: anywhere;
+}
+
+.password-policy-card .security-save-button {
+    height: 53px;
+    margin-top: 20px;
+    padding: 0 30px;
+    background: #38644b;
+    font-size: 16px;
+}
+
+@media (max-width: 1250px) and (min-width: 1051px), (max-width: 600px) {
+    .password-policy-card .password-complexity-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .password-complexity-controls {
+        width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 400px) {
+    .password-policy-card .password-policy-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .password-policy-value {
+        flex-basis: auto;
+    }
+}
+
 
 /* =========================================================
    LOCKED ACCOUNTS SECTION

@@ -21,7 +21,7 @@
                             <select id="orReason" name="reason" aria-required="true" aria-describedby="orReasonError">
                                 <option value="">Select a reason</option>
                                 <?php foreach (orderReturnReasons() as $returnReason): ?>
-                                    <option value="<?= htmlspecialchars($returnReason, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($returnReason, ENT_QUOTES, 'UTF-8') ?></option>
+                                    <option value="<?= pvHtml($returnReason, ENT_QUOTES, 'UTF-8') ?>"><?= pvHtml($returnReason, ENT_QUOTES, 'UTF-8') ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

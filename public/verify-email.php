@@ -42,7 +42,7 @@ $notice = $_SESSION['otp_notice'] ?? '';
 unset($_SESSION['otp_error'], $_SESSION['otp_notice']);
 
 function otpEscape(string $value): string {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return pvHtml($value, ENT_QUOTES, 'UTF-8');
 }
 ?>
 <!DOCTYPE html>
@@ -227,7 +227,7 @@ function otpEscape(string $value): string {
 
 </main>
 
-<script src="<?= BASE_URL ?>/assets/js/auth_loading.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/verify_email.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/auth_loading.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/verify_email.js"></script>
 </body>
 </html>
