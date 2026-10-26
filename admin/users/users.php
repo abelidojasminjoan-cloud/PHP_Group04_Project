@@ -1,118 +1,15 @@
 <?php
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/csrf.php';
+require_once __DIR__ . '/../../services/AdminUser.php';
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
-
-$pageTitle = "Users";
-
-
-/* =========================================
-   TEMPORARY ADMIN SESSION
-   Remove when login is connected
-========================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
-
-
-/* =========================================
-   SAMPLE USER DATA
-   Replace with MySQL query later
-========================================= */
-
-$users = [
-
-    [
-        'id' => 1,
-        'name' => 'Ava Santos',
-        'email' => 'admin@purevia.com',
-        'phone' => '+63 917 123 4567',
-        'role' => 'Admin',
-        'status' => 'active',
-        'joined' => '2024-01-15'
-    ],
-
-    [
-        'id' => 2,
-        'name' => 'Marcus Williams',
-        'email' => 'marcus@purevia.com',
-        'phone' => '+63 918 234 5678',
-        'role' => 'Staff',
-        'status' => 'active',
-        'joined' => '2024-03-10'
-    ],
-
-    [
-        'id' => 3,
-        'name' => 'Lisa Park',
-        'email' => 'lisa@purevia.com',
-        'phone' => '+63 919 345 6789',
-        'role' => 'Staff',
-        'status' => 'active',
-        'joined' => '2024-04-22'
-    ],
-
-    [
-        'id' => 4,
-        'name' => 'Sofia Dela Rosa',
-        'email' => 'sofia.delarosa@email.com',
-        'phone' => '+63 920 456 7890',
-        'role' => 'Customer',
-        'status' => 'active',
-        'joined' => '2025-02-14'
-    ],
-
-    [
-        'id' => 5,
-        'name' => 'James Uy',
-        'email' => 'james.uy@email.com',
-        'phone' => '+63 921 567 8901',
-        'role' => 'Customer',
-        'status' => 'active',
-        'joined' => '2025-04-08'
-    ],
-
-    [
-        'id' => 6,
-        'name' => 'Maria Garcia',
-        'email' => 'maria.garcia@email.com',
-        'phone' => '+63 922 678 9012',
-        'role' => 'Customer',
-        'status' => 'locked',
-        'joined' => '2025-01-20'
-    ],
-
-    [
-        'id' => 7,
-        'name' => 'Carlo Bautista',
-        'email' => 'carlo.bautista@email.com',
-        'phone' => '+63 923 789 0123',
-        'role' => 'Customer',
-        'status' => 'active',
-        'joined' => '2025-07-01'
-    ],
-
-    [
-        'id' => 8,
-        'name' => 'Nina Tan',
-        'email' => 'nina.tan@email.com',
-        'phone' => '+63 924 890 1234',
-        'role' => 'Customer',
-        'status' => 'inactive',
-        'joined' => '2024-11-05'
-    ]
-
-];
-
-
+$currentUser = requirePureViaAdmin($conn);
+$pageTitle = 'Users';
+$users = AdminUser::all($conn);
 $totalUsers = count($users);
-
+$roles = $conn->query('SELECT id, role_name FROM roles WHERE id IN (1, 2, 3) ORDER BY id')->fetch_all(MYSQLI_ASSOC);
+$passwordRequirements = securityPasswordRequirements(securityPolicy($conn));
 ?>
 
 <!DOCTYPE html>
@@ -234,7 +131,10 @@ $totalUsers = count($users);
 
 
                 <a
-                    href="./add.php"
+                    href="#userModal"
+                    id="addUserButton"
+                    aria-controls="userModal"
+                    aria-haspopup="dialog"
                     class="add-user-button"
                 >
 
@@ -349,8 +249,8 @@ $totalUsers = count($users);
                                     strtolower($user['status']);
 
                                 $initial =
-                                    strtoupper(
-                                        substr(
+                                    mb_strtoupper(
+                                        mb_substr(
                                             $user['name'],
                                             0,
                                             1
@@ -363,7 +263,7 @@ $totalUsers = count($users);
                                     class="user-row"
                                     data-role="<?= pvHtml($role) ?>"
                                     data-search="<?= pvHtml(
-                                        strtolower(
+                                        mb_strtolower(
                                             $user['name'] . ' ' .
                                             $user['email'] . ' ' .
                                             $user['phone']
@@ -507,7 +407,9 @@ $totalUsers = count($users);
 
                                             <!-- EDIT -->
                                             <a
-                                                href="./edit.php?id=<?= urlencode($user['id']) ?>"
+                                                href="#userModal"
+                                                data-edit-user="<?= (int) $user['id'] ?>"
+                                                aria-haspopup="dialog"
                                                 class="action-button edit-button"
                                                 title="Edit user"
                                                 aria-label="Edit <?= pvHtml($user['name']) ?>"
@@ -522,7 +424,8 @@ $totalUsers = count($users);
                                                 class="action-button delete-button"
                                                 title="Delete user"
                                                 aria-label="Delete <?= pvHtml($user['name']) ?>"
-                                                data-user-id="<?= pvHtml($user['id']) ?>"
+                                                data-delete-user="<?= (int) $user['id'] ?>"
+                                                data-revision="<?= pvHtml($user['revision']) ?>"
                                                 data-user-name="<?= pvHtml($user['name']) ?>"
                                             >
                                                 <i class="fa-regular fa-trash-can"></i>
@@ -572,6 +475,72 @@ $totalUsers = count($users);
     </div>
 
 
+
+    <div id="userModal" class="form-modal" aria-hidden="true">
+        <div class="form-modal-backdrop" data-close-user-modal></div>
+        <div class="form-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="userFormTitle" tabindex="-1">
+            <form id="userForm" class="purevia-form" action="<?= BASE_URL ?>/actions/admin/users/user.php" method="post">
+                <input type="hidden" name="csrf_token" value="<?= pvHtml(csrfToken()) ?>">
+                <input type="hidden" name="id">
+                <input type="hidden" name="revision">
+                <input type="hidden" name="action" value="create">
+                <header class="form-modal-header">
+                    <h2 id="userFormTitle">Add User</h2>
+                    <button type="button" class="form-modal-close" data-close-user-modal aria-label="Close user form">&times;</button>
+                </header>
+                <div class="form-modal-body">
+                    <p id="userFormError" class="form-alert form-alert-error" role="alert" tabindex="-1" hidden></p>
+                    <div class="form-grid form-grid-2">
+                        <div class="form-group">
+                            <label for="userFirstName">First Name <span class="form-required">*</span></label>
+                            <input id="userFirstName" class="form-control" name="first_name" maxlength="100" autocomplete="off" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userLastName">Last Name <span class="form-required">*</span></label>
+                            <input id="userLastName" class="form-control" name="last_name" maxlength="100" autocomplete="off" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email Address <span class="form-required">*</span></label>
+                        <input id="userEmail" class="form-control" name="email" type="email" maxlength="255" autocomplete="off" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPhone">Phone</label>
+                        <input id="userPhone" class="form-control" name="phone" type="tel" maxlength="30" autocomplete="off">
+                    </div>
+                    <div class="form-grid form-grid-2">
+                        <div class="form-group">
+                            <label for="userRole">Role</label>
+                            <select id="userRole" name="role_id" class="form-control" required>
+                                <?php foreach ($roles as $role): ?>
+                                    <option value="<?= (int) $role['id'] ?>"<?= (int) $role['id'] === 3 ? ' selected' : '' ?>><?= pvHtml($role['role_name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="userStatus">Status</label>
+                            <select id="userStatus" name="status" class="form-control" aria-describedby="userStatusHelp" required>
+                                <option value="active">Active</option>
+                                <option value="pending">Pending</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="locked">Locked</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="user-form-help" id="userStatusHelp">Active grants sign-in access and confirms the email on behalf of the user. Saving an account as Active also clears login locks. Pending users must verify their email.</p>
+                    <div class="form-group">
+                        <label for="userPassword" id="userPasswordLabel">Password <span class="form-required">*</span></label>
+                        <input id="userPassword" class="form-control" name="password" type="password" autocomplete="new-password" aria-describedby="userPasswordHelp" required>
+                        <p class="user-form-help" id="userPasswordHelp"><span id="userPasswordOptional" hidden>Leave blank to keep the current password. </span><?= pvHtml(implode('. ', $passwordRequirements)) ?>. Maximum 72 bytes.</p>
+                    </div>
+                </div>
+                <footer class="form-modal-footer">
+                    <button type="button" class="form-cancel-button" data-close-user-modal>Cancel</button>
+                    <button type="submit" id="userSaveButton" class="form-submit-button">Add User</button>
+                </footer>
+            </form>
+        </div>
+    </div>
 
     <!-- =====================================
          SIDEBAR JS
