@@ -710,17 +710,15 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         at PureVia is labeled with the information you actually need: what is inside,
                         who it is for, how to use it, and whether it is available now.
                     </p>
-                    <details class="pv-story-more">
-                        <summary>
-                            <span>Read our full story</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>
-                        </summary>
-                        <p>
-                            Our approach is simple: help you understand your skincare before you buy.
-                            Explore ingredients, skin-type guidance, and clear product information
-                            to build a routine that fits your needs, one thoughtful choice at a time.
-                        </p>
-                    </details>
+                  
+            <a
+                href="<?= BASE_URL ?>/public/about_us.php"
+                class="pv-story-full-link"
+            >
+                Read our full story
+                <span aria-hidden="true">&rarr;</span>
+            </a>
+
                 </div>
             </div>
         </section>

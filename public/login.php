@@ -182,7 +182,7 @@ function escapeHtml(string $value): string{
                 <a href="mailto:purevia@gmail.com">purevia@gmail.com</a>
             </div>
             <div class="auth-footer-links">
-                <a href="<?= BASE_URL ?>/privacy.php">Privacy</a>
+               <a href="<?= BASE_URL ?>/public/privacy-policy.php">Privacy</a>
                 <a href="<?= BASE_URL ?>/terms.php">Terms</a>
                 <span>&copy; <?= date('Y') ?> PureVia</span>
             </div>
