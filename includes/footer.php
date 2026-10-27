@@ -317,13 +317,13 @@
 
         <div class="footer-legal">
 
-            <a href="<?= BASE_URL ?>/privacy-policy.php">
+            <a href="<?= BASE_URL ?>/public/privacy_policy.php">
                 Privacy
             </a>
 
             <span>·</span>
 
-            <a href="<?= BASE_URL ?>/terms.php">
+            <a href="<?= BASE_URL ?>/public/terms.php">
                 Terms
             </a>
 

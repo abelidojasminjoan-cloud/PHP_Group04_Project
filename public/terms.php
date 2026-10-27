@@ -684,11 +684,6 @@ $baseUrl = htmlspecialchars(
 
             </section>
 
-            <?php
-            $policyType = 'terms';
-            require __DIR__ . '/../includes/policy_confirmation.php';
-            ?>
-
         </article>
 
     </div>
@@ -725,6 +720,7 @@ $baseUrl = htmlspecialchars(
 </body>
 
 <script
+    nonce="<?= pvScriptNonce() ?>"
     src="<?= $baseUrl ?>/assets/js/policy_scrollspy.js"
     defer
 ></script>

@@ -312,13 +312,6 @@ $baseUrl = htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8');
 
             </section>
 
-            <!-- PRIVACY POLICY CONFIRMATION -->
-            <?php
-                $policyType = 'privacy';
-
-                require __DIR__ . '/../includes/policy_confirmation.php';
-            ?>
-
         </article>
     </div>
 
@@ -339,6 +332,7 @@ $baseUrl = htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8');
 </footer>
 
 <script
+    nonce="<?= pvScriptNonce() ?>"
     src="<?= $baseUrl ?>/assets/js/policy_scrollspy.js"
     defer
 ></script>
