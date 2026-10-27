@@ -1,118 +1,25 @@
 <?php
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../includes/role-check.php';
 
-session_start();
-require_once __DIR__ . '/../../config/app.php';
-
+requirePureViaAdmin($conn);
 $pageTitle = "Users";
 
-
-/* =========================================
-   TEMPORARY ADMIN SESSION
-   Remove when login is connected
-========================================= */
-
-$_SESSION['first_name'] =
-    $_SESSION['first_name'] ?? 'Ava';
-
-$_SESSION['last_name'] =
-    $_SESSION['last_name'] ?? 'Santos';
-
-$_SESSION['email'] =
-    $_SESSION['email'] ?? 'admin@purevia.com';
-
-
-/* =========================================
-   SAMPLE USER DATA
-   Replace with MySQL query later
-========================================= */
-
-$users = [
-
-    [
-        'id' => 1,
-        'name' => 'Ava Santos',
-        'email' => 'admin@purevia.com',
-        'phone' => '+63 917 123 4567',
-        'role' => 'Admin',
-        'status' => 'active',
-        'joined' => '2024-01-15'
-    ],
-
-    [
-        'id' => 2,
-        'name' => 'Marcus Williams',
-        'email' => 'marcus@purevia.com',
-        'phone' => '+63 918 234 5678',
-        'role' => 'Staff',
-        'status' => 'active',
-        'joined' => '2024-03-10'
-    ],
-
-    [
-        'id' => 3,
-        'name' => 'Lisa Park',
-        'email' => 'lisa@purevia.com',
-        'phone' => '+63 919 345 6789',
-        'role' => 'Staff',
-        'status' => 'active',
-        'joined' => '2024-04-22'
-    ],
-
-    [
-        'id' => 4,
-        'name' => 'Sofia Dela Rosa',
-        'email' => 'sofia.delarosa@email.com',
-        'phone' => '+63 920 456 7890',
-        'role' => 'Customer',
-        'status' => 'active',
-        'joined' => '2025-02-14'
-    ],
-
-    [
-        'id' => 5,
-        'name' => 'James Uy',
-        'email' => 'james.uy@email.com',
-        'phone' => '+63 921 567 8901',
-        'role' => 'Customer',
-        'status' => 'active',
-        'joined' => '2025-04-08'
-    ],
-
-    [
-        'id' => 6,
-        'name' => 'Maria Garcia',
-        'email' => 'maria.garcia@email.com',
-        'phone' => '+63 922 678 9012',
-        'role' => 'Customer',
-        'status' => 'locked',
-        'joined' => '2025-01-20'
-    ],
-
-    [
-        'id' => 7,
-        'name' => 'Carlo Bautista',
-        'email' => 'carlo.bautista@email.com',
-        'phone' => '+63 923 789 0123',
-        'role' => 'Customer',
-        'status' => 'active',
-        'joined' => '2025-07-01'
-    ],
-
-    [
-        'id' => 8,
-        'name' => 'Nina Tan',
-        'email' => 'nina.tan@email.com',
-        'phone' => '+63 924 890 1234',
-        'role' => 'Customer',
-        'status' => 'inactive',
-        'joined' => '2024-11-05'
-    ]
-
-];
-
+$users = $conn->query("
+    SELECT
+        u.id,
+        TRIM(CONCAT_WS(' ', u.first_name, u.last_name)) AS name,
+        u.email,
+        COALESCE(u.phone, '') AS phone,
+        r.role_name AS role,
+        u.status,
+        DATE_FORMAT(u.created_at, '%Y-%m-%d') AS joined
+    FROM users u
+    INNER JOIN roles r ON r.id = u.role_id
+    ORDER BY u.id ASC
+")->fetch_all(MYSQLI_ASSOC);
 
 $totalUsers = count($users);
-
 ?>
 
 <!DOCTYPE html>
@@ -541,6 +448,7 @@ $totalUsers = count($users);
                             <tr
                                 id="noUsersFound"
                                 class="no-users-row"
+                                style="display: <?= $totalUsers === 0 ? 'table-row' : 'none' ?>;"
                             >
 
                                 <td colspan="6">

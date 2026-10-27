@@ -26,17 +26,6 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 
-$termsConfirmed = !empty(
-    $_SESSION['policy_confirmation']['terms']
-);
-
-$privacyConfirmed = !empty(
-    $_SESSION['policy_confirmation']['privacy']
-);
-
-$canRegister = $termsConfirmed && $privacyConfirmed;
-
-
 function escapeHtml(string $value): string {
     return pvHtml($value, ENT_QUOTES, 'UTF-8');
 }
@@ -309,7 +298,6 @@ function escapeHtml(string $value): string {
                     type="submit"
                     class="auth-submit"
                     id="registerSubmit"
-                    <?= $canRegister ? '' : 'disabled' ?>
                 >  
                     Create my account
                 </button>
