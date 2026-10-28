@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../services/AccountLockout.php';
 $passwordPolicy = securityPolicy($conn);
 
 
@@ -116,6 +117,9 @@ function recordLoginAttempt(
     ");
     $attemptStmt->bind_param('isssis', $userId, $email, $ipAddress, $browser, $successValue, $reason);
     $attemptStmt->execute();
+    if (!$successful && $reason === 'Account locked.' && $userId !== null) {
+        recordPureViaAccountLockout($conn, $userId, (int) $conn->insert_id, $ipAddress, $browser);
+    }
     $attemptStmt->close();
 }
 

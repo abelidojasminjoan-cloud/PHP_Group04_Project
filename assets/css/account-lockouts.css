@@ -1,0 +1,8 @@
+.account-lockouts-main .login-attempts-heading h1 { font-family: 'Cormorant Garamond',serif; font-size: clamp(30px,3vw,38px); }
+.account-lockouts-main .lockout-subtitle { color: #38634e; font-size: 13px; line-height: 1.7; }
+.lockout-note { padding: 16px 18px; margin: 0 0 16px; border-radius: 9px; color: #8a786d; background: #eeeae2; font-size: 12px; line-height: 1.8; }
+.lockout-name,.lockout-email { display: block; }
+.lockout-name { font-weight: 600; }
+.lockout-email,.lockout-unknown { color: #8a786d; font-size: 12px; }
+.lockout-email { margin-top: 4px; }
+.account-lockouts-main .login-attempt-row[hidden],.account-lockouts-main #noLoginAttemptsRow[hidden] { display: none !important; }

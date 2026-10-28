@@ -4,6 +4,9 @@ require_once __DIR__.'/../config/db.php';
 require_once __DIR__.'/../services/SkinProfile.php';
 require_once __DIR__.'/../services/SkinMatcher.php';
 require_once __DIR__.'/../services/skin-questions.php';
+require_once __DIR__.'/../services/SkinQuestionBank.php';
+$sqBank=SkinQuestionBank::rows($conn);
+$sqQuestions=SkinQuestionBank::definitions($sqBank);
 $sqCustomer=(int)($_SESSION['user_id']??0)>0&&($_SESSION['role']??'')==='customer';
 if($sqCustomer){require_once __DIR__.'/../includes/role-check.php';requirePureViaCustomer($conn);}
 if(empty($_SESSION['csrf_token']))$_SESSION['csrf_token']=bin2hex(random_bytes(32));
@@ -12,10 +15,11 @@ $sqSaved=$sqCustomer&&$sqOrigin==='profile_edit'?SkinProfile::load($conn,(int)$_
 $sqToken=bin2hex(random_bytes(32));
 $_SESSION['skin_assessment_tokens']=array_filter($_SESSION['skin_assessment_tokens']??[],fn($v)=>$v['expires']>=time());
 if(count($_SESSION['skin_assessment_tokens'])>=20)array_shift($_SESSION['skin_assessment_tokens']);
-$_SESSION['skin_assessment_tokens'][$sqToken]=['origin'=>$sqOrigin,'expires'=>time()+3600];
+$_SESSION['skin_assessment_tokens'][$sqToken]=['origin'=>$sqOrigin,'expires'=>time()+3600,'questionnaire_version'=>SkinQuestionBank::fingerprint($sqBank)];
 $sqChoices=SkinProfile::choices($conn);
-$sqBoot=['baseUrl'=>BASE_URL,'csrfToken'=>$_SESSION['csrf_token'],'assessmentToken'=>$sqToken,'canSave'=>$sqCustomer,'questions'=>skinQuestions(),'choices'=>$sqChoices,'guided'=>($_GET['path']??'')==='guided',
+$sqBoot=['baseUrl'=>BASE_URL,'csrfToken'=>$_SESSION['csrf_token'],'assessmentToken'=>$sqToken,'canSave'=>$sqCustomer,'questions'=>$sqQuestions,'observations'=>array_values(array_filter($sqBank,fn($r)=>!$r['is_core'])),'choices'=>$sqChoices,'guided'=>($_GET['path']??'')==='guided',
     'edit'=>isset($_GET['edit']),'saved'=>$sqSaved?['profile'=>$sqSaved,'matches'=>SkinMatcher::match($conn,$sqSaved),'saved'=>true]:null];
+$sqBoot['sources']=SkinEvidence::sources();
 function sqEsc(mixed $value):string{return pvHtml((string)$value,ENT_QUOTES,'UTF-8');}
 function sqQuestion(string $key,array $definition):void {?>
     <fieldset class="sq-question" data-question="<?= sqEsc($key) ?>"><legend><?= sqEsc($definition[0]) ?></legend><div class="sq-options">
@@ -34,7 +38,7 @@ function sqQuestion(string $key,array $definition):void {?>
 <main class="sq-page">
     <svg class="sq-botanical" viewBox="0 0 230 420" aria-hidden="true"><path d="M35 410Q130 210 175 0" fill="none" stroke="currentColor" stroke-width="3"/><path d="M90 275Q5 240 38 150Q106 190 90 275ZM112 222Q200 220 224 125Q144 150 112 222ZM134 156Q67 110 101 30Q146 78 134 156ZM159 81Q219 67 226 0Q178 20 159 81Z" fill="currentColor"/></svg>
     <div class="sq-container">
-        <header class="sq-heading"><h1><?= $sqOrigin==='profile_edit'?'My Skin Profile':'Find Your Skin Match' ?></h1><p>Answer a few questions so we can recommend products that suit your skin.</p></header>
+        <header class="sq-heading"><h1><?= $sqOrigin==='profile_edit'?'My Skin Profile':'Find Your Skin Match' ?></h1><p>Answer a few questions so we can recommend products that suit your skin.</p><p class="sq-help">Use your usual experience over the past four weeks. Choose Not sure when needed. This research-informed estimate uses adapted questions and has not been clinically validated.</p></header>
         <p class="sq-error" id="sqError" role="alert" hidden></p>
         <noscript><p>Please enable JavaScript to complete your skin profile.</p></noscript>
         <nav class="sq-progress" id="sqProgress" aria-label="Profile steps" hidden>
@@ -62,9 +66,10 @@ function sqQuestion(string $key,array $definition):void {?>
                 </div>
                 <button type="button" class="sq-text-button" id="sqSensitiveOnly">Not sure / Sensitive only? Use the guided finder.</button>
             </section>
-            <?php foreach(range(2,8) as $q):?><section class="sq-panel sq-guided" data-screen="q<?= $q ?>" hidden><p class="sq-kicker">Guided Skin Type Finder · <?= $q-1 ?> of 7</p><?php sqQuestion('q'.$q,skinQuestions()['q'.$q]); ?><?php if($q===8):?><p class="sq-help">This observation is optional. You do not need to perform a tissue test; choose Not sure to skip.</p><?php endif; ?></section><?php endforeach; ?>
-            <section class="sq-panel" data-screen="sensitivity" hidden><h2>How does your skin react?</h2><p class="sq-subtitle">Sensitivity is separate from your primary skin type.</p><?php foreach(['q9','q10','q11'] as $q)sqQuestion($q,skinQuestions()[$q]); ?></section>
-            <section class="sq-panel" data-screen="concerns" hidden><h2>What are your skin concerns?</h2><p class="sq-subtitle">Select all that apply.</p><div class="sq-options sq-two-columns">
+            <?php foreach(range(2,8) as $q):?><section class="sq-panel sq-guided" data-screen="q<?= $q ?>" hidden><p class="sq-kicker">Guided Skin Type Finder · <?= $q-1 ?> of 7</p><?php sqQuestion('q'.$q,$sqQuestions['q'.$q]); ?><?php if($q===8):?><p class="sq-help">This observation is optional. You do not need to perform a tissue test; choose Not sure to skip.</p><?php endif; ?></section><?php endforeach; ?>
+            <section class="sq-panel" data-screen="sensitivity" hidden><h2>How does your skin react?</h2><p class="sq-subtitle">Sensitivity is separate from your primary skin type.</p><?php foreach(['q9','q10','q11'] as $q)sqQuestion($q,$sqQuestions[$q]); ?></section>
+            <?php if($sqBoot['observations']):?><section class="sq-panel" data-screen="observations" hidden><h2>What have you noticed?</h2><p class="sq-subtitle">Think about your usual skin over the last four weeks. These observations may suggest concerns for you to confirm. They do not diagnose a condition.</p><?php foreach($sqBoot['observations'] as $q)sqQuestion($q['question_key'],$sqQuestions[$q['question_key']]); ?></section><?php endif; ?>
+            <section class="sq-panel" data-screen="concerns" hidden><h2>What are your skin concerns?</h2><p class="sq-subtitle">Select all that apply. Suggested concerns need your confirmation before matching.</p><p class="sq-notice" id="sqConcernSuggestions" hidden></p><div class="sq-options sq-two-columns">
                 <?php foreach($sqChoices['concerns'] as $c):?><label class="sq-choice"><input type="checkbox" name="concerns" value="<?= (int)$c['id'] ?>"><span><?= sqEsc($c['label']) ?></span></label><?php endforeach; ?>
                 <label class="sq-choice"><input type="checkbox" id="sqNoConcerns"><span>No specific concern</span></label>
                 </div><p class="sq-help" id="sqConcernCount" aria-live="polite">0 concerns selected</p><label class="sq-field" id="sqMainConcernField" hidden>Which concern would you most like to improve first?<select id="sqMainConcern"><option value="">Select your main concern</option></select></label>
@@ -81,15 +86,17 @@ function sqQuestion(string $key,array $definition):void {?>
             <footer class="sq-actions" id="sqFormActions"><button type="button" class="sq-secondary" id="sqBack">← &nbsp;Back</button><button type="submit" class="sq-primary" id="sqNext">Continue &nbsp; →</button></footer>
         </form>
         <section id="sqReview" hidden aria-labelledby="sqResultTitle">
-            <div class="sq-panel sq-review-panel"><p class="sq-kicker" id="sqReviewLabel">Review your skin profile</p><h2 id="sqResultTitle" tabindex="-1"></h2><p class="sq-subtitle" id="sqResultDescription"></p><dl class="sq-summary" id="sqSummary"></dl><p class="sq-notice" id="sqSensitivityNotice" hidden>Frequent irritation was reported. Consider consulting a dermatologist, especially for severe or persistent reactions. These recommendations cannot identify an allergy or guarantee compatibility.</p>
-                <div id="sqClarification" hidden><h3>A little more about your skin</h3><p class="sq-help">Your answers overlap. Try these two clarification questions, or choose your skin type manually.</p><?php sqQuestion('f1',skinQuestions()['f1']);sqQuestion('f2',skinQuestions()['f2']); ?><button type="button" id="sqRecalculate" class="sq-primary">Update my preview</button></div>
+            <div class="sq-panel sq-review-panel"><p class="sq-kicker" id="sqReviewLabel">Review your skin profile</p><h2 id="sqResultTitle" tabindex="-1"></h2><p class="sq-subtitle" id="sqSkinTypeDescription" hidden></p><p class="sq-subtitle" id="sqResultDescription"></p><dl class="sq-summary" id="sqSummary"></dl><p class="sq-notice" id="sqSensitivityNotice" hidden>Frequent irritation was reported. Consider consulting a dermatologist, especially for severe or persistent reactions. These recommendations cannot identify an allergy or guarantee compatibility.</p>
+                <div id="sqClarification" hidden><h3>A little more about your skin</h3><p class="sq-help">Your answers overlap. Try these two clarification questions, or choose your skin type manually.</p><?php sqQuestion('f1',$sqQuestions['f1']);sqQuestion('f2',$sqQuestions['f2']); ?><button type="button" id="sqRecalculate" class="sq-primary">Update my preview</button></div>
                 <div class="sq-review-actions"><button type="button" class="sq-secondary" id="sqEdit">Edit answers</button><button type="button" class="sq-secondary" id="sqManualOverride" hidden>Choose skin type manually</button><button type="button" class="sq-primary" id="sqSave" <?= $sqCustomer?'':'hidden' ?>>Save Skin Profile</button><a class="sq-primary" id="sqLogin" href="<?= BASE_URL ?>/public/login.php" <?= $sqCustomer?'hidden':'' ?>>Log in to save profile</a></div><p id="sqSaveStatus" role="status"></p>
                 <fieldset id="sqRating" class="sq-rating" hidden><legend>How useful were these recommendations?</legend><div><?php foreach(range(1,5) as $n):?><button type="button" data-rating="<?= $n ?>" aria-label="<?= $n ?> out of 5" aria-pressed="false"><?= $n ?> ★</button><?php endforeach; ?></div><p id="sqRatingStatus" class="sq-help" role="status"></p></fieldset>
             </div>
+            <section class="sq-panel"><h2>What your answers may suggest</h2><p class="sq-help" id="sqResultEvidence"></p><div id="sqGuidance"></div></section>
             <section class="sq-recommendations"><h2>Your skincare recommendations</h2><p class="sq-help" id="sqMatchNotice"></p><div id="sqProducts" class="sq-product-grid"></div></section>
             <section class="sq-routine"><h2>Your example skincare routine</h2><p class="sq-help">Follow each product's label directions. This is an informational shopping guide, not a treatment plan.</p><div id="sqRoutine" class="sq-routine-grid"></div><div id="sqTargeted"></div></section>
         </section>
-        <p class="sq-disclaimer">The guided finder estimates your skin type using questionnaire rules. It is not a medical assessment.</p>
+        <details class="sq-panel"><summary>How this assessment works and its sources</summary><p>Answer from your usual experience over the past four weeks. Recent treatments, weather changes or an active rash can affect observations. You do not need to stop prescribed treatment, leave skin uncomfortable after cleansing, or deliberately test a product that irritates you. Choose Not sure when an observation is unavailable.</p><p>This is a research-informed shopping guide using adapted questions and custom scoring. It has not been clinically validated and is not the official Baumann questionnaire. Oiliness, sensitivity, skin concerns and ingredient preferences are assessed separately. Fitzpatrick sun-response and FACE-Q satisfaction measures do not determine your skin type here.</p><ul><?php foreach(SkinEvidence::sources() as $source):?><li><?php if($source['url']):?><a href="<?= sqEsc($source['url']) ?>" target="_blank" rel="noopener noreferrer"><?= sqEsc($source['title']) ?></a><?php else:?><?= sqEsc($source['title']) ?><?php endif;?><p class="sq-help"><?= sqEsc($source['scope']) ?></p></li><?php endforeach;?></ul></details>
+        <p class="sq-disclaimer">A questionnaire estimate cannot guarantee product compatibility or diagnose skin disease or an ingredient allergy. Persistent or severe symptoms need a clinician's assessment.</p>
     </div>
 </main>
 <?php include __DIR__.'/../includes/footer.php'; ?>

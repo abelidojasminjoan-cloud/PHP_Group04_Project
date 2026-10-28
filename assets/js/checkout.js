@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorBox = document.getElementById("pvCheckoutError");
 
     let submitting = false;
+    const cards = window.PureViaCards;
 
     // =========================================
     // HELPERS
@@ -251,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const cardSelected = selected?.value === "card";
             cardDetails.hidden = !cardSelected;
             cardDetails.disabled = !cardSelected;
+            if (cardSelected) cards?.initialize(updatePaymentSelection);
         }
 
         // Show COD information only when COD is selected
@@ -294,25 +296,13 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // =====================================
-        // GCASH / CARD
-        // =====================================
-
         if (paymentNotice) {
             paymentNotice.hidden = false;
-
-            if (selected.value === "gcash") {
-                paymentNotice.textContent =
-                    "GCash payment will be available once a payment gateway is connected.";
-            } else {
-                paymentNotice.textContent =
-                    "Credit and debit card payments will be available once a payment gateway is connected.";
-            }
+            paymentNotice.textContent = config.paypalConfigured
+                ? (selected.value === "card" ? "Enter your card details below. Payment is processed securely by PayPal." : "Sign in to your PayPal account to approve payment securely.")
+                : "PayPal is not configured yet. Please choose Cash on Delivery.";
         }
-
-        if (placeOrder) {
-            placeOrder.disabled = true;
-        }
+        if (placeOrder) placeOrder.disabled = submitting || !config.canCheckout || !deliveryComplete() || !config.paypalConfigured || (selected.value === "card" && !cards?.ready);
     }
 
     // =========================================
@@ -359,14 +349,30 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Only COD is currently supported
-        if (selectedPayment.value !== "cod") {
+        // Only supported server-side payment methods are accepted.
+        if (!["cod", "card", "paypal"].includes(selectedPayment.value)) {
             showError(
-                "Please select Cash on Delivery to continue."
+                "Please select Cash on Delivery, Debit or Credit Card, or PayPal Account."
             );
             return;
         }
 
+        if (selectedPayment.value === "card") {
+            if (!validateAddress()) return;
+            updateAddressPreview();
+            if (!cards?.ready) { showError("Secure card fields are not ready. Check the message below Card details."); return; }
+            submitting = true;
+            placeOrder.disabled = true;
+            placeOrderText.textContent = "Checking payment...";
+            try { await cards.submit(); }
+            catch (error) { showError(error.message || "Unable to complete card payment. Check its payment status before retrying."); }
+            finally {
+                submitting = false;
+                placeOrderText.textContent = `Place order \u00b7 ${money(config.total || 0)}`;
+                updatePaymentSelection();
+            }
+            return;
+        }
         // Prevent duplicate submissions
         submitting = true;
 
@@ -422,6 +428,10 @@ document.addEventListener("DOMContentLoaded", () => {
             // HANDLE FAILED ORDER
             // =================================
 
+            if (response.status === 409 && result.redirect_url) {
+                const retryUrl = new URL(result.redirect_url, location.href);
+                if (retryUrl.origin === location.origin) { location.assign(retryUrl.href); return; }
+            }
             if (!response.ok || !result.success) {
                 throw new Error(
                     result.message ||

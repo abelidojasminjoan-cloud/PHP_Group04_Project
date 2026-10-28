@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/AuditContext.php';
 
 // Shared login completion, including password-only testing when explicitly enabled.
 
@@ -177,6 +178,7 @@ function pvCompleteLogin(mysqli $conn, int $userId, bool $secondFactorVerified):
         $stmt->execute();
         $stmt->close();
 
+        recordPureViaAuthAudit($conn, $userId, 'LOGIN');
         $conn->commit();
 
     } catch (Throwable $e) {

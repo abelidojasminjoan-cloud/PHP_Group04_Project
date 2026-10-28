@@ -69,6 +69,22 @@ document.addEventListener("DOMContentLoaded", () => {
             control("Status", "status", record?.status || "active", "select", [["active", "Active"], ["inactive", "Inactive"]]); name.focus();
         }
     }
+    function questionEditor(id, deleting = false) {
+        const r = id ? c.questionBank.find(q => Number(q.id) === id) : null;
+        if (id && !r) return;
+        open(deleting ? "Delete observation question" : id ? "Edit assessment question" : "Add observation question", "Custom questions are not clinically validated. Changes affect new assessments; saved answers keep their original wording.");
+        current = { action: deleting ? "question.delete" : "question.save", id, revision: Number(r?.revision || 0) };
+        if (deleting) { fields.append(node("p", `Delete ${r.prompt}? Existing assessment snapshots are retained.`)); el("saSubmit").textContent = "Delete question"; return; }
+        control("Question", "prompt", r?.prompt || "", "textarea").maxLength = 1000;
+        const options = r ? JSON.parse(r.options_json) : ["Yes", "No", "Not sure"];
+        fields.append(node("p", r?.is_core ? "Preserve each answer's meaning and order. Scoring rules remain fixed." : "Keep answer meanings: A = symptom present, B = absent, C = unsure. Concern suggestions require customer confirmation.", "sa-help"));
+        options.forEach((o, i) => { control(`Answer ${String.fromCharCode(65 + i)}`, `option_${i}`, o).maxLength = 300; });
+        control("Supplied source", "source_key", r?.source_key || "baumann", "select", Object.entries(c.sources).map(([k, v]) => [k, v.title]));
+        control("Evidence note / adaptation limits", "rationale", r?.rationale || "Original symptom observation informed by the supplied reference; not a validated diagnostic question.", "textarea").maxLength = 2000;
+        if (!r?.is_core) control("Concern to suggest when Yes (optional)", "concern_id", r?.concern_id || "", "select", [["", "No concern mapping"], ...c.concerns.map(v => [String(v.id), v.label])]);
+        control("Status", "status", r?.status || "active", "select", r?.is_core ? [["active", "Active"]] : [["active", "Active"], ["inactive", "Inactive"]]);
+        current.optionCount = options.length;
+    }
     async function assessmentViewer(id) {
         open("Assessment Details", "Loading assessment…"); el("saSubmit").hidden = true;
         try {
@@ -78,11 +94,15 @@ document.addEventListener("DOMContentLoaded", () => {
             fields.append(detail);
             if (p.assessment) { fields.append(node("h3", "Skin-type scores", "sa-detail-title")); const scores = node("p", Object.entries(p.assessment.scores).map(([type, score]) => `${type}: ${score}`).join(" · "), "sa-help"); fields.append(scores); }
             fields.append(node("h3", "Questionnaire Answers", "sa-detail-title"));
-            for (const [key, answer] of Object.entries(p.answers)) if (answer && c.questions[key]) { const row = node("div", undefined, "sa-answer"); row.append(node("strong", c.questions[key][0]), node("p", c.questions[key][1][answer.charCodeAt(0) - 65] || "Not answered")); fields.append(row); }
+            fields.append(node("p", `Questionnaire: ${p.questionnaire_version || "legacy (original wording unavailable)"}. Rules: ${p.rule_version || "legacy"}. Scores are not accuracy percentages.`, "sa-help"));
+            const definitions = p.questionnaire_snapshot || c.questions;
+            for (const [key, answer] of Object.entries(p.answers)) if (answer && definitions[key]) { const row = node("div", undefined, "sa-answer"); row.append(node("strong", definitions[key][0]), node("p", definitions[key][1][answer.charCodeAt(0) - 65] || "Not answered")); fields.append(row); }
         } catch (e) { if (e.name !== "AbortError") error(e.message || "Unable to load assessment."); }
     }
-    document.addEventListener("click", event => { const target = event.target.closest("[data-sa-type],[data-sa-delete],[data-sa-tag],[data-sa-tag-delete],[data-sa-suitability],[data-sa-assessment],[data-sa-close]"); if (!target || pending) return;
+    document.addEventListener("click", event => { const target = event.target.closest("[data-sa-question],[data-sa-question-delete],[data-sa-type],[data-sa-delete],[data-sa-tag],[data-sa-tag-delete],[data-sa-suitability],[data-sa-assessment],[data-sa-close]"); if (!target || pending) return;
         if (target.hasAttribute("data-sa-close")) close();
+        else if (target.hasAttribute("data-sa-question")) questionEditor(Number(target.dataset.saQuestion));
+        else if (target.hasAttribute("data-sa-question-delete")) questionEditor(Number(target.dataset.saQuestionDelete), true);
         else if (target.hasAttribute("data-sa-type")) typeEditor(Number(target.dataset.saType));
         else if (target.hasAttribute("data-sa-delete")) typeEditor(Number(target.dataset.saDelete), true);
         else if (target.hasAttribute("data-sa-tag")) tagEditor(Number(target.dataset.saTag));
@@ -95,6 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault(); if (pending || !current || !form.reportValidity()) return; pending = true; el("saSubmit").disabled = true; el("saFormError").hidden = true;
         const data = new FormData(form), payload = { ...current, csrf_token: c.csrfToken };
         if (["type.save", "tag.save"].includes(current.action)) for (const key of ["name", "description", "status"]) payload[key] = data.get(key);
+        if (current.action === "question.save") { for (const key of ["prompt", "source_key", "rationale", "status"]) payload[key] = data.get(key); payload.concern_id = data.get("concern_id") || ""; payload.options = Array.from({ length: current.optionCount }, (_, i) => data.get(`option_${i}`)); }
         if (current.action === "suitability.save") { for (const key of ["product_skin_types", "product_concerns", "product_ingredients"]) payload[key] = data.getAll(key); for (const key of ["ingredients_complete", "gentle", "targeted_approved", "sunscreen_verified"]) payload[key] = data.has(key); for (const key of ["routine_role", "usage_period", "routine_instructions"]) payload[key] = data.get(key); }
         try { const response = await fetch(`${c.baseUrl}/actions/admin/skin.php`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(payload) }); const result = await response.json(); if (!response.ok || !result.success) throw new Error(result.message || "Unable to save this record."); window.location.reload(); }
         catch (e) { error(e.message || "Unable to save this record."); pending = false; el("saSubmit").disabled = false; }

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| PUREVIA - CASH ON DELIVERY CHECKOUT
+| PUREVIA - PAYPAL AND CASH ON DELIVERY CHECKOUT
 | File: actions/checkout/place_order.php
 |--------------------------------------------------------------------------
 | No checkout-order.php helper is required.
@@ -61,19 +61,30 @@ try {
         checkoutReply(403, false, 'Invalid security token.');
     }
 
-    // Only COD is currently supported
-    if (($_POST['payment_method'] ?? '') !== 'cod') {
-        checkoutReply(
-            422,
-            false,
-            'Please select Cash on Delivery.'
-        );
-    }
+    require_once __DIR__ . '/../../services/PayPalCheckout.php';
+    $paymentMethod = $_POST['payment_method'] ?? '';
+    if (!in_array($paymentMethod, ['cod', 'card', 'paypal'], true)) checkoutReply(422, false, 'Choose Cash on Delivery, Debit or Credit Card, or PayPal Account.');
+    if ($paymentMethod !== 'cod' && !PayPalClient::configured()) checkoutReply(422, false, 'PayPal is not configured yet. Choose Cash on Delivery.');
 
     $checkoutToken = $_POST['checkout_token'] ?? '';
 
     if (!is_string($checkoutToken) || $checkoutToken === '') {
         checkoutReply(409, false, 'Invalid checkout session.');
+    }
+
+    // A durable checkout key prevents duplicate reservations across retries and sessions.
+    $requestKey = substr(hash('sha256', $userId . ':' . $checkoutToken), 0, 40);
+    if ($paymentMethod !== 'cod') {
+        $s = $conn->prepare('SELECT pc.order_id FROM paypal_checkouts pc JOIN orders o ON o.id=pc.order_id WHERE pc.request_key=? AND o.user_id=?');
+        $s->bind_param('si', $requestKey, $userId); $s->execute();
+        if ($existing = $s->get_result()->fetch_assoc()) checkoutReply(200, true, 'Resume your PayPal checkout.', ['order_id'=>(int)$existing['order_id'],'redirect_url'=>BASE_URL.'/public/paypal-payment.php?order_id='.$existing['order_id']]);
+    }
+    if (!empty($_SESSION['paypal_pending_order_id'])) {
+        $pendingId = (int) $_SESSION['paypal_pending_order_id'];
+        $s = $conn->prepare("SELECT pc.order_id FROM paypal_checkouts pc JOIN orders o ON o.id=pc.order_id WHERE pc.order_id=? AND o.user_id=? AND pc.state='pending'");
+        $s->bind_param('ii', $pendingId, $userId); $s->execute();
+        if ($s->get_result()->fetch_assoc()) checkoutReply(409, false, 'Finish or cancel your existing PayPal checkout first.', ['redirect_url'=>BASE_URL.'/public/paypal-payment.php?order_id='.$pendingId]);
+        unset($_SESSION['paypal_pending_order_id'], $_SESSION['paypal_pending_token']);
     }
 
     // Handle a repeated request after a successful order.
@@ -567,7 +578,7 @@ try {
 
             // Remove only purchased cart items.
             $deleteStmt->bind_param('i', $cartItemId);
-            $deleteStmt->execute();
+            if ($paymentMethod === 'cod') $deleteStmt->execute();
         }
 
         $itemStmt->close();
@@ -597,7 +608,7 @@ try {
 
         // Record COD as a pending payment.
         // No payment gateway or online charge occurs.
-        $paymentMethod = 'cod';
+        $storedPaymentMethod = $paymentMethod !== 'cod' ? 'online' : 'cod';
 
         $stmt = $conn->prepare("
             INSERT INTO payments (
@@ -611,16 +622,35 @@ try {
         $stmt->bind_param(
             'iss',
             $orderId,
-            $paymentMethod,
+            $storedPaymentMethod,
             $total
         );
 
         $stmt->execute();
         $stmt->close();
 
+        if ($paymentMethod !== 'cod') {
+            $snapshot = json_encode(['payment_preference'=>$paymentMethod,'items'=>array_map(static fn(array $item): array => [
+                'cart_item_id'=>(int)$item['cart_item_id'], 'product_variant_id'=>(int)$item['product_variant_id'],
+                'product_id'=>(int)$item['product_id'], 'quantity'=>(int)$item['quantity']
+            ], $items)], JSON_THROW_ON_ERROR);
+            $environment = PayPalClient::mode();
+            $s = $conn->prepare('INSERT INTO paypal_checkouts(order_id,request_key,environment,items_snapshot) VALUES(?,?,?,?)');
+            $s->bind_param('isss', $orderId, $requestKey, $environment, $snapshot); $s->execute();
+        }
+
         // Commit all changes together.
         $conn->commit();
         $inTransaction = false;
+
+        if ($paymentMethod !== 'cod') {
+            $_SESSION['paypal_pending_order_id'] = $orderId;
+            $_SESSION['paypal_pending_token'] = $checkoutToken;
+            checkoutReply(200, true, 'Continue with PayPal to complete payment.', [
+                'order_id'=>$orderId,
+                'redirect_url'=>BASE_URL.'/public/paypal-payment.php?order_id='.$orderId
+            ]);
+        }
 
         $_SESSION['confirmed_order_id'] = $orderId;
         $_SESSION['completed_checkout_token'] = $checkoutToken;
@@ -658,7 +688,7 @@ try {
         }
 
         error_log(
-            'PureVia COD checkout: ' . $e->getMessage()
+            'PureVia checkout: ' . $e->getMessage()
         );
 
         checkoutReply(

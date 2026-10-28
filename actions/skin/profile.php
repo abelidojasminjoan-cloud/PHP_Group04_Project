@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/../../includes/skin_api.php';
 require_once __DIR__.'/../../services/SkinProfile.php';
 require_once __DIR__.'/../../services/SkinMatcher.php';
+require_once __DIR__.'/../../services/SkinQuestionBank.php';
 try{
     $data=skinApiData();$action=$data['action']??null;
     if($action==='rate'){
@@ -15,7 +16,9 @@ try{
     $token=$data['assessment_token']??null;$entry=is_string($token)?($_SESSION['skin_assessment_tokens'][$token]??null):null;
     if(!$entry||$entry['expires']<time())skinReply(['success'=>false,'message'=>'This assessment has expired. Refresh the page to start again.'],403);
     $userId=$action==='save'?skinApiUser($conn,[3]):0;
-    $p=SkinProfile::validate($conn,$data);$matches=SkinMatcher::match($conn,$p);$id=null;
+    $bank=SkinQuestionBank::rows($conn);
+    if(!isset($entry['questionnaire_version'])||!hash_equals($entry['questionnaire_version'],SkinQuestionBank::fingerprint($bank)))skinReply(['success'=>false,'message'=>'The questions changed while you were answering. Refresh to start with the current version.'],409);
+    $p=SkinProfile::validate($conn,$data,$bank);$matches=SkinMatcher::match($conn,$p);$id=null;
     if($action==='save')$id=SkinProfile::save($conn,$userId,$p,$token,$entry['origin']);
     skinReply(['success'=>true,'profile'=>$p,'matches'=>$matches,'saved'=>$action==='save','assessment_id'=>$id]);
 }catch(JsonException|InvalidArgumentException $e){skinReply(['success'=>false,'message'=>$e instanceof JsonException?'Invalid submitted data.':$e->getMessage()],422);}

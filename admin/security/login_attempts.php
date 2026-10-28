@@ -5,6 +5,7 @@
 ========================================================= */
 
 require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/ip-address.php';
 requirePureViaAdmin($conn);
 
 $pageTitle = 'Login Attempts';
@@ -151,7 +152,7 @@ $totalAttempts = count($loginAttempts);
 
                 <p>
 
-                    <span id="loginAttemptCount">
+                    <span id="loginAttemptCount" aria-live="polite">
                         <?= $totalAttempts ?>
                     </span>
 
@@ -190,7 +191,7 @@ $totalAttempts = count($loginAttempts);
 
                     <input
                         type="search"
-                        id="loginAttemptSearch"
+                        id="loginAttemptSearch" aria-label="Search login attempts"
                         placeholder="Search login attempts..."
                         autocomplete="off"
                     >
@@ -204,7 +205,7 @@ $totalAttempts = count($loginAttempts);
 
                     <i class="fa-solid fa-filter filter-leading-icon"></i>
 
-                    <select id="loginResultFilter">
+                    <select id="loginResultFilter" aria-label="Filter login attempts by result">
 
                         <option value="all">
                             All Results
@@ -231,7 +232,7 @@ $totalAttempts = count($loginAttempts);
 
                     <i class="fa-solid fa-globe filter-leading-icon"></i>
 
-                    <select id="loginBrowserFilter">
+                    <select id="loginBrowserFilter" aria-label="Filter login attempts by browser">
 
                         <option value="all">
                             All Browsers
@@ -383,7 +384,7 @@ $totalAttempts = count($loginAttempts);
 
                             $searchValue = strtolower(
                                 $email . ' '
-                                . $ipAddress . ' '
+                                . $ipAddress . ' ' . pureViaIpLabel($ipAddress) . ' '
                                 . $browser . ' '
                                 . $resultValue . ' '
                                 . $reason . ' '
@@ -451,9 +452,7 @@ $totalAttempts = count($loginAttempts);
 
                                     <span class="login-ip-address">
 
-                                        <?= pvHtml(
-                                            $ipAddress
-                                        ) ?>
+                                        <?= pvHtml(pureViaIpLabel($ipAddress)) ?>
 
                                     </span>
 

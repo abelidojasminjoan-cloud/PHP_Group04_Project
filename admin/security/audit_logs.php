@@ -5,6 +5,7 @@
 ========================================================= */
 
 require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/ip-address.php';
 requirePureViaAdmin($conn);
 
 $pageTitle = 'Audit Logs';
@@ -28,6 +29,7 @@ $sql = "
         al.record_id,
         al.description,
         al.ip_address,
+        al.browser,
         al.created_at,
 
         u.first_name,
@@ -163,7 +165,7 @@ ksort($modules);
 
     <link
         rel="stylesheet"
-        href="../../assets/css/audit_logs.css"
+        href="../../assets/css/audit_logs.css?v=<?= filemtime(__DIR__ . '/../../assets/css/audit_logs.css') ?>"
     >
 
     <!-- Responsive adjustments -->
@@ -414,6 +416,8 @@ ksort($modules);
                                 DATE &amp; TIME
                             </th>
 
+                            <th>IP ADDRESS</th>
+                            <th>BROWSER</th>
                             <th>
                                 DETAILS
                             </th>
@@ -570,7 +574,7 @@ ksort($modules);
                                     . $dateDisplay . ' '
                                     . $details . ' '
                                     . ($log['record_id'] ?? '') . ' '
-                                    . ($log['ip_address'] ?? '')
+                                    . ($log['ip_address'] ?? '') . ' ' . ($log['browser'] ?? '')
                                 );
 
                             ?>
@@ -666,6 +670,8 @@ ksort($modules);
                                 </td>
 
 
+                                <td><span class="audit-ip"><?= !empty($log['ip_address']) ? pvHtml(pureViaIpLabel($log['ip_address'])) : '&mdash;' ?></span></td>
+                                <td><span class="audit-browser"><?= !empty($log['browser']) ? pvHtml($log['browser']) : '&mdash;' ?></span></td>
                                 <!-- DETAILS -->
 
                                 <td>
@@ -702,7 +708,7 @@ ksort($modules);
                             : '' ?>
                     >
 
-                        <td colspan="5">
+                        <td colspan="7">
 
                             <div class="no-audit-message">
 

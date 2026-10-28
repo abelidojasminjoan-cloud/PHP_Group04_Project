@@ -318,6 +318,7 @@ $csrfToken = $_SESSION['csrf_token'];
           href="<?= BASE_URL ?>/assets/css/footer.css">
 
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/product_details.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/product-favorites.css?v=<?= filemtime(__DIR__ . '/../assets/css/product-favorites.css') ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/search.css">
 
     <link rel="stylesheet"
@@ -430,9 +431,10 @@ $csrfToken = $_SESSION['csrf_token'];
                 <?php endif; ?>
             </p>
 
-            <h1 class="pd-title">
-                <?= pdEsc($product['product_name']) ?>
-            </h1>
+            <div class="pd-title-row">
+                <h1 class="pd-title"><?= pdEsc($product['product_name']) ?></h1>
+                <?php include __DIR__ . '/../includes/product_favorite_button.php'; ?>
+            </div>
 
             <!-- RATINGS AND STOCK -->
 

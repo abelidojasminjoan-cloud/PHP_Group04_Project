@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/SkinTypeFinder.php';
+require_once __DIR__.'/SkinQuestionBank.php';
 final class SkinProfile
 {
     public static function choices(mysqli $conn): array
@@ -9,11 +10,13 @@ final class SkinProfile
             'concerns'=>$conn->query("SELECT id,concern_name AS label FROM skin_concerns WHERE status='active' ORDER BY concern_name")->fetch_all(MYSQLI_ASSOC),
             'ingredients'=>$conn->query("SELECT id,ingredient_name AS label FROM ingredients WHERE status='active' ORDER BY ingredient_name")->fetch_all(MYSQLI_ASSOC)];
     }
-    public static function validate(mysqli $conn,array $data): array
+    public static function validate(mysqli $conn,array $data,?array $bank=null): array
     {
         $method=$data['assessment_method']??null;
         if(!is_string($method)||!in_array($method,['manual','guided'],true))throw new InvalidArgumentException('Choose manual selection or the guided finder.');
-        $raw=$data['answers']??[];if(!is_array($raw)||count($raw)>12)throw new InvalidArgumentException('Invalid assessment answers.');
+        $raw=$data['answers']??[];if(!is_array($raw)||count($raw)>200)throw new InvalidArgumentException('Invalid assessment answers.');
+        $bank??=SkinQuestionBank::rows($conn);$definitions=SkinQuestionBank::definitions($bank);
+        foreach($raw as $key=>$value)if(!isset($definitions[$key]))throw new InvalidArgumentException('Unknown assessment question. Refresh and try again.');
         $answers=[];
         foreach(array_merge(array_map(fn($q)=>'q'.$q,range(2,11)),['f1','f2']) as $key){
             if($method==='manual'&&!in_array($key,['q9','q10','q11'],true))continue;
@@ -22,6 +25,13 @@ final class SkinProfile
             $answers[$key]=$value;
         }
         foreach(['q9','q10','q11'] as $key)if($answers[$key]==='')throw new InvalidArgumentException('Answer all sensitivity questions. You may choose Not sure.');
+        $observed=[];
+        foreach($bank as $question)if(!$question['is_core']){
+            $key=$question['question_key'];$value=$raw[$key]??'C';
+            if(!is_string($value)||!in_array($value,['A','B','C'],true))throw new InvalidArgumentException('Choose a valid observation answer.');
+            $answers[$key]=$value;
+            if($value==='A'&&$question['concern_id'])$observed[]=['concern_id'=>(int)$question['concern_id'],'question'=>$question['prompt'],'source'=>$question['source_key']];
+        }
         $assessment=$method==='guided'?SkinTypeFinder::assess($answers):null;
         $type=$method==='manual'?($data['skin_type']??null):$assessment['skin_type'];
         if($method==='manual'&&(!is_string($type)||!in_array($type,SkinTypeFinder::TYPES,true)))throw new InvalidArgumentException('Select Normal, Dry, Oily, or Combination.');
@@ -50,18 +60,22 @@ final class SkinProfile
         if(!is_string($routine)||!in_array($routine,['basic','targeted','unsure'],true))throw new InvalidArgumentException('Choose a routine preference.');
         return ['assessment_method'=>$method,'skin_type'=>$type,'skin_type_id'=>$typeId,'skin_type_label'=>$typeLabel,'assessment'=>$assessment,'answers'=>$answers,
             'sensitivity'=>SkinTypeFinder::sensitivity($answers),'concerns'=>$concerns,'main_concern_id'=>$main,'ingredient_preference'=>$preference,
-            'avoided_ingredients'=>$avoided,'avoidance_reason'=>$avoided?$reason:'','routine_preference'=>$routine];
+            'avoided_ingredients'=>$avoided,'avoidance_reason'=>$avoided?$reason:'','routine_preference'=>$routine,
+            'questionnaire_version'=>SkinQuestionBank::fingerprint($bank),'rule_version'=>SkinEvidence::VERSION,'questionnaire_snapshot'=>$definitions,'question_evidence'=>$bank,'observed_concerns'=>$observed];
     }
     public static function load(mysqli $conn,int $userId): ?array
     {
         $s=$conn->prepare('SELECT p.*,t.assessment_key,t.skin_type_name FROM skin_profiles p LEFT JOIN skin_types t ON t.id=p.skin_type_id WHERE p.user_id=?');$s->bind_param('i',$userId);$s->execute();$r=$s->get_result()->fetch_assoc();if(!$r)return null;
         $s=$conn->prepare('SELECT concern_id FROM skin_profile_concerns WHERE skin_profile_id=?');$s->bind_param('i',$r['id']);$s->execute();$concerns=array_map('intval',array_column($s->get_result()->fetch_all(MYSQLI_ASSOC),'concern_id'));
         $s=$conn->prepare('SELECT ingredient_id FROM user_avoided_ingredients WHERE user_id=?');$s->bind_param('i',$userId);$s->execute();$avoided=array_map('intval',array_column($s->get_result()->fetch_all(MYSQLI_ASSOC),'ingredient_id'));
-        $answers=json_decode($r['assessment_answers']??'{}',true);$answers=is_array($answers)?$answers:[];$method=$r['assessment_method']??($r['skin_type_source']==='finder'?'guided':'manual');
+        $stored=json_decode($r['assessment_answers']??'{}',true);$stored=is_array($stored)?$stored:[];
+        $answers=$stored['answers']??$stored;$method=$r['assessment_method']??($r['skin_type_source']==='finder'?'guided':'manual');
         return ['assessment_method'=>$method,'skin_type'=>$r['assessment_key'],'skin_type_id'=>$r['assessment_key']?(int)$r['skin_type_id']:null,'skin_type_label'=>$r['assessment_key']?$r['skin_type_name']:null,
-            'assessment'=>$method==='guided'?SkinTypeFinder::assess($answers):null,'answers'=>$answers,'sensitivity'=>['level'=>$r['sensitivity_level']??'unknown','score'=>$r['sensitivity_score']===null?null:(float)$r['sensitivity_score'],'frequent_reaction'=>SkinTypeFinder::sensitivity($answers)['frequent_reaction']],
+            'assessment'=>$stored['assessment']??null,'answers'=>$answers,'sensitivity'=>['level'=>$r['sensitivity_level']??'unknown','score'=>$r['sensitivity_score']===null?null:(float)$r['sensitivity_score'],'frequent_reaction'=>SkinTypeFinder::sensitivity($answers)['frequent_reaction']],
             'concerns'=>$concerns,'main_concern_id'=>$r['main_concern_id']?(int)$r['main_concern_id']:null,'ingredient_preference'=>$avoided?'selected':$r['ingredient_preference'],
-            'avoided_ingredients'=>$avoided,'avoidance_reason'=>$r['avoidance_reason']??'','routine_preference'=>$r['routine_preference']];
+            'avoided_ingredients'=>$avoided,'avoidance_reason'=>$r['avoidance_reason']??'','routine_preference'=>$r['routine_preference'],
+            'questionnaire_version'=>$stored['questionnaire_version']??'legacy','rule_version'=>$stored['rule_version']??'legacy','questionnaire_snapshot'=>$stored['questionnaire_snapshot']??[],
+            'observed_concerns'=>$stored['observed_concerns']??[]];
     }
     public static function save(mysqli $conn,int $userId,array $p,string $token,string $origin): int
     {
@@ -72,7 +86,7 @@ final class SkinProfile
             $s=$conn->prepare('SELECT id,user_id,profile_snapshot FROM skin_assessments WHERE submission_key=?');$s->bind_param('s',$token);$s->execute();$old=$s->get_result()->fetch_assoc();
             if($old){if((int)$old['user_id']!==$userId||$old['profile_snapshot']!==$snapshot)throw new InvalidArgumentException('This assessment has already been saved. Start a new assessment to make changes.');$conn->commit();return (int)$old['id'];}
             $type=$p['skin_type_id'];$level=$p['sensitivity']['level']==='unknown'?null:$p['sensitivity']['level'];$score=$p['sensitivity']['score'];$method=$p['assessment_method'];$source=$method==='guided'?'finder':'manual';
-            $main=$p['main_concern_id'];$pref=$p['ingredient_preference'];$reason=$p['avoidance_reason']?:null;$routine=$p['routine_preference'];$answers=json_encode($p['answers'],JSON_THROW_ON_ERROR);
+            $main=$p['main_concern_id'];$pref=$p['ingredient_preference'];$reason=$p['avoidance_reason']?:null;$routine=$p['routine_preference'];$answers=json_encode(array_intersect_key($p,array_flip(['answers','assessment','questionnaire_version','rule_version','questionnaire_snapshot','question_evidence','observed_concerns'])),JSON_THROW_ON_ERROR);
             $s=$conn->prepare('INSERT INTO skin_profiles(user_id,skin_type_id,sensitivity_level,skin_type_source,assessment_method,sensitivity_score,main_concern_id,ingredient_preference,avoidance_reason,routine_preference,assessment_answers) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE skin_type_id=VALUES(skin_type_id),sensitivity_level=VALUES(sensitivity_level),skin_type_source=VALUES(skin_type_source),assessment_method=VALUES(assessment_method),sensitivity_score=VALUES(sensitivity_score),main_concern_id=VALUES(main_concern_id),ingredient_preference=VALUES(ingredient_preference),avoidance_reason=VALUES(avoidance_reason),routine_preference=VALUES(routine_preference),assessment_answers=VALUES(assessment_answers),updated_at=CURRENT_TIMESTAMP');
             $s->bind_param('iisssdissss',$userId,$type,$level,$source,$method,$score,$main,$pref,$reason,$routine,$answers);$s->execute();
             $s=$conn->prepare('SELECT id FROM skin_profiles WHERE user_id=?');$s->bind_param('i',$userId);$s->execute();$profileId=(int)$s->get_result()->fetch_assoc()['id'];

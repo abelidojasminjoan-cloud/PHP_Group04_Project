@@ -21,6 +21,7 @@ error_log
 /tmp/
 /temp/
 /cache/
+/.codex-tools/
 
 # Local configuration overrides
 config/*.local.php

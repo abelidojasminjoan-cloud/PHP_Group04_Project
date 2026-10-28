@@ -19,3 +19,9 @@
 .pv-product-favorite[aria-pressed="true"] { color: #c73728; }
 .pv-product-favorite[aria-pressed="true"] svg { fill: currentColor; }
 .pv-product-favorite:focus-visible { outline: 2px solid #38634e; outline-offset: 3px; }
+
+/* Product detail title heart uses the shared favorites control. */
+.pd-title-row { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.pd-title-row .pd-title { flex: 1; min-width: 0; margin: 0; }
+.pd-title-row .pv-product-favorite { position: static; flex: 0 0 40px; margin-top: 2px; border-color: transparent; background: transparent; }
+.pd-title-row .pv-product-favorite:hover { background: #eeeae2; }

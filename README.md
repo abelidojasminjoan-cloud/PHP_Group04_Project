@@ -55,3 +55,7 @@ Install the following:
 5. Open a browser and go to "https://localhost//PureVia/"
 6. Then the PureVia website should be accessible now
 
+For the research-informed skin assessment and admin question bank, run
+`php tools/migrate-skin-questions.php` after the existing skin-profile schema is installed.
+See [assessment evidence, limitations and verification](docs/skin-assessment-evidence.md).
+
