@@ -755,6 +755,20 @@ body {
     color: #8d7c6e;
 }
 
+.status-pending { background: #fff0d0; color: #aa6a13; }
+
+#userModal .user-form-help {
+    margin: 8px 0 18px;
+    color: #81756c;
+    font-size: 12px;
+    line-height: 1.6;
+}
+#userModal [hidden] { display: none; }
+#userModal :disabled { cursor: not-allowed; opacity: .65; }
+@media (max-width: 480px) {
+    #userModal .form-grid-2 { grid-template-columns: 1fr; }
+}
+
 
 /* =========================================================
    JOINED DATE
