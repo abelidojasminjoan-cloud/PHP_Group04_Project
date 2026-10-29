@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../services/AccountLockout.php';
+require_once __DIR__ . '/../../services/StaffAccounts.php';
 $passwordPolicy = securityPolicy($conn);
 
 
@@ -142,7 +143,7 @@ try {
     $stmt = $conn->prepare("
         SELECT
             u.id, u.first_name, u.last_name, u.email, u.password, u.status,
-            u.failed_login_attempts, u.locked_until,
+            u.failed_login_attempts, u.locked_until, u.session_version,
             u.role_id, u.totp_enabled_at,
             (SELECT r.role_name FROM roles r WHERE r.id = u.role_id) AS role_name
         FROM users u
@@ -192,6 +193,22 @@ try {
         rejectLogin($email, 'Invalid email or password.');
     }
 
+    // A correct password on a pending staff account starts email activation only.
+    // It never establishes staff access or a successful-login session.
+    if ((int) $user['role_id'] === 2 && $user['status'] === 'pending') {
+        $notice = preparePureViaStaffVerification($conn, $user);
+        recordLoginAttempt($conn, $userId, $email, false, 'Staff email verification required.');
+        $conn->commit();
+        session_regenerate_id(true);
+        $_SESSION = [
+            'csrf_token' => bin2hex(random_bytes(32)),
+            'pending_verification_user_id' => $userId,
+            'otp_notice' => $notice,
+            'login_email' => $email,
+        ];
+        header('Location: ' . BASE_URL . '/public/verify-email.php', true, 303);
+        exit;
+    }
     if ($user['status'] !== 'active') {
         recordLoginAttempt($conn, $userId, $email, false, 'Account is not active.');
         $conn->commit();
@@ -243,6 +260,7 @@ unset(
 
 // Save the pending 2FA challenge.
 $_SESSION['pending_2fa_user_id'] = $userId;
+$_SESSION['pending_2fa_session_version'] = (int) $user['session_version'];
 $_SESSION['pending_2fa_started'] = time();
 $_SESSION['pending_2fa_attempts'] = 0;
 

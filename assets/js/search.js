@@ -1,6 +1,6 @@
 
 document.addEventListener("DOMContentLoaded", function () {
-    const BASE_URL = "/purevia_website";
+    const BASE_URL = window.PUREVIA_BASE_URL ?? "/purevia_website";
 
     const trigger = document.getElementById("pvSearchTrigger");
     const panel = document.getElementById("pvSearchPanel");

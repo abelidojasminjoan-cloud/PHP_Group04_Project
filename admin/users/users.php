@@ -20,6 +20,7 @@ $users = $conn->query("
 ")->fetch_all(MYSQLI_ASSOC);
 
 $totalUsers = count($users);
+if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 ?>
 
 <!DOCTYPE html>
@@ -140,18 +141,15 @@ $totalUsers = count($users);
                 </div>
 
 
-                <a
-                    href="./add.php"
-                    class="add-user-button"
-                >
+                <button type="button" id="addStaffButton" class="add-user-button">
 
                     <i class="fa-solid fa-plus"></i>
 
                     <span>
-                        Add User
+                        Add Staff
                     </span>
 
-                </a>
+                </button>
 
             </section>
 
@@ -492,6 +490,8 @@ $totalUsers = count($users);
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
+<?php include __DIR__ . '/../../includes/staff-account-dialog.php'; ?>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/staff-account.js"></script>
 </body>
 
 </html>

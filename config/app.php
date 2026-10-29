@@ -49,10 +49,18 @@ define(
     strtolower($_ENV['APP_ENV'] ?? 'local')
 );
 
+// The built-in server serves public/ at the origin, without the XAMPP folder prefix.
+$isPublicDevServer = PHP_SAPI === 'cli-server';
+$devServerName = $_SERVER['SERVER_NAME'] ?? 'localhost';
+if (!preg_match('/\A[a-zA-Z0-9.-]+\z/', $devServerName)) {
+    $devServerName = 'localhost';
+}
+$devServerOrigin = 'http://' . $devServerName . ':' . (int) ($_SERVER['SERVER_PORT'] ?? 8000);
+
 define(
     'APP_URL',
     rtrim(
-        $_ENV['APP_URL'] ?? 'http://localhost/purevia_website',
+        $isPublicDevServer ? $devServerOrigin : ($_ENV['APP_URL'] ?? 'http://localhost/purevia_website'),
         '/'
     )
 );
@@ -117,7 +125,7 @@ date_default_timezone_set(
 
 define(
     'BASE_URL',
-    '/purevia_website'
+    $isPublicDevServer ? '' : '/purevia_website'
 );
 
 

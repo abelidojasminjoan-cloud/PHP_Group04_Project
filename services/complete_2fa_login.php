@@ -56,6 +56,7 @@ function pvCompleteLogin(mysqli $conn, int $userId, bool $secondFactorVerified):
                 u.email,
                 u.status,
                 u.totp_enabled_at,
+                u.session_version,
                 r.role_name
             FROM users u
             INNER JOIN roles r
@@ -78,6 +79,9 @@ function pvCompleteLogin(mysqli $conn, int $userId, bool $secondFactorVerified):
             );
         }
 
+        if ((int)($user['session_version']??0) !== (int)($_SESSION['pending_2fa_session_version']??0)) {
+            throw new RuntimeException('Your password changed. Start sign-in again.');
+        }
         $role = strtolower(
             (string) $user['role_name']
         );
@@ -191,6 +195,7 @@ function pvCompleteLogin(mysqli $conn, int $userId, bool $secondFactorVerified):
 
     unset(
         $_SESSION['pending_2fa_user_id'],
+        $_SESSION['pending_2fa_session_version'],
         $_SESSION['pending_2fa_started'],
         $_SESSION['pending_2fa_attempts'],
         $_SESSION['2fa_setup_secret'],
@@ -200,6 +205,7 @@ function pvCompleteLogin(mysqli $conn, int $userId, bool $secondFactorVerified):
     );
 
     $_SESSION['user_id'] = (int) $user['id'];
+    $_SESSION['session_version'] = (int) $user['session_version'];
     $_SESSION['role_id'] = (int) $user['role_id'];
     $_SESSION['role'] = $role;
 

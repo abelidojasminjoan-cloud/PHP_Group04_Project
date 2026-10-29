@@ -154,7 +154,7 @@ function escapeHtml(string $value): string{
                 </div>
 
                 <div class="auth-forgot">
-                    <a href="<?= BASE_URL ?>/forgot-password.php">
+                    <a href="<?= BASE_URL ?>/public/forgot-password.php">
                         Forgot password?
                     </a>
                 </div>

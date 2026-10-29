@@ -8,15 +8,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-/* ADMIN / STAFF AUTHORIZATION */
-if (
-    empty($_SESSION['user_id']) ||
-    !in_array((int) ($_SESSION['role_id'] ?? 0), [1, 2], true)
-) {
-    header('Location: ' . BASE_URL . '/public/index.php');
-    exit;
-}
-
+require_once __DIR__ . '/../../includes/role-check.php';
+requirePureViaAdmin($conn);
+$_SESSION['csrf_token'] ??= bin2hex(random_bytes(32));
 function inventoryEscape(?string $value): string
 {
     return pvHtml($value ?? '', ENT_QUOTES, 'UTF-8');
@@ -35,6 +29,7 @@ $sql = "
         pv.variant_label,
         pv.price,
         pv.stock_quantity AS stock,
+        pv.low_stock_threshold AS threshold,
         pv.updated_at AS last_updated
     FROM product_variants AS pv
     INNER JOIN products AS p
@@ -50,166 +45,6 @@ $sql = "
 $result = $conn->query($sql);
 $inventory = $result->fetch_all(MYSQLI_ASSOC);
 $result->free();
-
-/*
- * DEMO INVENTORY
- *
- * Set to true to display sample data.
- * Set to false to use actual database records.
- *
- * Demo data does NOT modify the database.
- */
-$useDemoInventory = true;
-
-if ($useDemoInventory) {
-
-    $inventory = [
-        [
-            'variant_id' => 1,
-            'product_id' => 1,
-            'product' => 'Gentle Botanical Cleanser',
-            'sku' => 'CLN-001',
-            'category' => 'Cleansers',
-            'size_capacity' => '100ML',
-            'variant_label' => 'Regular',
-            'price' => 249.00,
-            'stock' => 45,
-            'last_updated' => '2026-09-10 10:00:00'
-        ],
-        [
-            'variant_id' => 2,
-            'product_id' => 1,
-            'product' => 'Gentle Botanical Cleanser',
-            'sku' => 'CLN-001',
-            'category' => 'Cleansers',
-            'size_capacity' => '200ML',
-            'variant_label' => 'Large',
-            'price' => 399.00,
-            'stock' => 12,
-            'last_updated' => '2026-09-10 10:00:00'
-        ],
-        [
-            'variant_id' => 3,
-            'product_id' => 2,
-            'product' => 'Salicylic Pore Refining Cleanser',
-            'sku' => 'CLN-002',
-            'category' => 'Cleansers',
-            'size_capacity' => '50ML',
-            'variant_label' => 'Travel Size',
-            'price' => 179.00,
-            'stock' => 62,
-            'last_updated' => '2026-09-12 09:00:00'
-        ],
-        [
-            'variant_id' => 4,
-            'product_id' => 2,
-            'product' => 'Salicylic Pore Refining Cleanser',
-            'sku' => 'CLN-002',
-            'category' => 'Cleansers',
-            'size_capacity' => '150ML',
-            'variant_label' => 'Regular',
-            'price' => 349.00,
-            'stock' => 0,
-            'last_updated' => '2026-09-12 09:00:00'
-        ],
-        [
-            'variant_id' => 5,
-            'product_id' => 3,
-            'product' => 'Hyaluronic Acid Hydration Serum',
-            'sku' => 'SRM-001',
-            'category' => 'Serums',
-            'size_capacity' => '15ML',
-            'variant_label' => 'Mini',
-            'price' => 299.00,
-            'stock' => 89,
-            'last_updated' => '2026-09-15 11:00:00'
-        ],
-        [
-            'variant_id' => 6,
-            'product_id' => 3,
-            'product' => 'Hyaluronic Acid Hydration Serum',
-            'sku' => 'SRM-001',
-            'category' => 'Serums',
-            'size_capacity' => '30ML',
-            'variant_label' => 'Regular',
-            'price' => 499.00,
-            'stock' => 27,
-            'last_updated' => '2026-09-15 11:00:00'
-        ],
-        [
-            'variant_id' => 7,
-            'product_id' => 4,
-            'product' => 'Vitamin C Brightening Serum',
-            'sku' => 'SRM-002',
-            'category' => 'Serums',
-            'size_capacity' => '30ML',
-            'variant_label' => 'Regular',
-            'price' => 549.00,
-            'stock' => 8,
-            'last_updated' => '2026-09-18 14:00:00'
-        ],
-        [
-            'variant_id' => 8,
-            'product_id' => 5,
-            'product' => 'Ceramide Barrier Repair Moisturizer',
-            'sku' => 'MST-001',
-            'category' => 'Moisturizers',
-            'size_capacity' => '50G',
-            'variant_label' => 'Regular',
-            'price' => 459.00,
-            'stock' => 53,
-            'last_updated' => '2026-09-20 08:00:00'
-        ],
-        [
-            'variant_id' => 9,
-            'product_id' => 5,
-            'product' => 'Ceramide Barrier Repair Moisturizer',
-            'sku' => 'MST-001',
-            'category' => 'Moisturizers',
-            'size_capacity' => '100G',
-            'variant_label' => 'Large',
-            'price' => 749.00,
-            'stock' => 10,
-            'last_updated' => '2026-09-20 08:00:00'
-        ],
-        [
-            'variant_id' => 10,
-            'product_id' => 6,
-            'product' => 'Daily Defense Sunscreen SPF 50',
-            'sku' => 'SUN-001',
-            'category' => 'Sunscreen',
-            'size_capacity' => '50ML',
-            'variant_label' => 'Regular',
-            'price' => 399.00,
-            'stock' => 38,
-            'last_updated' => '2026-09-22 10:00:00'
-        ],
-        [
-            'variant_id' => 11,
-            'product_id' => 7,
-            'product' => 'Soothing Hydration Toner',
-            'sku' => 'TNR-001',
-            'category' => 'Toners',
-            'size_capacity' => '100ML',
-            'variant_label' => 'Regular',
-            'price' => 279.00,
-            'stock' => 25,
-            'last_updated' => '2026-09-23 10:00:00'
-        ],
-        [
-            'variant_id' => 12,
-            'product_id' => 7,
-            'product' => 'Soothing Hydration Toner',
-            'sku' => 'TNR-001',
-            'category' => 'Toners',
-            'size_capacity' => '200ML',
-            'variant_label' => 'Large',
-            'price' => 449.00,
-            'stock' => 0,
-            'last_updated' => '2026-09-23 10:00:00'
-        ]
-    ];
-}
 
 $totalInventory = count($inventory);
 
@@ -270,6 +105,7 @@ $defaultThreshold = 15;
     >
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form2.css?v=<?= filemtime(__DIR__ . '/../../assets/css/form2.css') ?>">
 </head>
 
 <body>
@@ -380,7 +216,7 @@ $defaultThreshold = 15;
 
                             <?php
                             $stock = (int) $item['stock'];
-                            $threshold = $defaultThreshold;
+                            $threshold = (int) $item['threshold'];
 
                             if ($stock === 0) {
                                 $stockLevel = 'out-of-stock';
@@ -485,14 +321,7 @@ $defaultThreshold = 15;
                                 <td>
                                     <div class="inventory-actions">
 
-                                        <a
-                                            href="./edit_inventory.php?id=<?= (int) $item['variant_id'] ?>"
-                                            class="inventory-edit-button"
-                                            title="Edit variant inventory"
-                                            aria-label="Edit inventory for <?= inventoryEscape($item['product'] . ' ' . $item['size_capacity']) ?>"
-                                        >
-                                            <i class="fa-regular fa-pen-to-square"></i>
-                                        </a>
+                                        <button type="button" class="inventory-edit-button" data-manage-inventory="<?= (int)$item['variant_id'] ?>" title="Manage inventory" aria-label="Manage inventory for <?= inventoryEscape($item['product'] . ' ' . $item['size_capacity']) ?>"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
 
                                     </div>
                                 </td>
@@ -532,5 +361,7 @@ $defaultThreshold = 15;
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<?php require __DIR__ . '/../../includes/inventory-dialog.php'; ?>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/inventory-manage.js?v=<?= filemtime(__DIR__ . '/../../assets/js/inventory-manage.js') ?>"></script>
 </body>
 </html>

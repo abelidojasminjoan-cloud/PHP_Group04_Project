@@ -257,7 +257,9 @@ if ($reviews) {
 
     while ($row = $result->fetch_assoc()) {
         $reviewImages[(int) $row['review_id']][] =
-            pdImage($row['image_path']);
+            str_starts_with(str_replace('\\', '/', (string) $row['image_path']), 'uploads/reviews/')
+                ? BASE_URL . '/uploads/reviews/' . rawurlencode(basename(str_replace('\\', '/', (string) $row['image_path'])))
+                : pdImage($row['image_path']);
     }
 
     $stmt->close();

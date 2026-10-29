@@ -201,6 +201,29 @@ foreach ($orders as $order) {
     }
 }
 
+// Reviews are available for delivered purchases, once per product per customer.
+$reviewForms = [];
+$reviewStmt = $conn->prepare('SELECT product_id FROM product_reviews WHERE user_id = ?');
+$reviewStmt->bind_param('i', $userId);
+$reviewStmt->execute();
+$reviewedProducts = array_fill_keys(array_column($reviewStmt->get_result()->fetch_all(MYSQLI_ASSOC), 'product_id'), true);
+$reviewStmt->close();
+foreach ($orders as $reviewOrder) {
+    if (moTab($reviewOrder) !== 'completed') continue;
+    $reviewItems = [];
+    foreach ($itemsByOrder[(int) $reviewOrder['id']] ?? [] as $reviewItem) {
+        $pid = (int) $reviewItem['product_id'];
+        if ($pid < 1 || isset($reviewedProducts[$pid])) continue;
+        [$name, $variant] = moProductParts($reviewItem);
+        if (isset($reviewItems[$pid])) {
+            $reviewItems[$pid]['quantity'] += (int) $reviewItem['quantity'];
+            if (!str_contains($reviewItems[$pid]['variant'], $variant)) $reviewItems[$pid]['variant'] .= ' · ' . $variant;
+            continue;
+        }
+        $reviewItems[$pid] = ['id' => $pid, 'name' => $name, 'variant' => $variant, 'quantity' => (int) $reviewItem['quantity']];
+    }
+    $reviewForms[(int) $reviewOrder['id']] = ['items' => array_values($reviewItems)];
+}
 // CSRF TOKEN
 
 if (empty($_SESSION['csrf_token'])) {
@@ -244,6 +267,7 @@ $csrfToken = $_SESSION['csrf_token'];
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/order-cancellation.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form2.css">
 </head>
 
 <body>
@@ -392,7 +416,7 @@ $csrfToken = $_SESSION['csrf_token'];
                                         <?php if ($tab === 'cancelled'): ?><button type="button" class="mo-button mo-button-outline" data-cancellation-details="<?= $orderId ?>">Cancellation details</button><?php endif; ?>
                                         <?php if ($tab === 'ship'): ?><a href="<?= moEsc($supportUrl) ?>" class="mo-button mo-button-outline">Contact support</a><?php endif; ?>
                                         <?php if ($tab === 'completed'): ?>
-                                            <?php if ($firstProductId): ?><a href="<?= moEsc($buyAgainUrl) ?>#customerReviews" class="mo-button mo-button-outline">Write a review</a><?php endif; ?>
+                                            <?php if ($firstProductId): ?><button type="button" class="mo-button mo-button-outline" data-review-order="<?= $orderId ?>" <?= empty($reviewForms[$orderId]['items']) ? 'disabled' : '' ?>><?= empty($reviewForms[$orderId]['items']) ? 'Review submitted' : 'Write a review' ?></button><?php endif; ?>
                                             <button type="button" class="mo-button mo-button-outline" data-return-id="<?= $orderId ?>" <?= isset($returnRequests[$orderId]) || !$items ? 'disabled' : '' ?>><?= isset($returnRequests[$orderId]) ? 'Return requested' : 'Return item' ?></button>
                                         <?php endif; ?>
                                         <?php if ($tab === 'returned'): ?><a href="<?= moEsc($detailsUrl) ?>" class="mo-button mo-button-outline">Return details</a><?php endif; ?>
@@ -416,6 +440,9 @@ $csrfToken = $_SESSION['csrf_token'];
 
 <?php include __DIR__ . '/../includes/order_cancellation_modals.php'; ?>
 <?php include __DIR__ . '/../includes/order_return_modal.php'; ?>
+<?php include __DIR__ . '/../includes/product-review-dialog.php'; ?>
+<script nonce="<?= pvScriptNonce() ?>">window.PUREVIA_PRODUCT_REVIEWS = { orders: <?= pvJson($reviewForms) ?> };</script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/product-review.js"></script>
 
 <script nonce="<?= pvScriptNonce() ?>">
     window.PUREVIA_ORDERS = {

@@ -951,6 +951,7 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `session_version` int unsigned NOT NULL DEFAULT 0,
   `role_id` int(10) unsigned NOT NULL DEFAULT 3,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -1033,3 +1034,36 @@ SELECT la.user_id,la.id,COALESCE(NULLIF(TRIM(CONCAT_WS(' ',u.first_name,u.last_n
 FROM login_attempts la LEFT JOIN users u ON u.id=la.user_id
 LEFT JOIN account_lockout_logs existing ON existing.source_attempt_id=la.id
 WHERE la.successful=0 AND la.failure_reason='Account locked.' AND existing.id IS NULL;
+
+-- Password reset request throttling
+CREATE TABLE IF NOT EXISTS password_reset_limits (
+    key_hash CHAR(64) NOT NULL PRIMARY KEY,
+    requests SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+    expires_at DATETIME NOT NULL,
+    KEY idx_reset_limit_expiry(expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Manual inventory adjustment history
+CREATE TABLE IF NOT EXISTS inventory_adjustments (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    variant_id INT UNSIGNED NULL,
+    product_id INT UNSIGNED NULL,
+    user_id INT UNSIGNED NULL,
+    adjustment_type ENUM('add','remove') NOT NULL,
+    reason VARCHAR(40) NOT NULL,
+    quantity INT UNSIGNED NOT NULL,
+    stock_before INT UNSIGNED NOT NULL,
+    stock_after INT UNSIGNED NOT NULL,
+    threshold_before INT UNSIGNED NOT NULL,
+    threshold_after INT UNSIGNED NOT NULL,
+    notes TEXT NOT NULL,
+    request_key CHAR(64) NOT NULL UNIQUE,
+    request_fingerprint CHAR(64) NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    browser VARCHAR(255) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_adjustment_variant(variant_id,created_at),
+    CONSTRAINT fk_inventory_adjustment_variant FOREIGN KEY (variant_id) REFERENCES product_variants(id) ON DELETE SET NULL,
+    CONSTRAINT fk_inventory_adjustment_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+    CONSTRAINT fk_inventory_adjustment_actor FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

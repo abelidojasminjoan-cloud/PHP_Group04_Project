@@ -62,3 +62,11 @@ desktop.ini
 /backups/
 *.sql.gz
 *.sql.zip
+
+# Local document-root junctions (existing source directories, not copies).
+/public/assets/
+/public/uploads/
+/public/actions/
+/public/account/
+/public/admin/
+/public/staff/

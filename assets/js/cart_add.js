@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "use strict";
 
     const baseUrl = (
-        window.PUREVIA_BASE_URL || "/purevia_website"
+        window.PUREVIA_BASE_URL ?? "/purevia_website"
     ).replace(/\/$/, "");
 
     // Update the bag count in the header.
