@@ -120,6 +120,38 @@ function srCsvValue(mixed $value): string
 $from = $_GET['from'] ?? date('Y-m-01');
 $to = $_GET['to'] ?? date('Y-m-t');
 
+
+/* ==========================================
+   MONTHLY SALES REPORT FILTER
+========================================== */
+
+if (isset($_GET['month'])) {
+
+    $month = $_GET['month'];
+
+    if (
+        !is_string($month) ||
+        !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)
+    ) {
+        http_response_code(422);
+        exit('Invalid report month.');
+    }
+
+    $monthStart = DateTimeImmutable::createFromFormat(
+        '!Y-m-d',
+        $month . '-01'
+    );
+
+    if (!$monthStart) {
+        http_response_code(422);
+        exit('Invalid report month.');
+    }
+
+    $from = $monthStart->format('Y-m-01');
+    $to = $monthStart->format('Y-m-t');
+}
+
+
 if (!is_string($from) || !is_string($to)) {
     http_response_code(422);
     exit('Invalid dates.');
@@ -776,6 +808,45 @@ $csvUrl = '?' . http_build_query([
                     method="GET"
                     class="sales-filter-bar"
                 >
+
+                
+<!-- MONTHLY REPORT FILTER -->
+
+<form
+    method="GET"
+    class="sales-filter-bar"
+    aria-label="Filter sales by month"
+>
+
+    <div class="sales-filter-group">
+
+        <label for="reportMonth">
+            Select Month
+        </label>
+
+        <input
+            type="month"
+            id="reportMonth"
+            name="month"
+            value="<?= srEsc(substr($from, 0, 7)) ?>"
+            required
+        >
+
+    </div>
+
+    <div class="sales-filter-actions">
+
+        <button
+            type="submit"
+            class="sales-filter-btn"
+        >
+            Generate Monthly Report
+        </button>
+
+    </div>
+
+</form>
+
 
                     <div class="sales-filter-group">
 
