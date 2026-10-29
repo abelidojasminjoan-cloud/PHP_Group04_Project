@@ -5,6 +5,33 @@ require_once __DIR__ . '/../config/db.php';
 
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 $orderId = (int) ($_SESSION['confirmed_order_id'] ?? 0);
+$paypalOrder = null;
+$paypalAutoAction = '';
+$paypalNotice = '';
+$paypalReturnId = filter_var($_GET['paypal_order_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if ($userId > 0 && $paypalReturnId) {
+    require_once __DIR__ . '/../services/PayPalCheckout.php';
+    require_once __DIR__ . '/../services/PayPalReturn.php';
+    try {
+        // The query string selects only an order owned by the signed-in customer.
+        $paypalOrder = PayPalCheckout::find($conn, $userId, $paypalReturnId);
+        $orderId = $paypalReturnId;
+        try {
+            $paypalAutoAction = pureViaPayPalReturnAction($_GET, $paypalOrder);
+        } catch (DomainException $error) {
+            $paypalNotice = $error->getMessage();
+        }
+        if (isset($_GET['cancelled']) && $paypalOrder['state'] === 'pending') {
+            $paypalNotice = 'PayPal payment was not completed. Your order is saved with payment pending.';
+        }
+    } catch (Throwable $error) {
+        error_log('PureVia PayPal return: ' . $error->getMessage());
+        header('Location: ' . BASE_URL . '/public/my-orders.php');
+        exit;
+    }
+}
+$pendingPayPal = $paypalOrder !== null && $paypalOrder['state'] === 'pending' && $paypalOrder['order_status'] === 'pending';
+if ($pendingPayPal && empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
 if ($userId <= 0 || $orderId <= 0) {
     header('Location: ' . BASE_URL . '/public/cart.php');
@@ -65,6 +92,7 @@ function orderEsc(mixed $value): string
         rel="stylesheet"
         href="<?= BASE_URL ?>/assets/css/order-success.css"
     >
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/paypal.css">
 </head>
 
 <body>
@@ -79,7 +107,7 @@ function orderEsc(mixed $value): string
             &#10003;
         </div>
 
-        <h1>Your order is placed</h1>
+        <h1><?= $order['order_status'] === 'cancelled' ? 'Your order is cancelled' : 'Your order is placed' ?></h1>
 
         <p class="pv-success-description">
             Thank you for shopping with PureVia.
@@ -133,6 +161,16 @@ function orderEsc(mixed $value): string
 
         </div>
 
+        <?php if ($pendingPayPal): ?>
+            <p id="pvPayPalError" role="alert" <?= $paypalNotice === '' ? 'hidden' : '' ?>><?= orderEsc($paypalNotice) ?></p>
+            <p id="pvPayPalStatus" role="status" aria-live="polite"><?= $paypalAutoAction === 'confirm' ? 'Verifying your PayPal payment…' : 'You can continue or check payment for this saved order.' ?></p>
+            <form method="post" action="<?= BASE_URL ?>/public/paypal-payment.php?order_id=<?= (int) $orderId ?>" class="pv-paypal-actions" id="pvPayPalPaymentForm" <?= $paypalAutoAction !== '' ? 'hidden' : '' ?> data-auto-action="<?= orderEsc($paypalAutoAction) ?>" data-paypal-host="<?= PayPalClient::mode() === 'live' ? 'www.paypal.com' : 'www.sandbox.paypal.com' ?>">
+                <input type="hidden" name="csrf_token" value="<?= orderEsc($_SESSION['csrf_token']) ?>">
+                <button type="submit" class="pv-success-button pv-success-primary" name="action" value="start">Continue to PayPal</button>
+                <button type="submit" class="pv-success-button pv-success-secondary" name="action" value="confirm">Check payment</button>
+                <button type="submit" class="pv-success-button pv-success-secondary" name="action" value="cancel">Cancel unpaid order</button>
+            </form>
+        <?php endif; ?>
         <!-- UPDATED BUTTONS -->
 
         <div class="pv-success-actions">
@@ -159,5 +197,6 @@ function orderEsc(mixed $value): string
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/paypal-payment.js?v=<?= filemtime(__DIR__ . '/../assets/js/paypal-payment.js') ?>"></script>
 </body>
 </html>

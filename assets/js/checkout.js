@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const paymentNotice = document.getElementById("pvPaymentNotice");
-    const cardDetails = document.getElementById("pvCardDetails");
     const codMessage = document.getElementById("pvCodMessage");
 
     const placeOrder = document.getElementById("pvPlaceOrder");
@@ -30,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorBox = document.getElementById("pvCheckoutError");
 
     let submitting = false;
-    const cards = window.PureViaCards;
 
     // =========================================
     // HELPERS
@@ -248,12 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         });
 
-        if (cardDetails) {
-            const cardSelected = selected?.value === "card";
-            cardDetails.hidden = !cardSelected;
-            cardDetails.disabled = !cardSelected;
-            if (cardSelected) cards?.initialize(updatePaymentSelection);
-        }
 
         // Show COD information only when COD is selected
         if (codMessage) {
@@ -299,10 +291,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (paymentNotice) {
             paymentNotice.hidden = false;
             paymentNotice.textContent = config.paypalConfigured
-                ? (selected.value === "card" ? "Enter your card details below. Payment is processed securely by PayPal." : "Sign in to your PayPal account to approve payment securely.")
+                ? "Sign in to your PayPal account to approve payment securely."
                 : "PayPal is not configured yet. Please choose Cash on Delivery.";
         }
-        if (placeOrder) placeOrder.disabled = submitting || !config.canCheckout || !deliveryComplete() || !config.paypalConfigured || (selected.value === "card" && !cards?.ready);
+        if (placeOrder) placeOrder.disabled = submitting || !config.canCheckout || !deliveryComplete() || !config.paypalConfigured;
     }
 
     // =========================================
@@ -350,29 +342,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Only supported server-side payment methods are accepted.
-        if (!["cod", "card", "paypal"].includes(selectedPayment.value)) {
+        if (!["cod", "paypal"].includes(selectedPayment.value)) {
             showError(
-                "Please select Cash on Delivery, Debit or Credit Card, or PayPal Account."
+                "Please select Cash on Delivery or PayPal."
             );
             return;
         }
 
-        if (selectedPayment.value === "card") {
-            if (!validateAddress()) return;
-            updateAddressPreview();
-            if (!cards?.ready) { showError("Secure card fields are not ready. Check the message below Card details."); return; }
-            submitting = true;
-            placeOrder.disabled = true;
-            placeOrderText.textContent = "Checking payment...";
-            try { await cards.submit(); }
-            catch (error) { showError(error.message || "Unable to complete card payment. Check its payment status before retrying."); }
-            finally {
-                submitting = false;
-                placeOrderText.textContent = `Place order \u00b7 ${money(config.total || 0)}`;
-                updatePaymentSelection();
-            }
-            return;
-        }
         // Prevent duplicate submissions
         submitting = true;
 
@@ -448,9 +424,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (result.redirect_url) {
                 const destination = new URL(result.redirect_url, window.location.href);
-                if (destination.origin !== window.location.origin ||
-                    !['http:', 'https:'].includes(destination.protocol)) {
-                    throw new Error('Invalid order confirmation URL.');
+                const localDestination = destination.origin === window.location.origin;
+                const paypalHost = config.paypalMode === 'live' ? 'www.paypal.com' : 'www.sandbox.paypal.com';
+                const paypalDestination = selectedPayment.value === 'paypal' && result.payment_provider === 'paypal' &&
+                    destination.protocol === 'https:' && destination.hostname === paypalHost && !destination.port;
+                if ((!localDestination && !paypalDestination) || !['http:', 'https:'].includes(destination.protocol) ||
+                    destination.username || destination.password) {
+                    throw new Error('Invalid payment destination.');
                 }
                 window.location.assign(destination.href);
                 return;

@@ -1,0 +1,32 @@
+.git
+.github
+.gitignore
+.env
+.env.*
+vendor
+node_modules
+.vscode
+.idea
+.codex
+.agents
+.codex-tools
+tmp
+temp
+storage
+logs
+backups
+*.sql
+*.log
+*.bak
+*.swp
+
+# Runtime uploads live on the Render disk, not inside the image.
+/uploads
+
+# Local Windows directory junctions; Docker creates its own Linux links.
+/public/assets
+/public/actions
+/public/account
+/public/admin
+/public/staff
+/public/uploads

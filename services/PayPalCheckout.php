@@ -25,7 +25,7 @@ final class PayPalCheckout
             if ($row['approval_url']) { $conn->commit(); return $row['approval_url']; }
             $snapshot = json_decode($row['items_snapshot'], true, 32, JSON_THROW_ON_ERROR);
             $landingPage = ($snapshot['payment_preference'] ?? 'paypal') === 'card' ? 'GUEST_CHECKOUT' : 'LOGIN';
-            $callback = APP_URL . '/public/paypal-payment.php?order_id=' . $orderId;
+            $callback = APP_URL . '/public/order-success.php?paypal_order_id=' . $orderId;
             $remote = ($client ?? new PayPalClient())->request('POST', '/v2/checkout/orders', [
                 'intent' => 'CAPTURE',
                 'purchase_units' => [['custom_id' => (string) $orderId, 'invoice_id' => $row['order_number'],
