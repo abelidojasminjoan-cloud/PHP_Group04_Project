@@ -174,9 +174,8 @@ $statusLabel = $statusLabels[$status] ?? ucfirst($status);
 
 $paymentLabels = [
     'cod' => 'Cash on Delivery',
-    'gcash' => 'GCash',
     'card' => 'Credit or Debit Card',
-    'online' => 'Online Payment'
+    'online' => 'PayPal'
 ];
 
 $paymentLabel = $paymentLabels[$paymentMethod]
@@ -271,6 +270,9 @@ if (empty($_SESSION['csrf_token'])) {
 <body>
 
 <?php include __DIR__ . '/../includes/header.php'; ?>
+<?php if (($order['payment_method'] ?? '') === 'online' && $order['payment_status'] === 'pending' && $order['order_status'] === 'pending'): ?>
+<p class="od-payment-resume"><a href="<?= BASE_URL ?>/public/paypal-payment.php?order_id=<?= (int)$orderId ?>">Continue or cancel PayPal payment</a></p>
+<?php endif; ?>
 
 <main class="od-page">
     <div class="od-container">

@@ -11,7 +11,7 @@ if ($userId <= 0) {
 }
 
 $stmt = $conn->prepare(
-    'SELECT email, status FROM users WHERE id = ? LIMIT 1'
+    'SELECT email, status FROM users WHERE id = ? AND role_id IN (2, 3) LIMIT 1'
 );
 $stmt->bind_param('i', $userId);
 $stmt->execute();

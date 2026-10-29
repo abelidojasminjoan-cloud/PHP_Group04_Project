@@ -68,7 +68,7 @@ try {
     $stmt->close();
 
     if (
-        !$user || !$record || (int) $user['role_id'] !== 3 ||
+        !$user || !$record || !in_array((int) $user['role_id'], [2, 3], true) ||
         $user['status'] !== 'pending' || $user['email_verified_at'] === null ||
         $record['used_at'] !== null || (int) $record['is_valid'] !== 1
     ) {

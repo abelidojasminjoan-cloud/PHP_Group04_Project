@@ -761,3 +761,139 @@ body.form-modal-open {
         width: 100%;
     }
 }
+
+/* Inventory management: all overrides are scoped to this dialog. */
+.inventory-dialog { --inventory-green: var(--form-green,#3f6b50); --inventory-green-dark: var(--form-green-dark,#315640); --inventory-text: var(--form-text,#25251f); --inventory-border: var(--form-border,#d9d0c4); --inventory-muted: var(--form-muted,#8d847a); --inventory-danger: var(--form-danger,#c44b40); --inventory-surface: #eeeae2; --inventory-background: #fff; width: min(700px,calc(100% - 28px)); max-width: none; max-height: min(92vh,850px); padding: 0; border: 1px solid var(--inventory-border); border-radius: 20px; color: var(--inventory-text); background: var(--inventory-background); box-shadow: 0 24px 80px #0003; }
+.inventory-dialog::backdrop { background: #1e201a66; backdrop-filter: blur(2px); }
+.inventory-dialog form { display: flex; flex-direction: column; max-height: min(92vh,850px); margin: 0; }
+.inventory-dialog .inventory-dialog-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; padding: 26px 28px 20px; border-bottom: 1px solid var(--inventory-border); flex-shrink: 0; }
+.inventory-dialog .inventory-dialog-header h2 { font: 600 26px/1.2 Georgia,serif; margin: 0 0 6px; }
+.inventory-dialog .inventory-dialog-header p { margin: 0; color: var(--inventory-muted); font-size: 12px; line-height: 1.6; }
+.inventory-dialog .inventory-dialog-close { border: 0; background: transparent; color: var(--inventory-muted); font-size: 26px; line-height: 1; padding: 2px 5px; cursor: pointer; }
+.inventory-dialog .inventory-dialog-body { padding: 24px 28px; overflow-y: auto; min-height: 0; }
+.inventory-dialog .inventory-dialog-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; margin-bottom: 26px; }
+.inventory-dialog .inventory-dialog-stats div { padding: 18px 10px; border-radius: 10px; text-align: center; background: var(--inventory-surface); }
+.inventory-dialog .inventory-dialog-stats span { display: block; font: 11px/1.5 monospace; color: var(--inventory-muted); margin-bottom: 8px; }
+.inventory-dialog .inventory-dialog-stats strong { font-size: 14px; }
+.inventory-dialog fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.inventory-dialog .inventory-dialog-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 18px; }
+.inventory-dialog label { display: flex; flex-direction: column; gap: 9px; font-size: 12px; font-weight: 600; min-width: 0; }
+.inventory-dialog input,.inventory-dialog select,.inventory-dialog textarea { width: 100%; min-width: 0; border: 1px solid var(--inventory-border); border-radius: 10px; background: var(--inventory-background); color: var(--inventory-text); padding: 13px 14px; font: 13px/1.6 'Poppins',sans-serif; }
+.inventory-dialog textarea { resize: vertical; min-height: 100px; }
+.inventory-dialog input:focus,.inventory-dialog select:focus,.inventory-dialog textarea:focus { outline: 2px solid #9eb5a566; border-color: var(--inventory-green); }
+.inventory-dialog .inventory-dialog-full { grid-column: 1/-1; }
+.inventory-dialog small { color: var(--inventory-muted); font-size: 10px; font-weight: 400; }
+.inventory-dialog .inventory-required { color: var(--inventory-danger); }
+.inventory-dialog .inventory-adjustment-help { margin: 14px 0 0; color: #766b5e; font-size: 11px; line-height: 1.7; }
+.inventory-dialog .inventory-stock-preview { margin: 24px 0 0; padding: 18px; background: var(--inventory-surface); border-radius: 10px; font-size: 12px; }
+.inventory-dialog .inventory-dialog-error { margin: 0 0 18px; border-radius: 8px; background: #fff0ed; color: var(--inventory-danger); padding: 12px; font-size: 12px; line-height: 1.6; }
+.inventory-dialog .inventory-dialog-footer { display: flex; justify-content: flex-end; align-items: center; gap: 14px; padding: 18px 28px; border-top: 1px solid var(--inventory-border); background: var(--inventory-background); flex-shrink: 0; }
+.inventory-dialog .inventory-dialog-footer button { padding: 12px 22px; border: 0; border-radius: 10px; font: 600 12px 'Poppins',sans-serif; cursor: pointer; }
+.inventory-dialog .inventory-dialog-cancel { color: var(--inventory-text); background: transparent; }
+.inventory-dialog .inventory-dialog-save { background: var(--inventory-green); color: var(--inventory-background); }
+.inventory-dialog button:disabled { opacity: .55; cursor: wait; }
+@media(max-width:550px) { .inventory-dialog .inventory-dialog-header { padding: 20px; }.inventory-dialog .inventory-dialog-body { padding: 20px; }.inventory-dialog .inventory-dialog-footer { padding: 16px 20px; }.inventory-dialog .inventory-dialog-grid { grid-template-columns: minmax(0,1fr); gap: 18px; }.inventory-dialog .inventory-dialog-stats { gap: 7px; }.inventory-dialog .inventory-dialog-stats span { font-size: 9px; }.inventory-dialog .inventory-dialog-stats div { padding: 12px 6px; }.inventory-dialog .inventory-dialog-stats strong { font-size: 12px; } }
+
+.inventory-dialog .inventory-dialog-save:hover { background: var(--inventory-green-dark); }
+
+/* Inventory dialog has one scroll container; header and footer stay fixed. */
+#inventoryManageDialog { --inventory-max-height: min(92dvh,850px); max-height: var(--inventory-max-height); overflow: hidden; }
+#inventoryManageDialog > form { max-height: calc(var(--inventory-max-height) - 2px); min-height: 0; overflow: hidden; }
+#inventoryManageDialog .inventory-dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+/* Product reviews: local variables and overrides leave other forms unchanged. */
+.review-dialog {
+    --review-green: var(--form-green, #3f6b50);
+    --review-border: var(--form-border, #d9d0c4);
+    --review-muted: var(--form-muted, #8d847a);
+    --review-text: var(--form-text, #25251f);
+    --review-surface: #f4f1ec;
+    --review-star: #bd9567;
+    --review-max-height: min(94dvh, 880px);
+    width: min(700px, calc(100% - 28px)); max-width: none; max-height: var(--review-max-height);
+    padding: 0; overflow: hidden; border: 1px solid var(--review-border); border-radius: 18px;
+    background: #fff; color: var(--review-text); box-shadow: 0 24px 80px #0003;
+    font: 13px/1.6 'Poppins', sans-serif;
+}
+.review-dialog::backdrop { background: #25251f66; backdrop-filter: blur(2px); }
+.review-dialog > form { display: flex; flex-direction: column; max-height: calc(var(--review-max-height) - 2px); min-height: 0; margin: 0; overflow: hidden; }
+.review-dialog [hidden] { display: none !important; }
+.review-dialog button, .review-dialog input, .review-dialog textarea, .review-dialog select { font: inherit; }
+.review-dialog .review-dialog-header { padding: 24px 26px 20px; border-color: var(--review-border); }
+.review-dialog .review-dialog-header h2 { font: 600 26px/1.25 Georgia, serif; margin: 0 0 5px; }
+.review-dialog .review-dialog-header p { font-size: 12px; color: var(--review-muted); }
+.review-dialog .form-modal-close { font-size: 25px; line-height: 1; }
+.review-dialog .review-dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 22px 26px 0; }
+.review-dialog .review-product { display: flex; justify-content: space-between; align-items: center; gap: 16px; background: var(--review-surface); border: 1px solid var(--review-border); border-radius: 10px; padding: 18px; margin-bottom: 22px; }
+.review-dialog .review-product strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.review-dialog .review-product div > span { display: block; color: var(--review-muted); font-size: 12px; margin-top: 4px; }
+.review-dialog .review-quantity { flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--review-border); border-radius: 20px; background: #fff; color: var(--review-green); font: 11px/1.8 monospace; }
+.review-dialog .review-rating { border: 0; margin: 0 0 20px; padding: 0; min-width: 0; }
+.review-dialog .review-rating legend { float: none; width: auto; padding: 0; margin: 0 0 5px; font-size: 12px; font-weight: 600; }
+.review-dialog .review-stars { display: flex; gap: 8px; width: fit-content; }
+.review-dialog .review-star { position: relative; cursor: pointer; padding: 0 3px; margin: 0; color: #d5d0c7; font-size: 31px; line-height: 1.4; }
+.review-dialog .review-star input { position: absolute; opacity: 0; width: 100%; height: 100%; inset: 0; margin: 0; cursor: pointer; }
+.review-dialog .review-star.is-selected { color: var(--review-star); }
+.review-dialog .review-star:has(input:focus-visible) { outline: 2px solid var(--review-green); outline-offset: 2px; border-radius: 4px; }
+.review-dialog .form-group { margin-bottom: 22px; }
+.review-dialog .form-group > label { font-size: 12px; }
+.review-dialog .form-control { border-color: var(--review-border); font-size: 13px; }
+.review-dialog .form-textarea { min-height: 108px; max-height: 220px; resize: vertical; }
+.review-dialog .review-upload { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px dashed #93a08d; border-radius: 13px; background: var(--review-surface); padding: 18px 22px; }
+.review-dialog .review-upload strong { display: block; font-size: 13px; }
+.review-dialog .review-upload small { display: block; font-size: 11px; color: var(--review-muted); margin-top: 4px; }
+.review-dialog .review-upload button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; flex-shrink: 0; border: 1px solid var(--review-green); border-radius: 8px; background: #fff; color: var(--review-green); padding: 12px 20px; font-size: 12px; font-weight: 500; cursor: pointer; }
+.review-dialog .review-upload svg { width: 16px; height: 16px; }
+.review-dialog .review-photo-list { --review-photo-size: 80px; display: flex; flex-wrap: wrap; gap: 12px; list-style: none; margin: 16px 0 0; padding: 0; }
+.review-dialog .review-photo-list li { position: relative; flex: 0 0 var(--review-photo-size); width: var(--review-photo-size); height: var(--review-photo-size); margin: 0; }
+.review-dialog .review-photo-list img { display: block; width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
+.review-dialog .review-photo-list span { display: none; }
+.review-dialog .review-photo-list button { position: absolute; top: 4px; right: 4px; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: #25251fcc; color: #fff; font-size: 19px; line-height: 1; cursor: pointer; }
+.review-dialog .review-dialog-footer { flex-shrink: 0; margin: 18px 26px 0; padding: 18px 0 22px; border-top: 1px solid var(--review-border); display: flex; justify-content: flex-end; gap: 16px; background: #fff; }
+.review-dialog .review-dialog-footer button { padding: 12px 24px; border-radius: 9px; min-height: 46px; font-size: 13px; }
+.review-dialog .form-submit-button { background: var(--review-green); }
+.review-dialog .review-message { padding: 12px; margin: 0 0 16px; border-radius: 8px; background: #edf5ef; color: var(--review-green); }
+.review-dialog .review-message.is-error { background: #fff0ed; color: var(--form-danger); }
+.review-dialog button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 550px) {
+    .review-dialog .review-dialog-header { padding: 20px; }
+    .review-dialog .review-dialog-body { padding: 18px 20px 0; }
+    .review-dialog .review-dialog-footer { margin-left: 20px; margin-right: 20px; }
+    .review-dialog .review-upload { padding: 16px; flex-wrap: wrap; }
+    .review-dialog .review-upload button { width: 100%; }
+}
+/* Override the site-wide margin reset for this native modal only. */
+#productReviewDialog { position: fixed; inset: 0; margin: auto; }
+
+/* Add Staff Account: modal-local overrides using the shared product form styles. */
+.staff-account-dialog {
+    --staff-green: var(--form-green, #3f6b50);
+    --staff-border: var(--form-border, #d9d0c4);
+    --staff-muted: var(--form-muted, #8d847a);
+    --staff-surface: #eeeae2;
+    --staff-max-height: min(92dvh, 700px);
+    position: fixed; inset: 0; margin: auto; padding: 0;
+    width: min(700px, calc(100% - 28px)); max-width: none; max-height: var(--staff-max-height);
+    border: 1px solid var(--staff-border); border-radius: 18px; overflow: hidden;
+    color: var(--form-text); background: #fff; box-shadow: 0 24px 80px #0003;
+    font: 13px/1.7 'Poppins', sans-serif;
+}
+.staff-account-dialog::backdrop { background: #25251f66; backdrop-filter: blur(2px); }
+.staff-account-dialog [hidden] { display: none !important; }
+.staff-account-dialog > form { display: flex; flex-direction: column; max-height: calc(var(--staff-max-height) - 2px); min-height: 0; margin: 0; overflow: hidden; }
+.staff-account-dialog button, .staff-account-dialog input { font: inherit; }
+.staff-account-dialog .form-modal-header { padding: 24px 28px 20px; border-color: var(--staff-border); }
+.staff-account-dialog .form-modal-header h2 { font: 600 26px/1.3 Georgia, serif; margin: 0; }
+.staff-account-dialog .form-modal-close { font-size: 25px; line-height: 1; }
+.staff-account-dialog .form-modal-body { padding: 22px 28px; overflow-y: auto; overscroll-behavior: contain; }
+.staff-account-dialog .form-group { margin-bottom: 18px; }
+.staff-account-dialog .form-group > label { font-size: 12px; }
+.staff-account-dialog .form-control { height: 49px; border-color: var(--staff-border); font-size: 13px; }
+.staff-account-dialog .staff-account-help { margin: 0; padding: 15px; border-radius: 9px; color: var(--staff-muted); background: var(--staff-surface); font-size: 12px; line-height: 1.9; }
+.staff-account-dialog .form-modal-footer { display: flex; justify-content: flex-end; gap: 14px; padding: 18px 28px; flex-shrink: 0; border-top: 1px solid var(--staff-border); }
+.staff-account-dialog .form-modal-footer button { min-height: 46px; padding: 12px 24px; border-radius: 9px; font-size: 13px; }
+.staff-account-dialog .form-submit-button { background: var(--staff-green); }
+.staff-account-dialog .staff-account-message { padding: 12px; margin: 0 0 16px; border-radius: 8px; background: #edf5ef; color: var(--staff-green); }
+.staff-account-dialog .staff-account-message.is-error { background: #fff0ed; color: var(--form-danger); }
+.staff-account-dialog button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 550px) { .staff-account-dialog .form-modal-header, .staff-account-dialog .form-modal-body, .staff-account-dialog .form-modal-footer { padding-left: 20px; padding-right: 20px; } }
+#addStaffButton { border: 0; cursor: pointer; font-family: inherit; }

@@ -38,20 +38,24 @@ purevia_db.sql
 
 # Installation/Setup
 
-Install the following:
-- PHP
-- MySQL
-- XAMPP
-- Visual Studio Code
-- HTML
-- CSS
-- JavaScript
+Requirements: PHP, MySQL/MariaDB (available through XAMPP), and Composer.
+
+1. Open the PureVia project folder in Visual Studio Code.
+2. Start MySQL in XAMPP. The terminal command below serves the website, so Apache is not required for the website. If using XAMPP's phpMyAdmin, also start Apache to access phpMyAdmin.
+3. Create the `purevia_db` database in phpMyAdmin and import `database/purevia_db.sql`.
+4. Configure the database connection and other required settings in `.env`.
+5. Run `composer install` from the project root if the Composer dependencies are not installed.
+6. When setting up a fresh checkout or moving the project, follow the [local PHP server setup](docs/local-php-server.md) to recreate the public directory junctions.
+7. Open a terminal in the project root (the folder containing `public`, `config`, and `composer.json`) and run:
+
+```powershell
+php -S localhost:8000 -t public
+```
+
+8. Open http://localhost:8000/ in your browser. Keep the terminal running while using the website; press Ctrl + C to stop the server.
 
 
-1. Open XAMPP and start Apache and MySQL
-2. Copy the System Project PureVia Folder above into the "htdocs" folder
-3. Open the PHP/MyAdmin in your browser
-4. Create a Database for the System Project PureVia and import the SQL database file
-5. Open a browser and go to "https://localhost//PureVia/"
-6. Then the PureVia website should be accessible now
+For the research-informed skin assessment and admin question bank, run
+`php tools/migrate-skin-questions.php` after the existing skin-profile schema is installed.
+See [assessment evidence, limitations and verification](docs/skin-assessment-evidence.md).
 

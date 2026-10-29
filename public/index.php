@@ -937,7 +937,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
 
                     <a
-                        href="<?= BASE_URL ?>/forgot-password.php"
+                        href="<?= BASE_URL ?>/public/forgot-password.php"
                         class="forgot-password"
                     >
                         Forgot Password?

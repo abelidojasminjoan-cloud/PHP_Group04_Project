@@ -538,7 +538,8 @@ else {
             <div class="sidebar-section">
                 <p class="sidebar-section-title">SKIN MATCH</p>
                 <a href="<?= $adminBase ?>/skin-types/skin-types.php" class="sidebar-link <?= sidebarActive('/skin-types/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">◉</span><span>Skin Types</span></span></a>
-                <a href="<?= $adminBase ?>/suitability/suitability.php" class="sidebar-link <?= sidebarActive('/suitability/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">✓</span><span>Suitability</span></span></a>
+                <a href="<?= $adminBase ?>/suitability/suitability.php" class="sidebar-link <?= sidebarActive('/suitability/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">✓</span><span>Suitability Management</span></span></a>
+                <a href="<?= $adminBase ?>/assessment-questions/assessment-questions.php" class="sidebar-link <?= sidebarActive('/assessment-questions/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">?</span><span>Assessment Questions</span></span></a>
                 <a href="<?= $adminBase ?>/quiz-analytics/quiz-analytics.php" class="sidebar-link <?= sidebarActive('/quiz-analytics/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">▥</span><span>Quiz Analytics</span></span></a>
             </div>
 
@@ -649,6 +650,10 @@ else {
                 </a>
 
 
+                <a href="<?= $adminBase ?>/security/account_lockouts.php"
+                   class="sidebar-link <?= sidebarActive('/security/account_lockouts.php') ?>">
+                    <span class="sidebar-link-left"><span class="sidebar-menu-icon" aria-hidden="true">&#8856;</span><span>Account Lockout Logs</span></span>
+                </a>
                 <a
                     href="<?= $adminBase ?>/security/login_attempts.php"
                     class="sidebar-link <?= sidebarActive('/security/login_attempts.php') ?>"

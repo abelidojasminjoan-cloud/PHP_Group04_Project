@@ -39,6 +39,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
 
 ?>
 
+<script nonce="<?= pvScriptNonce() ?>">window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;</script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/image-fallbacks.js"></script>
 <header class="site-header" id="pureviaHeader">
 

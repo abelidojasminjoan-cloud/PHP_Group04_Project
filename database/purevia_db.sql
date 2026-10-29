@@ -30,6 +30,7 @@ CREATE TABLE `audit_logs` (
   `record_id` varchar(100) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
+  `browser` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_audit_user` (`user_id`),
@@ -950,6 +951,7 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `session_version` int unsigned NOT NULL DEFAULT 0,
   `role_id` int(10) unsigned NOT NULL DEFAULT 3,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
@@ -993,3 +995,75 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-10-21  0:46:46
+
+-- PayPal checkout tracking
+CREATE TABLE IF NOT EXISTS paypal_checkouts (
+    order_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    request_key CHAR(40) NOT NULL UNIQUE,
+    environment ENUM('sandbox','live') NOT NULL,
+    paypal_order_id VARCHAR(32) NULL UNIQUE,
+    approval_url VARCHAR(512) NULL,
+    capture_id VARCHAR(64) NULL UNIQUE,
+    items_snapshot LONGTEXT NOT NULL,
+    state ENUM('pending','paid','cancelled') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_paypal_checkout_order FOREIGN KEY (order_id) REFERENCES orders(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Read-only account lockout event history
+CREATE TABLE IF NOT EXISTS account_lockout_logs (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NULL,
+    source_attempt_id BIGINT UNSIGNED NULL UNIQUE,
+    name_snapshot VARCHAR(210) NOT NULL,
+    email_snapshot VARCHAR(255) NOT NULL,
+    failed_attempts SMALLINT UNSIGNED NULL,
+    ip_address VARCHAR(45) NULL,
+    browser VARCHAR(255) NOT NULL,
+    locked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_lockout_time (locked_at, id),
+    KEY idx_lockout_user (user_id),
+    CONSTRAINT fk_account_lockout_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Only explicit lockout events are imported, not attempts blocked by an existing lock.
+-- Old attempts did not store a failure count; do not guess it from today's policy.
+INSERT INTO account_lockout_logs (user_id,source_attempt_id,name_snapshot,email_snapshot,failed_attempts,ip_address,browser,locked_at)
+SELECT la.user_id,la.id,COALESCE(NULLIF(TRIM(CONCAT_WS(' ',u.first_name,u.last_name)),''),'Unknown account'),
+       la.email_attempted,NULL,la.ip_address,COALESCE(NULLIF(la.browser,''),'Unknown'),la.attempted_at
+FROM login_attempts la LEFT JOIN users u ON u.id=la.user_id
+LEFT JOIN account_lockout_logs existing ON existing.source_attempt_id=la.id
+WHERE la.successful=0 AND la.failure_reason='Account locked.' AND existing.id IS NULL;
+
+-- Password reset request throttling
+CREATE TABLE IF NOT EXISTS password_reset_limits (
+    key_hash CHAR(64) NOT NULL PRIMARY KEY,
+    requests SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+    expires_at DATETIME NOT NULL,
+    KEY idx_reset_limit_expiry(expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Manual inventory adjustment history
+CREATE TABLE IF NOT EXISTS inventory_adjustments (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    variant_id INT UNSIGNED NULL,
+    product_id INT UNSIGNED NULL,
+    user_id INT UNSIGNED NULL,
+    adjustment_type ENUM('add','remove') NOT NULL,
+    reason VARCHAR(40) NOT NULL,
+    quantity INT UNSIGNED NOT NULL,
+    stock_before INT UNSIGNED NOT NULL,
+    stock_after INT UNSIGNED NOT NULL,
+    threshold_before INT UNSIGNED NOT NULL,
+    threshold_after INT UNSIGNED NOT NULL,
+    notes TEXT NOT NULL,
+    request_key CHAR(64) NOT NULL UNIQUE,
+    request_fingerprint CHAR(64) NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    browser VARCHAR(255) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_adjustment_variant(variant_id,created_at),
+    CONSTRAINT fk_inventory_adjustment_variant FOREIGN KEY (variant_id) REFERENCES product_variants(id) ON DELETE SET NULL,
+    CONSTRAINT fk_inventory_adjustment_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+    CONSTRAINT fk_inventory_adjustment_actor FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/IngredientChecker.php';
+require_once __DIR__.'/SkinEvidence.php';
 final class SkinMatcher
 {
     public static function match(mysqli $conn,array $profile): array
@@ -17,6 +18,8 @@ final class SkinMatcher
         $products=[];$excluded=0;
         foreach($rows as $r){
             $id=(int)$r['id'];$skins=$links['product_skin_types'][$id]??[];$concerns=$links['product_concerns'][$id]??[];
+            // A concern match must not override an explicit, incompatible catalog skin-type assignment.
+            if($profile['skin_type_id']&&$skins&&!in_array($profile['skin_type_id'],$skins,true)){$excluded++;continue;}
             $check=IngredientChecker::check($links['product_ingredients'][$id]??[],(bool)$r['ingredients_complete'],$profile['avoided_ingredients'],$names);
             if(!$check['eligible']){$excluded++;continue;}
             $score=0;$reasons=[];
@@ -32,7 +35,7 @@ final class SkinMatcher
                 'role'=>$r['routine_role']??'none','period'=>$r['usage_period']??'both','instructions'=>$r['routine_instructions']??'','gentle'=>(bool)$r['gentle'],'targeted_approved'=>(bool)$r['targeted_approved'],'sunscreen_verified'=>(bool)$r['sunscreen_verified'],'concerns'=>$concerns];
         }
         usort($products,fn($a,$b)=>($b['score']<=>$a['score'])?:($a['id']<=>$b['id']));
-        return ['products'=>array_slice($products,0,12),'routine'=>self::routine($products,$profile),'excluded_count'=>$excluded];
+        return ['products'=>array_slice($products,0,12),'routine'=>self::routine($products,$profile),'excluded_count'=>$excluded,'guidance'=>SkinEvidence::guidance($profile)];
     }
     private static function routine(array $products,array $profile): array
     {

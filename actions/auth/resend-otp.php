@@ -40,7 +40,7 @@ try {
     $stmt = $conn->prepare(
         'SELECT id, first_name, email, status
          FROM users
-         WHERE id = ?
+         WHERE id = ? AND role_id IN (2, 3)
          LIMIT 1
          FOR UPDATE'
     );

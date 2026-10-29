@@ -51,6 +51,10 @@ final class AdminOrder
             $old=self::details($conn,$id);
             if(!hash_equals($old['revision'],$revision))throw new DomainException('This order changed while it was open. Close and reopen it before saving.');
             if(!$payment&&$paymentStatus!==$old['payment_status'])throw new DomainException('This order has no payment record to update.');
+            $ps=$conn->prepare('SELECT state FROM paypal_checkouts WHERE order_id=?');$ps->bind_param('i',$id);$ps->execute();$paypal=$ps->get_result()->fetch_assoc();
+            if($paypal && ($paymentStatus!==$old['payment_status'] || ($paypal['state']!=='paid' && $status!==$old['status']))) {
+                throw new DomainException('PayPal payment status is controlled by verified gateway responses. Resolve pending payments through the PayPal checkout page; refunds must be processed in PayPal.');
+            }
             $changed=$status!==$old['status']||$paymentStatus!==$old['payment_status'];
             if($changed){
                 $s=$conn->prepare('UPDATE orders SET order_status=?,payment_status=? WHERE id=?');$s->bind_param('ssi',$status,$paymentStatus,$id);$s->execute();

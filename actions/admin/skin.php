@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/../../includes/skin_api.php';
 require_once __DIR__.'/../../services/SkinAdmin.php';
+require_once __DIR__.'/../../services/SkinQuestionBank.php';
 try{
     $admin=skinApiUser($conn,[1]);
     if($_SERVER['REQUEST_METHOD']==='GET'){
@@ -13,7 +14,9 @@ try{
         if(!$record)skinReply(['success'=>false,'message'=>'Record not found.'],404);skinReply(['success'=>true,'record'=>$record]);
     }
     $data=skinApiData();$action=$data['action']??null;
-    if($action==='type.save')SkinAdmin::type($conn,$admin,$data);
+    if($action==='question.save')SkinQuestionBank::save($conn,$admin,$data);
+    elseif($action==='question.delete')SkinQuestionBank::save($conn,$admin,$data,true);
+    elseif($action==='type.save')SkinAdmin::type($conn,$admin,$data);
     elseif($action==='type.delete')SkinAdmin::type($conn,$admin,$data,true);
     elseif($action==='tag.save')SkinAdmin::tag($conn,$admin,$data);
     elseif($action==='tag.delete')SkinAdmin::tag($conn,$admin,$data,true);

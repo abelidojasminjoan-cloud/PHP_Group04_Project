@@ -8,8 +8,7 @@ $currentUser = requirePureViaAdmin($conn);
 $pageTitle = 'Users';
 $users = AdminUser::all($conn);
 $totalUsers = count($users);
-$roles = $conn->query('SELECT id, role_name FROM roles WHERE id IN (1, 2, 3) ORDER BY id')->fetch_all(MYSQLI_ASSOC);
-$passwordRequirements = securityPasswordRequirements(securityPolicy($conn));
+if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 ?>
 
 <!DOCTYPE html>
@@ -130,21 +129,15 @@ $passwordRequirements = securityPasswordRequirements(securityPolicy($conn));
                 </div>
 
 
-                <a
-                    href="#userModal"
-                    id="addUserButton"
-                    aria-controls="userModal"
-                    aria-haspopup="dialog"
-                    class="add-user-button"
-                >
+                <button type="button" id="addStaffButton" class="add-user-button">
 
                     <i class="fa-solid fa-plus"></i>
 
                     <span>
-                        Add User
+                        Add Staff
                     </span>
 
-                </a>
+                </button>
 
             </section>
 
@@ -554,6 +547,8 @@ $passwordRequirements = securityPasswordRequirements(securityPolicy($conn));
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
+<?php include __DIR__ . '/../../includes/staff-account-dialog.php'; ?>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/staff-account.js"></script>
 </body>
 
 </html>

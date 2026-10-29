@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../services/PayPalClient.php';
 
 function checkoutEsc(string|int|float|bool|null $value): string {
     return pvHtml((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
@@ -229,7 +230,7 @@ function peso(float $amount): string {
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <!-- Responsive adjustments -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css"><link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/paypal-card-fields.css?v=<?= filemtime(__DIR__ . '/../assets/css/paypal-card-fields.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&amp;display=swap" rel="stylesheet">
 </head>
 
@@ -411,85 +412,36 @@ function peso(float $amount): string {
 
                     <div class="pv-payment-options">
 
-                        <label class="pv-payment-option">
-                            <input type="radio"
-                                   name="payment_method"
-                                   value="card">
-
-                            <span class="pv-payment-icon">CARD</span>
-
-                            <span class="pv-payment-copy">
-                                <strong>Credit or Debit Card</strong>
-                                <small>Visa, Mastercard, or JCB</small>
-                            </span>
-
-                            <span class="pv-payment-indicator"></span>
-                        </label>
-
-                        <fieldset class="pv-card-details" id="pvCardDetails" aria-labelledby="pvCardDetailsTitle" hidden disabled>
-                            <div class="pv-card-details-intro">
-                                <strong id="pvCardDetailsTitle">Enter your card details</strong>
-                                <p>Enter the details shown on your card.</p>
-                            </div>
-                            <div class="pv-card-details-grid">
-                                <label class="pv-card-details-full" for="pvCardName">
-                                    Name on Card
-                                    <input type="text" id="pvCardName" autocomplete="cc-name" placeholder="Name as shown on card" maxlength="120">
-                                </label>
-                                <label class="pv-card-details-full" for="pvCardNumber">
-                                    Card Number
-                                    <input type="text" id="pvCardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="23">
-                                </label>
-                                <label for="pvCardExpiry">
-                                    Expiry Date
-                                    <input type="text" id="pvCardExpiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5">
-                                </label>
-                                <label for="pvCardSecurityCode">
-                                    Security Code
-                                    <input type="password" id="pvCardSecurityCode" inputmode="numeric" autocomplete="cc-csc" placeholder="CVV" maxlength="4">
-                                </label>
-                                <label for="pvCardType">
-                                    Card Type
-                                    <select id="pvCardType" autocomplete="cc-type">
-                                        <option value="visa">Visa</option>
-                                        <option value="mastercard">Mastercard</option>
-                                        <option value="jcb">JCB</option>
-                                    </select>
-                                </label>
-                            </div>
-                        </fieldset>
-
-                        <label class="pv-payment-option">
-                            <input type="radio"
-                                   name="payment_method"
-                                   value="gcash">
-
-                            <span class="pv-payment-icon">G</span>
-
-                            <span class="pv-payment-copy">
-                                <strong>GCash</strong>
-                                <small>Pay securely with your GCash wallet</small>
-                            </span>
-
-                            <span class="pv-payment-indicator"></span>
-                        </label>
-
                         <label class="pv-payment-option selected">
-                            <input type="radio"
-                                   name="payment_method"
-                                   value="cod"
-                                   checked>
-
+                            <input type="radio" name="payment_method" value="cod" checked>
                             <span class="pv-payment-icon">COD</span>
-
-                            <span class="pv-payment-copy">
-                                <strong>Cash on Delivery</strong>
-                                <small>Pay in cash when your order arrives</small>
-                            </span>
-
+                            <span class="pv-payment-copy"><strong>Cash on Delivery (COD)</strong><small>Pay in cash when your order arrives</small></span>
                             <span class="pv-payment-indicator"></span>
                         </label>
-
+                        <label class="pv-payment-option">
+                            <input type="radio" name="payment_method" value="card">
+                            <span class="pv-payment-icon"><i class="fa-solid fa-credit-card" aria-hidden="true"></i></span>
+                            <span class="pv-payment-copy"><strong>Debit or Credit Card</strong><small>Enter your card details below</small></span>
+                            <span class="pv-payment-indicator"></span>
+                        </label>
+                        <fieldset class="pv-card-details" id="pvCardDetails" aria-labelledby="pvCardDetailsTitle" hidden disabled>
+                            <div class="pv-card-details-intro"><strong id="pvCardDetailsTitle">Card details</strong><p>Enter your details below. Payment verification starts after you select Place order.</p></div>
+                            <div class="pv-card-details-grid">
+                                <label class="pv-card-details-full" for="pvCardholderName">Full name of cardholder
+                                    <input type="text" id="pvCardholderName" autocomplete="cc-name" placeholder="Name as shown on card" maxlength="120" required>
+                                </label>
+                                <div class="pv-card-details-full"><label id="pvCardNumberLabel">Card number</label><div class="pv-card-hosted-field" id="pvHostedCardNumber" aria-labelledby="pvCardNumberLabel"></div></div>
+                                <div><label id="pvCardExpiryLabel">Expiry date</label><div class="pv-card-hosted-field" id="pvHostedCardExpiry" aria-labelledby="pvCardExpiryLabel"></div></div>
+                                <div><label id="pvCardCvcLabel">CVC / CVV</label><div class="pv-card-hosted-field" id="pvHostedCardCvc" aria-labelledby="pvCardCvcLabel"></div></div>
+                            </div>
+                            <p class="pv-card-status" id="pvCardStatus" role="status" aria-live="polite">Select Debit or Credit Card to load the secure fields.</p>
+                        </fieldset>
+                        <label class="pv-payment-option">
+                            <input type="radio" name="payment_method" value="paypal">
+                            <span class="pv-payment-icon"><i class="fa-brands fa-paypal" aria-hidden="true"></i></span>
+                            <span class="pv-payment-copy"><strong>PayPal Account</strong><small>Sign in to your PayPal account to pay</small></span>
+                            <span class="pv-payment-indicator"></span>
+                        </label>
                     </div>
 
                     <div class="pv-payment-notice"
@@ -565,6 +517,8 @@ window.PUREVIA_CHECKOUT = <?= pvJson([
     'baseUrl' => BASE_URL,
     'total' => $total,
     'canCheckout' => $canCheckout,
+    'paypalConfigured' => PayPalClient::configured(),
+    'paypalMode' => PayPalClient::mode(),
     'savedAddress' => $deliveryAddress ? array_intersect_key($deliveryAddress, array_flip([
         'recipient_first_name', 'recipient_last_name', 'phone', 'address_line1',
         'address_line2', 'province', 'city', 'barangay', 'postal_code', 'country'
@@ -574,6 +528,7 @@ window.PUREVIA_CHECKOUT = <?= pvJson([
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/paypal-cards.js?v=<?= filemtime(__DIR__ . '/../assets/js/paypal-cards.js') ?>"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

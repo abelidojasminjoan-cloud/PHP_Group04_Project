@@ -967,3 +967,15 @@ body {
         padding-right: 15px;
     }
 }
+/* Authentication context columns. Keep historical unknown browser values blank. */
+.audit-table { min-width: 1120px; }
+.audit-table th:nth-child(1) { width: 9%; }
+.audit-table th:nth-child(2) { width: 10%; }
+.audit-table th:nth-child(3) { width: 13%; }
+.audit-table th:nth-child(4) { width: 15%; }
+.audit-table th:nth-child(5) { width: 12%; }
+.audit-table th:nth-child(6) { width: 16%; }
+.audit-table th:nth-child(7) { width: 25%; }
+.audit-ip { white-space: nowrap; font-size: 12px; }
+.audit-browser { color: #8a786d; font-size: 12px; line-height: 1.6; }
+.audit-action-logout { background: #fff0e4; color: #c36b23; }

@@ -83,7 +83,7 @@ function orderEsc(mixed $value): string
 
         <p class="pv-success-description">
             Thank you for shopping with PureVia.
-            Pay in cash when your order arrives.
+            <?= $order['payment_method'] === 'cod' ? 'Pay in cash when your order arrives.' : ($order['payment_status'] === 'paid' ? 'Your PayPal payment has been received.' : 'Your payment is awaiting verification.') ?>
         </p>
 
         <strong class="pv-success-order-number">
@@ -96,7 +96,7 @@ function orderEsc(mixed $value): string
                 <span>Payment method</span>
 
                 <strong>
-                    Cash on Delivery
+                    <?= $order['payment_method'] === 'cod' ? 'Cash on Delivery' : 'PayPal' ?>
                 </strong>
             </div>
 
@@ -121,7 +121,7 @@ function orderEsc(mixed $value): string
             </div>
 
             <div class="pv-success-detail-row">
-                <span>Total to pay on delivery</span>
+                <span><?= $order['payment_method'] === 'cod' ? 'Total to pay on delivery' : 'Order total' ?></span>
 
                 <strong>
                     ₱<?= number_format(

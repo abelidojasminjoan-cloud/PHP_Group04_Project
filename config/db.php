@@ -32,6 +32,8 @@ try {
 }
 
 require_once __DIR__ . '/../services/security-policy.php';
+require_once __DIR__ . '/../services/SessionVersion.php';
+enforcePureViaSessionVersion($conn);
 $pureViaRequestPolicy = securityPolicy($conn);
 enforcePureViaSessionTimeout(
     $pureViaRequestPolicy,
