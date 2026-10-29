@@ -20,7 +20,8 @@ if (!is_file($autoload)) {
 require_once $autoload;
 
 $dotenv = Dotenv\Dotenv::createImmutable($projectRoot);
-$dotenv->load();
+// Render provides runtime environment variables; local .env remains supported.
+$dotenv->safeLoad();
 
 /* =========================================================
    APPLICATION INFORMATION
@@ -125,7 +126,7 @@ date_default_timezone_set(
 
 define(
     'BASE_URL',
-    $isPublicDevServer ? '' : '/purevia_website'
+    $isPublicDevServer ? '' : rtrim((string) (parse_url(APP_URL, PHP_URL_PATH) ?: ''), '/')
 );
 
 

@@ -1,6 +1,11 @@
-# PayPal checkout (PHP)
+# PayPal Sandbox checkout
 
-PayPal Sandbox is the default. Add your sandbox app credentials to the existing private `.env`:
+Checkout offers Cash on Delivery and PayPal. The PayPal integration uses server-side
+[Orders v2 create/approve/capture](https://developer.paypal.com/whats-an-order/).
+
+## Configuration
+
+The private `.env` must contain credentials from the same Sandbox business app:
 
 ```dotenv
 PAYPAL_MODE=sandbox
@@ -8,28 +13,54 @@ PAYPAL_CLIENT_ID="your-sandbox-client-id"
 PAYPAL_CLIENT_SECRET="your-sandbox-client-secret"
 ```
 
-Use a PayPal Developer sandbox business app and a separate sandbox personal buyer account. Do not commit or share the secret. PHP requires cURL with a working CA certificate bundle; never disable TLS verification. `APP_URL` must match the application URL, including its subdirectory, so PayPal returns to the correct site.
+PHP requires cURL and a working CA certificate bundle. TLS verification stays on.
+Import `database/migrations/20261029_paypal_checkout.sql` once if the tracking table
+is not installed. PayPal uses the existing `online` payment method in the database.
 
-Import `database/migrations/20261029_paypal_checkout.sql` once through phpMyAdmin. It adds a payment tracking table without modifying existing orders or enum values. PayPal payments use the existing `online` payment method internally. Cash on Delivery remains available; GCash and disconnected card inputs are removed.
+From the project root run `php -S localhost:8000 -t public` and open
+http://localhost:8000/. The built-in server automatically uses that origin for
+PayPal return URLs. Under Apache, `.env` APP_URL must match the website address.
+Use the same hostname throughout checkout to retain the sign-in session.
 
-Checkout creates an unpaid order and reserves stock using database prices. Open the payment page, continue to PayPal, approve, then choose **Confirm / check payment** when returned. Only a server-verified completed capture for the exact order, PHP amount and currency marks it paid. Approval, query parameters and browser messages do not establish payment. Repeated requests reuse the same PayPal request IDs. The private secret never enters HTML or JavaScript.
+## Payment flow
 
-If interrupted, open **My orders → order details → Continue or cancel PayPal payment**. Retry the status check after network errors; do not create another payment. Cancellation checks PayPal first, reconciles a completed capture, or cancels an unpaid order and restores stock exactly once. Cart items remain until payment completes. Changed cart rows are retained instead of silently deleting edits.
+1. Choose PayPal and select Place order. PHP saves an unpaid order using database
+   prices and reserves the selected stock.
+2. The same checkout POST creates/resumes the gateway order and returns PayPal's
+   validated approval URL. The browser opens PayPal directly without an intermediate
+   payment page.
+3. Sign in with a separate Sandbox personal buyer account and approve payment.
+4. PayPal returns directly to PureVia's original Order Success / Order Placed page.
+   The returned token must match the saved gateway order.
+   A same-origin, CSRF-protected POST captures or reconciles the approved payment.
+5. PHP verifies the gateway order ID, local order identity, PHP currency, exact
+   amount, and completed capture status before marking the order paid and opening
+   order confirmation. Refresh/retry reuses the saved order and request IDs.
 
-Schedule `php tools/expire-paypal-checkouts.php` hourly to reconcile or cancel pending orders older than three hours and release abandoned reservations. If PayPal is unavailable it leaves the reservation intact for a later retry. Do not delete tracking records. Sandbox and live attempts cannot be mixed.
+If interrupted, use My orders → order details → Continue or cancel PayPal payment.
+Check payment retries verification without creating a second local order. Closing
+PayPal leaves the unpaid order available to resume. Cancel unpaid order first
+checks the remote status; it reconciles an already completed capture or restores
+reserved stock once. A gateway error leaves the order available for a safe retry.
+Only unchanged purchased cart rows are cleared on verified payment.
 
-This is a Sandbox integration, not a completed live-payment certification. Automated refund/dispute webhooks and refund initiation are not included. Admins cannot manually mark PayPal payments paid or refunded. Process refunds through PayPal; add verified webhook/reconciliation support before live deployment. Do not enable live mode without completing sandbox tests and configuring public HTTPS.
+Schedule `php tools/expire-paypal-checkouts.php` hourly to reconcile/cancel unpaid
+reservations older than three hours. No scheduler is installed by this feature.
+PayPal errors and cancellation return to the same original confirmation layout,
+showing the actual unpaid/cancelled status and recovery controls. The initial
+redirect and return handling need JavaScript; manual retry controls
+remain on the payment page after an error. Private keys never enter browser code.
 
-Validation should cover approval/capture, declining/cancelling, double clicks, refresh/retry, changed cart quantities, wrong users, amount mismatches and stock restoration. Local automated checks use simulated gateway responses; they cannot replace a real sandbox transaction.
+## Verification and limits
 
-Official references: https://developer.paypal.com/studio/checkout/standard/integrate and https://developer.paypal.com/docs/api/orders/v2/
+Sandbox OAuth authentication and creation of an unpaid PHP 1.00 gateway order were
+verified against the configured PayPal app. Capture, mismatch rejection, retries,
+cancellation, and stock restoration were checked with simulated gateway responses
+and connection-local temporary database tables. No real local orders, inventory,
+or customer payments were changed by those checks.
 
-## Embedded card fields
-
-The Debit or Credit Card option displays the cardholder name, card number, expiry and CVC on checkout. It uses PayPal JavaScript SDK v6 and a restricted browser-safe SDK token generated by PHP. Card number, expiry and CVC are PayPal-hosted components, not ordinary inputs posted to the website. The cardholder name is passed directly to the SDK and is not included in PHP form data.
-
-Enable Advanced Credit and Debit Card Payments for the sandbox business app and confirm eligibility for your merchant account, country and PHP currency. Without credentials or eligibility, the form displays a clear unavailable message and does not accept a payment. Bank verification may still open an authentication challenge. Checkout remains on the website until payment is verified, then opens the order confirmation. PayPal Account and COD retain their existing flows.
-
-The original redirect payment page remains available to recover or cancel interrupted orders. PHP creates the amount from the cart and verifies the completed capture independently of the browser. SDK initialization, eligibility, card submission and real Sandbox capture require testing with your configured PayPal app.
-
-Reference: https://developer.paypal.com/expanded/card-fields
+A complete Sandbox purchase still requires a buyer to sign in and approve on
+PayPal. No buyer credentials were used and no actual capture was performed during
+automated checks. This does not enable live payments, automated refunds, or refund
+and dispute webhooks. Historical card-payment recovery code remains for existing
+orders; new checkout orders accept only COD or PayPal.

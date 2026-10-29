@@ -34,6 +34,22 @@ function checkoutReply(
     exit;
 }
 
+/** Return the gateway approval URL directly after the local order is committed. */
+function checkoutPayPalReply(mysqli $conn, int $userId, int $orderId, ?PayPalClient $client = null): never
+{
+    try {
+        $row = PayPalCheckout::find($conn, $userId, $orderId);
+        if ($row['state'] === 'paid') {
+            $_SESSION['confirmed_order_id'] = $orderId;
+            checkoutReply(200, true, 'Payment already verified.', ['order_id' => $orderId, 'redirect_url' => BASE_URL . '/public/order-success.php']);
+        }
+        $approvalUrl = PayPalCheckout::start($conn, $userId, $orderId, $client);
+        checkoutReply(200, true, 'Continue to PayPal.', ['order_id' => $orderId, 'payment_provider' => 'paypal', 'redirect_url' => $approvalUrl]);
+    } catch (Throwable $error) {
+        error_log('PureVia PayPal handoff: ' . $error->getMessage());
+        checkoutReply(409, false, 'Your order is saved, but PayPal could not be opened. Resume payment for this order.', ['order_id' => $orderId, 'redirect_url' => BASE_URL . '/public/order-success.php?paypal_order_id=' . $orderId]);
+    }
+}
 try {
     require_once __DIR__ . '/../../config/app.php';
     require_once __DIR__ . '/../../config/db.php';
@@ -63,7 +79,7 @@ try {
 
     require_once __DIR__ . '/../../services/PayPalCheckout.php';
     $paymentMethod = $_POST['payment_method'] ?? '';
-    if (!in_array($paymentMethod, ['cod', 'card', 'paypal'], true)) checkoutReply(422, false, 'Choose Cash on Delivery, Debit or Credit Card, or PayPal Account.');
+    if (!in_array($paymentMethod, ['cod', 'paypal'], true)) checkoutReply(422, false, 'Choose Cash on Delivery or PayPal.');
     if ($paymentMethod !== 'cod' && !PayPalClient::configured()) checkoutReply(422, false, 'PayPal is not configured yet. Choose Cash on Delivery.');
 
     $checkoutToken = $_POST['checkout_token'] ?? '';
@@ -77,13 +93,13 @@ try {
     if ($paymentMethod !== 'cod') {
         $s = $conn->prepare('SELECT pc.order_id FROM paypal_checkouts pc JOIN orders o ON o.id=pc.order_id WHERE pc.request_key=? AND o.user_id=?');
         $s->bind_param('si', $requestKey, $userId); $s->execute();
-        if ($existing = $s->get_result()->fetch_assoc()) checkoutReply(200, true, 'Resume your PayPal checkout.', ['order_id'=>(int)$existing['order_id'],'redirect_url'=>BASE_URL.'/public/paypal-payment.php?order_id='.$existing['order_id']]);
+        if ($existing = $s->get_result()->fetch_assoc()) checkoutPayPalReply($conn, $userId, (int) $existing['order_id']);
     }
     if (!empty($_SESSION['paypal_pending_order_id'])) {
         $pendingId = (int) $_SESSION['paypal_pending_order_id'];
         $s = $conn->prepare("SELECT pc.order_id FROM paypal_checkouts pc JOIN orders o ON o.id=pc.order_id WHERE pc.order_id=? AND o.user_id=? AND pc.state='pending'");
         $s->bind_param('ii', $pendingId, $userId); $s->execute();
-        if ($s->get_result()->fetch_assoc()) checkoutReply(409, false, 'Finish or cancel your existing PayPal checkout first.', ['redirect_url'=>BASE_URL.'/public/paypal-payment.php?order_id='.$pendingId]);
+        if ($s->get_result()->fetch_assoc()) checkoutReply(409, false, 'Finish or cancel your existing PayPal checkout first.', ['redirect_url'=>BASE_URL.'/public/order-success.php?paypal_order_id='.$pendingId]);
         unset($_SESSION['paypal_pending_order_id'], $_SESSION['paypal_pending_token']);
     }
 
@@ -646,10 +662,7 @@ try {
         if ($paymentMethod !== 'cod') {
             $_SESSION['paypal_pending_order_id'] = $orderId;
             $_SESSION['paypal_pending_token'] = $checkoutToken;
-            checkoutReply(200, true, 'Continue with PayPal to complete payment.', [
-                'order_id'=>$orderId,
-                'redirect_url'=>BASE_URL.'/public/paypal-payment.php?order_id='.$orderId
-            ]);
+            checkoutPayPalReply($conn, $userId, $orderId);
         }
 
         $_SESSION['confirmed_order_id'] = $orderId;
