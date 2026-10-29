@@ -538,7 +538,7 @@ else {
             <div class="sidebar-section">
                 <p class="sidebar-section-title">SKIN MATCH</p>
                 <a href="<?= $adminBase ?>/skin-types/skin-types.php" class="sidebar-link <?= sidebarActive('/skin-types/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">◉</span><span>Skin Types</span></span></a>
-                <a href="<?= $adminBase ?>/suitability/suitability.php" class="sidebar-link <?= sidebarActive('/suitability/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">✓</span><span>Suitability Management</span></span></a>
+                <a href="<?= $adminBase ?>/suitability/suitability.php" class="sidebar-link <?= sidebarActive('/suitability/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">✓</span><span>Suitability</span></span></a>
                 <a href="<?= $adminBase ?>/quiz-analytics/quiz-analytics.php" class="sidebar-link <?= sidebarActive('/quiz-analytics/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon">▥</span><span>Quiz Analytics</span></span></a>
             </div>
 
