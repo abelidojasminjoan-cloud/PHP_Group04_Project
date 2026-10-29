@@ -1,0 +1,541 @@
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+
+/* =====================================
+   PUREVIA ABOUT US
+===================================== */
+
+.pv-about {
+    --about-ink: #283629;
+    --about-green: #53684b;
+    --about-muted: #667164;
+    --about-line: #dddcd0;
+    --about-cream: #f8f6f0;
+    --about-white: #fffdf8;
+
+    font-family: 'DM Sans', Arial, sans-serif;
+    color: var(--about-ink);
+    background: var(--about-cream);
+    overflow: clip;
+}
+
+.pv-about *,
+.pv-about *::before,
+.pv-about *::after {
+    box-sizing: border-box;
+}
+
+.pv-about .pv-about-shell {
+    max-width: 1220px;
+    margin-inline: auto;
+    padding-inline: 38px;
+}
+
+.pv-about h1,
+.pv-about h2,
+.pv-about h3 {
+    color: var(--about-ink);
+}
+
+.pv-about h1,
+.pv-about h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+}
+
+.pv-about h1 em,
+.pv-about h2 em {
+    font-weight: 400;
+    color: var(--about-green);
+}
+
+.pv-about p {
+    line-height: 1.85;
+}
+
+.pv-about .pv-about-eyebrow {
+    color: var(--about-green);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+}
+
+.pv-about .pv-about-eyebrow span {
+    padding-inline: 8px;
+    color: #a5b09d;
+}
+
+/* =====================================
+   HERO SECTION
+===================================== */
+
+.pv-about-hero {
+    background: linear-gradient(
+        116deg,
+        #f3f5ec 0%,
+        #faf8f2 60%,
+        #edeedc 100%
+    );
+
+    padding-block: 100px 96px;
+}
+
+.pv-about-hero-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.07fr)
+        minmax(0, 0.93fr);
+
+    align-items: center;
+    gap: 64px;
+}
+
+.pv-about-hero h1 {
+    font-size: clamp(45px, 5.2vw, 76px);
+    line-height: 1.11;
+    margin: 0 0 24px;
+}
+
+.pv-about-hero-copy > p:not(.pv-about-eyebrow) {
+    color: #566151;
+    font-size: 15px;
+    max-width: 600px;
+    margin: 0 0 16px;
+}
+
+.pv-about-hero-copy .pv-about-lead {
+    color: var(--about-ink) !important;
+    font-weight: 700;
+    font-size: 17px !important;
+}
+
+/* =====================================
+   PRIMARY LINKS
+===================================== */
+
+.pv-about-primary-link {
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    min-height: 52px;
+    padding: 13px 22px;
+    background: var(--about-ink);
+    color: #fff !important;
+    border-radius: 6px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    text-decoration: none;
+    margin-top: 15px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.pv-about-primary-link:hover {
+    background: var(--about-green);
+    transform: translateY(-2px);
+}
+
+.pv-about-primary-link:focus-visible,
+.pv-about a:focus-visible {
+    outline: 3px solid #9cae8c;
+    outline-offset: 3px;
+}
+
+/* =====================================
+   HERO IMAGE
+===================================== */
+
+.pv-about-hero-visual {
+    min-width: 0;
+    position: relative;
+    padding: 0 0 26px 25px;
+}
+
+.pv-about-hero-visual::before {
+    content: '';
+    position: absolute;
+    inset: 25px 25px 0 0;
+    border: 1px solid #a5b29b;
+    border-radius: 200px 200px 15px 15px;
+}
+
+.pv-about-hero-visual img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 4.4;
+    object-fit: cover;
+    position: relative;
+    border-radius: 200px 200px 12px 12px;
+}
+
+.pv-about-image-note {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    max-width: 260px;
+    padding: 16px 20px;
+    background: var(--about-white);
+    box-shadow: 0 10px 36px #29312618;
+    border-radius: 8px;
+    color: var(--about-green);
+    font: 500 17px/1.4 'Playfair Display', Georgia, serif;
+}
+
+/* =====================================
+   GENERAL SECTIONS
+===================================== */
+
+.pv-about-section {
+    padding-block: 104px;
+}
+
+.pv-about-section h2,
+.pv-about-journey h2 {
+    font-size: clamp(36px, 4vw, 58px);
+    line-height: 1.18;
+    margin-bottom: 25px;
+}
+
+/* =====================================
+   WHERE IT ALL BEGAN
+===================================== */
+
+.pv-about-two-col {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 0.83fr)
+        minmax(0, 1.17fr);
+
+    align-items: center;
+    gap: 84px;
+}
+
+.pv-about-photo-frame {
+    position: relative;
+    padding: 20px 20px 20px 0;
+}
+
+.pv-about-photo-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 20px;
+    border-radius: 8px;
+    background: #e5e9de;
+}
+
+.pv-about-photo-frame img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 520px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.pv-about-text-block p:not(.pv-about-eyebrow),
+.pv-about-vision p,
+.pv-about-team-closing {
+    color: #566151;
+    font-size: 15px;
+}
+
+/* =====================================
+   FEATURES
+===================================== */
+
+.pv-about-features {
+    background: #eaf0e7;
+}
+
+.pv-about-heading-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 56px;
+    margin-bottom: 36px;
+}
+
+.pv-about-heading-row h2 {
+    max-width: 660px;
+    margin-bottom: 0;
+}
+
+.pv-about-heading-row > p {
+    max-width: 325px;
+    margin: 0;
+    font-size: 14px;
+    color: #596659;
+}
+
+.pv-about-feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.pv-about-feature-card {
+    background: var(--about-white);
+    border: 1px solid #d4ded2;
+    border-radius: 12px;
+    padding: 27px;
+    min-width: 0;
+}
+
+.pv-about-feature-no {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #8a9685;
+}
+
+.pv-about-feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    margin: 28px 0 20px;
+    border-radius: 50%;
+    background: #e9efe7;
+    color: var(--about-green);
+    font-size: 22px;
+}
+
+.pv-about-feature-card h3 {
+    font: 500 25px/1.3 'Playfair Display', Georgia, serif;
+    margin: 0 0 13px;
+}
+
+.pv-about-feature-card p {
+    margin: 0;
+    color: #5d685b;
+    font-size: 14px;
+}
+
+.pv-about-feature-bottom {
+    margin: 25px 0 0;
+    color: #556153;
+    font-size: 14px;
+    max-width: 840px;
+}
+
+/* =====================================
+   DEVELOPMENT TEAM
+===================================== */
+
+.pv-about-team {
+    text-align: center;
+    background: #fffdf9;
+}
+
+.pv-about-team .pv-about-section-lead {
+    max-width: 780px;
+    margin: 0 auto 36px;
+    color: #606b5d;
+    font-size: 15px;
+}
+
+.pv-about-team-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.pv-about-team-grid li {
+    padding: 28px 15px;
+    background: var(--about-cream);
+    border: 1px solid #e5e2d9;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    align-items: center;
+    color: var(--about-ink);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pv-about-team-initials {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #dfe8da;
+    color: #53684b;
+    font: 500 25px 'Playfair Display', Georgia, serif;
+}
+
+.pv-about-team-closing {
+    max-width: 840px;
+    margin: 36px auto 0;
+}
+
+/* =====================================
+   PURPOSE AND VISION
+===================================== */
+
+.pv-about-vision {
+    background: var(--about-cream);
+}
+
+.pv-about-vision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+}
+
+.pv-about-disclaimer {
+    background: #edf0e6;
+    padding: 18px 22px;
+    border-left: 3px solid var(--about-green);
+    font-size: 13px !important;
+    border-radius: 4px;
+}
+
+/* =====================================
+   OUR JOURNEY CONTINUES
+===================================== */
+
+.pv-about-journey {
+    background: #293d30;
+    color: #f4f6ed;
+    padding-block: 105px;
+    text-align: center;
+}
+
+.pv-about-journey-inner {
+    max-width: 900px !important;
+}
+
+.pv-about-journey .pv-about-eyebrow {
+    color: #bbd0b4;
+}
+
+.pv-about-journey h2 {
+    color: #fffdf7;
+}
+
+.pv-about-journey h2 em {
+    color: #c6d9bd;
+}
+
+.pv-about-journey p:not(.pv-about-eyebrow) {
+    color: #e0e8dc;
+    font-size: 15px;
+}
+
+.pv-about-cta-link {
+    color: var(--about-ink) !important;
+    background: #f2f3e8;
+}
+
+.pv-about-cta-link:hover {
+    background: #cddfc7;
+}
+
+.pv-about-journey .pv-about-signature {
+    margin: 35px 0 0;
+    font: italic 19px 'Playfair Display', Georgia, serif;
+}
+
+/* =====================================
+   RESPONSIVE DESIGN
+===================================== */
+
+@media (max-width: 1000px) {
+    .pv-about-hero-grid,
+    .pv-about-two-col,
+    .pv-about-vision-grid {
+        gap: 40px;
+    }
+
+    .pv-about-feature-card {
+        padding: 22px;
+    }
+
+    .pv-about-team-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .pv-about .pv-about-shell {
+        padding-inline: 20px;
+    }
+
+    .pv-about-hero {
+        padding-block: 58px 65px;
+    }
+
+    .pv-about-hero-grid,
+    .pv-about-two-col,
+    .pv-about-vision-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-about-hero-visual {
+        max-width: 560px;
+        margin-inline: auto;
+    }
+
+    .pv-about-section {
+        padding-block: 65px;
+    }
+
+    .pv-about-photo-frame {
+        max-width: 500px;
+        width: 100%;
+        margin: auto;
+    }
+
+    .pv-about-photo-frame img {
+        height: 390px;
+    }
+
+    .pv-about-heading-row {
+        display: block;
+    }
+
+    .pv-about-heading-row > p {
+        max-width: 100%;
+        margin-top: 18px;
+    }
+
+    .pv-about-feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-about-journey {
+        padding-block: 70px;
+    }
+}
+
+@media (max-width: 440px) {
+    .pv-about-hero h1 {
+        font-size: 43px;
+    }
+
+    .pv-about-team-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-about-image-note {
+        max-width: 210px;
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pv-about-primary-link {
+        transition: none;
+    }
+}

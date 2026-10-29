@@ -444,6 +444,7 @@ $passwordRequirements = securityPasswordRequirements(securityPolicy($conn));
                             <tr
                                 id="noUsersFound"
                                 class="no-users-row"
+                                style="display: <?= $totalUsers === 0 ? 'table-row' : 'none' ?>;"
                             >
 
                                 <td colspan="6">

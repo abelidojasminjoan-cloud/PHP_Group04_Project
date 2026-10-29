@@ -290,6 +290,7 @@ body {
    GUEST ACCOUNT BUTTON
 ========================================= */
 
+.pv-search-trigger,
 .guest-account-icon {
     border: none;
     background: transparent;
@@ -305,10 +306,12 @@ body {
     -webkit-appearance: none;
 }
 
+.pv-search-trigger:focus,
 .guest-account-icon:focus {
     outline: none;
 }
 
+.pv-search-trigger:focus-visible,
 .guest-account-icon:focus-visible {
     outline: 2px solid #69745d;
     outline-offset: 4px;

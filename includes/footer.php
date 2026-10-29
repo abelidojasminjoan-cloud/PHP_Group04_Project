@@ -123,9 +123,11 @@
                 Product Ingredients
             </a>
 
-            <a href="<?= BASE_URL ?>/about.php">
+            
+            <a href="<?= BASE_URL ?>/public/about_us.php">
                 About PureVia
             </a>
+
 
         </div>
 
@@ -248,58 +250,57 @@
              COLUMN 4 - SUPPORT
         ================================== -->
 
-        <div class="footer-column">
+         <div class="footer-column">
 
-            <h3>SUPPORT</h3>
+         <h3>SUPPORT</h3>
 
-            <a href="<?= BASE_URL ?>/about.php">
-                About Us
-            </a>
+        <a href="<?= BASE_URL ?>/public/about_us.php">
+            About Us
+        </a>
 
-            <a href="<?= BASE_URL ?>/contact.php">
-                Contact
-            </a>
+        <a href="<?= BASE_URL ?>/contact.php">
+            Contact
+        </a>
 
-            <a href="<?= BASE_URL ?>/faq.php">
-                FAQs
-            </a>
+        <a href="<?= BASE_URL ?>/faq.php">
+            FAQs
+        </a>
 
-            <a href="<?= BASE_URL ?>/shipping.php">
-                Shipping & Returns
-            </a>
+        <a href="<?= BASE_URL ?>/shipping.php">
+            Shipping & Returns
+        </a>
 
-            <a href="<?= BASE_URL ?>/privacy-policy.php">
-                Privacy Policy
-            </a>
+        <a href="<?= BASE_URL ?>/public/privacy_policy.php">
+            Privacy Policy
+        </a>
 
-            <a href="<?= BASE_URL ?>/terms.php">
-                Terms & Conditions
-            </a>
-
-        </div>
+        <a href="<?= BASE_URL ?>/public/terms.php">
+            Terms & Conditions
+        </a>
 
     </div>
+</div>
 
 
     <!-- =====================================
          SOCIALS
     ====================================== -->
 
-    <div class="footer-socials">
+         <div class="footer-socials">
 
-        <a href="#">
-            Instagram
-        </a>
+            <a href="#">
+                Instagram
+            </a>
 
-        <a href="#">
-            Pinterest
-        </a>
+            <a href="#">
+                Pinterest
+            </a>
 
-        <a href="#">
-            TikTok
-        </a>
+            <a href="#">
+                TikTok
+            </a>
 
-    </div>
+        </div>
 
 
     <!-- =====================================
@@ -316,13 +317,13 @@
 
         <div class="footer-legal">
 
-            <a href="<?= BASE_URL ?>/privacy-policy.php">
+            <a href="<?= BASE_URL ?>/public/privacy_policy.php">
                 Privacy
             </a>
 
             <span>·</span>
 
-            <a href="<?= BASE_URL ?>/terms.php">
+            <a href="<?= BASE_URL ?>/public/terms.php">
                 Terms
             </a>
 

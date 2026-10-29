@@ -25,6 +25,7 @@ if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+
 function escapeHtml(string $value): string {
     return pvHtml($value, ENT_QUOTES, 'UTF-8');
 }
@@ -40,7 +41,8 @@ function escapeHtml(string $value): string {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/auth.css">
+   <link rel="stylesheet"
+      href="<?= BASE_URL ?>/assets/css/auth.css">
 </head>
 <body class="auth-page">
 
@@ -251,13 +253,28 @@ function escapeHtml(string $value): string {
                     </span>
                 </div>
 
-                <div class="auth-terms-field">
-                    <p class="auth-terms">
-                        By continuing and using your account, you agree to our
-                        <a href="<?= BASE_URL ?>/terms.php" target="_blank" rel="noopener">Terms of Use</a>
-                        and <a href="<?= BASE_URL ?>/privacy.php" target="_blank" rel="noopener">Privacy Policy</a>.
-                    </p>
-                </div>
+               
+
+
+<div class="auth-terms-field">
+    <p class="auth-terms">
+        By creating an account, you agree to our
+        <a href="<?= BASE_URL ?>/public/terms.php"
+           target="_blank"
+           rel="noopener noreferrer">
+            Terms of Use
+        </a>
+        and acknowledge that you have read our
+        <a href="<?= BASE_URL ?>/public/privacy_policy.php"
+           target="_blank"
+           rel="noopener noreferrer">
+            Privacy Policy
+        </a>.
+    </p>
+</div>
+
+
+
 
                 <!-- Google reCAPTCHA v2 -->
                 <div class="auth-field">
@@ -277,9 +294,14 @@ function escapeHtml(string $value): string {
                     </span>
                 <?php endif; ?>
 
-                <button type="submit" class="auth-submit">
+                <button
+                    type="submit"
+                    class="auth-submit"
+                    id="registerSubmit"
+                >  
                     Create my account
                 </button>
+
 
             </form>
 
@@ -291,7 +313,7 @@ function escapeHtml(string $value): string {
             </p>
 
         </div>
-
+  
         <footer class="auth-footer">
             <div class="auth-help" aria-label="Contact support">
                 <span>NEED HELP?</span>
@@ -299,11 +321,21 @@ function escapeHtml(string $value): string {
                 <span aria-hidden="true">|</span>
                 <a href="mailto:purevia@gmail.com">purevia@gmail.com</a>
             </div>
-            <div class="auth-footer-links">
-                <a href="<?= BASE_URL ?>/privacy.php">Privacy</a>
-                <a href="<?= BASE_URL ?>/terms.php">Terms</a>
-                <span>&copy; <?= date('Y') ?> PureVia</span>
-            </div>
+           
+
+<div class="auth-footer-links">
+    <a href="<?= BASE_URL ?>/public/privacy_policy.php">
+        Privacy
+    </a>
+
+    <a href="<?= BASE_URL ?>/public/terms.php">
+        Terms
+    </a>
+
+    <span>&copy; <?= date('Y') ?> PureVia</span>
+</div>
+
+
         </footer>
 
     </section>

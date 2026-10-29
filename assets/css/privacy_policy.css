@@ -1,0 +1,449 @@
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap');
+
+:root {
+    --privacy-cream: #f8f6f0;
+    --privacy-card: #fffdf9;
+    --privacy-green: #53634b;
+    --privacy-deep: #293126;
+    --privacy-text: #30332c;
+    --privacy-muted: #73796f;
+    --privacy-line: #e3ddd2;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body.pv-privacy-page {
+    margin: 0;
+    background: var(--privacy-cream);
+    color: var(--privacy-text);
+    font-family: 'DM Sans', Arial, sans-serif;
+    line-height: 1.75;
+}
+
+a {
+    color: inherit;
+}
+
+a:focus-visible {
+    outline: 3px solid #879b7c;
+    outline-offset: 4px;
+}
+
+/* HEADER */
+
+.pv-privacy-header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 22px 34px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.pv-privacy-brand {
+    color: var(--privacy-deep);
+    font: 500 33px/1.2 'Playfair Display', Georgia, serif;
+    letter-spacing: -1px;
+    text-decoration: none;
+}
+
+.pv-privacy-brand span {
+    color: var(--privacy-green);
+}
+
+.pv-privacy-back {
+    color: var(--privacy-green);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.pv-privacy-back:hover,
+.pv-privacy-footer-action a:hover {
+    text-decoration: underline;
+}
+
+/* PAGE INTRODUCTION */
+
+.pv-privacy-main {
+    max-width: 1160px;
+    margin: 10px auto 0;
+    padding: 0 30px 54px;
+}
+
+.pv-privacy-intro {
+    padding: 54px 62px 44px;
+    background: linear-gradient(
+        125deg,
+        #edf0e8,
+        #faf8f2 75%
+    );
+    border: 1px solid #d9dfd3;
+    border-radius: 20px;
+}
+
+.pv-privacy-eyebrow {
+    color: var(--privacy-green);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.pv-privacy-intro h1 {
+    margin: 12px 0;
+    font: 500 clamp(36px, 5vw, 56px)/1.16
+          'Playfair Display', Georgia, serif;
+    color: var(--privacy-deep);
+}
+
+.pv-privacy-intro > p {
+    max-width: 680px;
+    margin: 0;
+    color: #5d675a;
+    font-size: 15px;
+}
+
+.pv-privacy-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+    margin-top: 22px;
+    color: #626d60;
+    font-size: 12px;
+}
+
+.pv-privacy-meta span + span {
+    padding-left: 24px;
+    border-left: 1px solid #c4cdbc;
+}
+
+/* MAIN LAYOUT */
+
+.pv-privacy-layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 38px;
+    margin-top: 35px;
+    align-items: start;
+}
+
+/* SECTION NAVIGATION */
+
+.pv-privacy-nav {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    padding: 23px 15px;
+    border: 1px solid var(--privacy-line);
+    background: var(--privacy-card);
+    border-radius: 14px;
+}
+
+.pv-privacy-nav p {
+    margin: 0 13px 12px;
+    color: var(--privacy-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+}
+
+.pv-privacy-nav a {
+    padding: 7px 13px;
+    border-radius: 7px;
+    color: #555e50;
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.pv-privacy-nav a:hover,
+.pv-privacy-nav a:focus-visible {
+    background: #e9eee5;
+    color: #30442d;
+}
+
+/* POLICY CONTENT */
+
+.pv-privacy-content {
+    min-width: 0;
+    background: var(--privacy-card);
+    border: 1px solid var(--privacy-line);
+    border-radius: 14px;
+    padding: 10px 45px;
+}
+
+.pv-privacy-content section {
+    padding: 31px 0 29px;
+    border-bottom: 1px solid var(--privacy-line);
+    scroll-margin-top: 26px;
+}
+
+.pv-privacy-content section:last-child {
+    border-bottom: none;
+}
+
+.pv-privacy-content h2 {
+    display: flex;
+    gap: 13px;
+    align-items: baseline;
+    margin: 0 0 14px;
+    color: var(--privacy-deep);
+    font: 500 25px/1.3
+          'Playfair Display', Georgia, serif;
+}
+
+.pv-privacy-content h2 span {
+    flex-shrink: 0;
+    color: var(--privacy-green);
+    font: 700 12px 'DM Sans', Arial, sans-serif;
+}
+
+.pv-privacy-content p,
+.pv-privacy-content li {
+    color: #50554c;
+    font-size: 14px;
+    line-height: 1.85;
+}
+
+.pv-privacy-content p {
+    margin: 0 0 13px;
+}
+
+.pv-privacy-content p:last-child {
+    margin-bottom: 0;
+}
+
+.pv-privacy-content ul {
+    padding-left: 22px;
+    margin: 8px 0 18px;
+}
+
+.pv-privacy-content li {
+    margin-bottom: 8px;
+    padding-left: 3px;
+}
+
+.pv-privacy-content strong {
+    color: #303d2d;
+}
+
+/* CONTACT INFORMATION */
+
+.pv-privacy-contact {
+    margin: 20px 0;
+    border: 1px solid var(--privacy-line);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.pv-privacy-contact div {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--privacy-line);
+    font-size: 13px;
+}
+
+.pv-privacy-contact div:last-child {
+    border-bottom: 0;
+}
+
+.pv-privacy-contact dt {
+    color: var(--privacy-muted);
+    font-weight: 700;
+}
+
+.pv-privacy-contact dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.pv-privacy-review {
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: #f1eee7;
+}
+
+/* FOOTER */
+
+.pv-privacy-footer-action {
+    text-align: right;
+    margin-top: 24px;
+}
+
+.pv-privacy-footer-action a {
+    color: var(--privacy-green);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.pv-privacy-footer {
+    padding: 28px 20px;
+    text-align: center;
+    border-top: 1px solid var(--privacy-line);
+    color: #7a8176;
+    font-size: 11px;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 900px) {
+    .pv-privacy-layout {
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+
+    .pv-privacy-nav {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pv-privacy-nav p {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .pv-privacy-header {
+        padding: 18px;
+    }
+
+    .pv-privacy-brand {
+        font-size: 27px;
+    }
+
+    .pv-privacy-back {
+        font-size: 11px;
+    }
+
+    .pv-privacy-main {
+        padding: 0 15px 36px;
+    }
+
+    .pv-privacy-intro {
+        padding: 35px 25px;
+    }
+
+    .pv-privacy-meta span + span {
+        border: 0;
+        padding-left: 0;
+    }
+
+    .pv-privacy-content {
+        padding: 5px 22px;
+    }
+
+    .pv-privacy-content h2 {
+        font-size: 23px;
+    }
+
+    .pv-privacy-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-privacy-contact div {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+
+
+/* =========================================
+   ACTIVE SIDEBAR HIGHLIGHT
+========================================= */
+
+.pv-privacy-nav {
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+}
+
+.pv-privacy-nav a.is-active,
+.pv-privacy-nav a[aria-current="location"] {
+    background: #e5ebe1;
+    color: #293126;
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 #53634b;
+}
+
+/* =========================================
+   TERMS AND PRIVACY CHECKBOX
+========================================= */
+
+.pv-policy-confirm {
+    margin-top: 20px;
+    padding: 28px 0 18px;
+    border-top: 1px solid #e3ddd2;
+}
+
+.pv-privacy-content .pv-policy-confirm h2 {
+    margin: 0 0 12px;
+    color: #293126;
+    font-size: 25px;
+}
+
+.pv-policy-confirm-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+    color: #303d2d;
+    font-size: 14px;
+    line-height: 1.7;
+    cursor: pointer;
+}
+
+.pv-policy-confirm-label input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 19px;
+    height: 19px;
+    margin-top: 3px;
+    accent-color: #53634b;
+    cursor: pointer;
+}
+
+.pv-policy-save-status {
+    margin: 8px 0 0 31px !important;
+    color: #53634b !important;
+    font-size: 12px !important;
+}
+
+.pv-policy-confirm-label input:focus-visible {
+    outline: 2px solid #53634b;
+    outline-offset: 3px;
+}
+
+.pv-policy-confirm-label input:disabled {
+    cursor: wait;
+}
+
+@media (max-width: 900px) {
+    .pv-privacy-nav {
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+@media (max-width: 600px) {
+    .pv-privacy-content .pv-policy-confirm h2 {
+        font-size: 22px;
+    }
+}
