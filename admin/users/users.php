@@ -1,24 +1,12 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/csrf.php';
+require_once __DIR__ . '/../../services/AdminUser.php';
 
-requirePureViaAdmin($conn);
-$pageTitle = "Users";
-
-$users = $conn->query("
-    SELECT
-        u.id,
-        TRIM(CONCAT_WS(' ', u.first_name, u.last_name)) AS name,
-        u.email,
-        COALESCE(u.phone, '') AS phone,
-        r.role_name AS role,
-        u.status,
-        DATE_FORMAT(u.created_at, '%Y-%m-%d') AS joined
-    FROM users u
-    INNER JOIN roles r ON r.id = u.role_id
-    ORDER BY u.id ASC
-")->fetch_all(MYSQLI_ASSOC);
-
+$currentUser = requirePureViaAdmin($conn);
+$pageTitle = 'Users';
+$users = AdminUser::all($conn);
 $totalUsers = count($users);
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 ?>
@@ -254,8 +242,8 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
                                     strtolower($user['status']);
 
                                 $initial =
-                                    strtoupper(
-                                        substr(
+                                    mb_strtoupper(
+                                        mb_substr(
                                             $user['name'],
                                             0,
                                             1
@@ -268,7 +256,7 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
                                     class="user-row"
                                     data-role="<?= pvHtml($role) ?>"
                                     data-search="<?= pvHtml(
-                                        strtolower(
+                                        mb_strtolower(
                                             $user['name'] . ' ' .
                                             $user['email'] . ' ' .
                                             $user['phone']
@@ -412,7 +400,9 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
 
                                             <!-- EDIT -->
                                             <a
-                                                href="./edit.php?id=<?= urlencode($user['id']) ?>"
+                                                href="#userModal"
+                                                data-edit-user="<?= (int) $user['id'] ?>"
+                                                aria-haspopup="dialog"
                                                 class="action-button edit-button"
                                                 title="Edit user"
                                                 aria-label="Edit <?= pvHtml($user['name']) ?>"
@@ -427,7 +417,8 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
                                                 class="action-button delete-button"
                                                 title="Delete user"
                                                 aria-label="Delete <?= pvHtml($user['name']) ?>"
-                                                data-user-id="<?= pvHtml($user['id']) ?>"
+                                                data-delete-user="<?= (int) $user['id'] ?>"
+                                                data-revision="<?= pvHtml($user['revision']) ?>"
                                                 data-user-name="<?= pvHtml($user['name']) ?>"
                                             >
                                                 <i class="fa-regular fa-trash-can"></i>
@@ -478,6 +469,72 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
     </div>
 
 
+
+    <div id="userModal" class="form-modal" aria-hidden="true">
+        <div class="form-modal-backdrop" data-close-user-modal></div>
+        <div class="form-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="userFormTitle" tabindex="-1">
+            <form id="userForm" class="purevia-form" action="<?= BASE_URL ?>/actions/admin/users/user.php" method="post">
+                <input type="hidden" name="csrf_token" value="<?= pvHtml(csrfToken()) ?>">
+                <input type="hidden" name="id">
+                <input type="hidden" name="revision">
+                <input type="hidden" name="action" value="create">
+                <header class="form-modal-header">
+                    <h2 id="userFormTitle">Add User</h2>
+                    <button type="button" class="form-modal-close" data-close-user-modal aria-label="Close user form">&times;</button>
+                </header>
+                <div class="form-modal-body">
+                    <p id="userFormError" class="form-alert form-alert-error" role="alert" tabindex="-1" hidden></p>
+                    <div class="form-grid form-grid-2">
+                        <div class="form-group">
+                            <label for="userFirstName">First Name <span class="form-required">*</span></label>
+                            <input id="userFirstName" class="form-control" name="first_name" maxlength="100" autocomplete="off" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userLastName">Last Name <span class="form-required">*</span></label>
+                            <input id="userLastName" class="form-control" name="last_name" maxlength="100" autocomplete="off" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email Address <span class="form-required">*</span></label>
+                        <input id="userEmail" class="form-control" name="email" type="email" maxlength="255" autocomplete="off" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPhone">Phone</label>
+                        <input id="userPhone" class="form-control" name="phone" type="tel" maxlength="30" autocomplete="off">
+                    </div>
+                    <div class="form-grid form-grid-2">
+                        <div class="form-group">
+                            <label for="userRole">Role</label>
+                            <select id="userRole" name="role_id" class="form-control" required>
+                                <?php foreach ($roles as $role): ?>
+                                    <option value="<?= (int) $role['id'] ?>"<?= (int) $role['id'] === 3 ? ' selected' : '' ?>><?= pvHtml($role['role_name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="userStatus">Status</label>
+                            <select id="userStatus" name="status" class="form-control" aria-describedby="userStatusHelp" required>
+                                <option value="active">Active</option>
+                                <option value="pending">Pending</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="locked">Locked</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="user-form-help" id="userStatusHelp">Active grants sign-in access and confirms the email on behalf of the user. Saving an account as Active also clears login locks. Pending users must verify their email.</p>
+                    <div class="form-group">
+                        <label for="userPassword" id="userPasswordLabel">Password <span class="form-required">*</span></label>
+                        <input id="userPassword" class="form-control" name="password" type="password" autocomplete="new-password" aria-describedby="userPasswordHelp" required>
+                        <p class="user-form-help" id="userPasswordHelp"><span id="userPasswordOptional" hidden>Leave blank to keep the current password. </span><?= pvHtml(implode('. ', $passwordRequirements)) ?>. Maximum 72 bytes.</p>
+                    </div>
+                </div>
+                <footer class="form-modal-footer">
+                    <button type="button" class="form-cancel-button" data-close-user-modal>Cancel</button>
+                    <button type="submit" id="userSaveButton" class="form-submit-button">Add User</button>
+                </footer>
+            </form>
+        </div>
+    </div>
 
     <!-- =====================================
          SIDEBAR JS
