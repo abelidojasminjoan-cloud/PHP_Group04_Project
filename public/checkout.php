@@ -34,7 +34,7 @@ if (empty($_SESSION['csrf_token'])) {
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
@@ -61,14 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     )));
 
     if (!$ids || count($ids) > 100) {
-        header('Location: ' . BASE_URL . '/public/cart.php');
+        header('Location: ' . BASE_URL . '/cart.php');
         exit;
     }
 
     $_SESSION['checkout_selected_items'] = $ids;
     $_SESSION['checkout_token'] = bin2hex(random_bytes(32));
 
-    header('Location: ' . BASE_URL . '/public/checkout.php', true, 303);
+    header('Location: ' . BASE_URL . '/checkout.php', true, 303);
     exit;
 }
 
@@ -78,7 +78,7 @@ if (empty($_SESSION['checkout_token'])) {
 }
 
 if (!$selectedIds || !is_array($selectedIds)) {
-    header('Location: ' . BASE_URL . '/public/cart.php');
+    header('Location: ' . BASE_URL . '/cart.php');
     exit;
 }
 
@@ -248,7 +248,7 @@ function peso(float $amount): string {
                 <h1>Complete your order</h1>
             </div>
 
-            <a href="<?= BASE_URL ?>/public/cart.php"
+            <a href="<?= BASE_URL ?>/cart.php"
                class="pv-checkout-back">
                 <i class="fa-solid fa-chevron-left"></i>
                 Back to bag
@@ -509,7 +509,7 @@ window.PUREVIA_CHECKOUT = <?= pvJson([
 </script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

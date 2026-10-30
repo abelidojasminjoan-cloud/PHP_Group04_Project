@@ -1,1 +1,11 @@
 DirectoryIndex index.php public/index.php
+RewriteEngine On
+
+# Keep private project files out of Apache's web access.
+RewriteRule (^|/)\. - [F,L]
+RewriteRule ^(?:config|database|docs|includes|services|tools|vendor|backups|storage)(?:/|$) - [F,L]
+
+# Clean customer-page URLs when XAMPP serves the project directory.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([A-Za-z0-9_-]+\.php)$ public/$1 [L]

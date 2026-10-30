@@ -144,34 +144,60 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    /* SEARCH CHECKBOXES */
-
-    function setupCheckboxSearch(inputId, listId) {
-
-        const searchInput = document.getElementById(inputId);
+    /* PRODUCT OPTION SEARCH AND BULK SELECTION */
+    function setupProductOptions(listId, toggleId, searchId, label) {
         const list = document.getElementById(listId);
+        const toggle = document.getElementById(toggleId);
+        const search = searchId ? document.getElementById(searchId) : null;
+        const toggleLabel = toggle.nextElementSibling;
+        const empty = document.createElement('p');
+        empty.className = 'product-options-empty';
+        empty.setAttribute('role', 'status');
+        list.appendChild(empty);
 
-        if (!searchInput || !list) {
-            return;
+        function visibleInputs() {
+            return [...list.querySelectorAll('.product-checkbox')]
+                .filter(option => !option.hidden)
+                .map(option => option.querySelector('input[type="checkbox"]'))
+                .filter(input => input && !input.disabled);
         }
 
-        searchInput.addEventListener("input", function () {
+        function syncToggle() {
+            const inputs = visibleInputs();
+            const selected = inputs.filter(input => input.checked).length;
+            toggle.disabled = inputs.length === 0;
+            toggle.checked = inputs.length > 0 && selected === inputs.length;
+            toggle.indeterminate = selected > 0 && selected < inputs.length;
+        }
 
-            const query = searchInput.value
-                .trim()
-                .toLowerCase();
-
-            list.querySelectorAll('.product-checkbox').forEach(option => {
-
-                const text = option.textContent.toLowerCase();
-
-                option.hidden = !text.includes(query);
+        function refresh() {
+            const query = search ? search.value.trim().toLowerCase() : '';
+            const options = [...list.querySelectorAll('.product-checkbox')];
+            options.forEach(option => {
+                option.hidden = !option.textContent.toLowerCase().includes(query);
             });
+            const hasResults = options.some(option => !option.hidden);
+            empty.hidden = hasResults;
+            empty.textContent = query ? 'No ' + label + ' found.' : 'No ' + label + ' available.';
+            toggleLabel.textContent = 'Select all ' + (query ? 'matching ' : '') + label;
+            syncToggle();
+        }
+
+        toggle.addEventListener('change', () => {
+            visibleInputs().forEach(input => { input.checked = toggle.checked; });
+            syncToggle();
         });
+        list.addEventListener('change', syncToggle);
+        search?.addEventListener('input', refresh);
+        refresh();
+        return refresh;
     }
 
-    setupCheckboxSearch("concernSearch", "concernOptions");
-    setupCheckboxSearch("ingredientSearch", "ingredientOptions");
+    const refreshProductOptions = [
+        setupProductOptions('skinTypeOptions', 'selectAllSkinTypes', null, 'skin types'),
+        setupProductOptions('concernOptions', 'selectAllConcerns', 'concernSearch', 'skin concerns'),
+        setupProductOptions('ingredientOptions', 'selectAllIngredients', 'ingredientSearch', 'ingredients')
+    ];
 
     function updateRoutineFields() {
         const role = document.getElementById('productRoutineRole').value;
@@ -293,7 +319,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formBody.inert = false;
         form.removeAttribute('aria-busy');
         formError.remove();
-        form.querySelectorAll('.product-checkbox').forEach(option => { option.hidden = false; });
+        refreshProductOptions.forEach(refresh => refresh());
         updateRoutineFields();
         title.textContent = editing ? 'Edit Product' : 'Add New Product';
         subtitle.textContent = 'Fill in the details and add all available sizes';
@@ -311,7 +337,7 @@ document.addEventListener("DOMContentLoaded", function () {
         form.elements.namedItem('product_id').value = product.id;
         form.elements.namedItem('product_revision').value = product.revision;
         const fields = {
-            productName: product.product_name, productCode: product.product_code,
+            productName: product.product_name,
             productCategory: product.category_id, productStatus: product.status,
             productDescription: product.description ?? '', keyBenefits: product.benefits.join('\n'),
             productRoutineRole: product.suitability_settings.routine_role,
@@ -350,6 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 input.checked = true;
             });
         });
+        refreshProductOptions.forEach(refresh => refresh());
         variantRows.replaceChildren(...(product.variants.length ? product.variants.map(createVariantRow) : [createVariantRow()]));
         updateRemoveButtons();
         const preview = path => new URL(path, new URL(form.dataset.baseUrl + '/', document.baseURI)).href;

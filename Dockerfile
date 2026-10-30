@@ -24,8 +24,7 @@ COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/purevia.ini
 COPY docker/start.sh /usr/local/bin/purevia-start
 
-# The local Windows junctions are excluded from the build context. Linux links
-# expose only the existing web folders while retaining their PHP include paths.
+# Expose the original web folders through links, without copying source files.
 RUN set -eux; \
     mkdir -p /var/www/storage/uploads/products /var/www/storage/uploads/profiles \
         /var/www/storage/uploads/reviews /var/www/storage/sessions; \

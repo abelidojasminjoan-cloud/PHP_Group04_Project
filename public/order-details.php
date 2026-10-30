@@ -9,7 +9,7 @@ require_once __DIR__ . '/../services/order-returns.php';
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
@@ -21,7 +21,7 @@ $orderId = filter_input(
 );
 
 if (!$orderId) {
-    header('Location: ' . BASE_URL . '/public/my-orders.php');
+    header('Location: ' . BASE_URL . '/my-orders.php');
     exit;
 }
 
@@ -265,18 +265,19 @@ if (empty($_SESSION['csrf_token'])) {
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/order-cancellation.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form2.css">
 </head>
 
 <body>
 
 <?php include __DIR__ . '/../includes/header.php'; ?>
 <?php if (($order['payment_method'] ?? '') === 'online' && $order['payment_status'] === 'pending' && $order['order_status'] === 'pending'): ?>
-<p class="od-payment-resume"><a href="<?= BASE_URL ?>/public/paypal-payment.php?order_id=<?= (int)$orderId ?>">Continue or cancel PayPal payment</a></p>
+<p class="od-payment-resume"><a href="<?= BASE_URL ?>/paypal-payment.php?order_id=<?= (int)$orderId ?>">Continue or cancel PayPal payment</a></p>
 <?php endif; ?>
 
 <main class="od-page">
     <div class="od-container">
-        <a href="<?= BASE_URL ?>/public/my-orders.php" class="od-back">
+        <a href="<?= BASE_URL ?>/my-orders.php" class="od-back">
             <?= odIcon('arrow-left') ?> Back to my orders
         </a>
 
@@ -412,7 +413,7 @@ window.PUREVIA_ORDER_DETAILS = <?= pvJson([
 </script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-details.js"></script>

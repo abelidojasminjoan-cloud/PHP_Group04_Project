@@ -35,11 +35,11 @@
 
             <div class="footer-menu">
 
-                <a href="<?= BASE_URL ?>/public/login.php">
+                <a href="<?= BASE_URL ?>/login.php">
                     Login
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/register.php">
+                <a href="<?= BASE_URL ?>/register.php">
                     Register
                 </a>
 
@@ -65,27 +65,27 @@
 
             <h3>SHOP</h3>
 
-            <a href="<?= BASE_URL ?>/public/shop.php">
+            <a href="<?= BASE_URL ?>/shop.php">
                 All Products
             </a>
 
-            <a href="<?= BASE_URL ?>/public/shop.php?category=cleansers">
+            <a href="<?= BASE_URL ?>/shop.php?category=cleansers">
                 Cleansers
             </a>
 
-            <a href="<?= BASE_URL ?>/public/shop.php?category=toners">
+            <a href="<?= BASE_URL ?>/shop.php?category=toners">
                 Toners
             </a>
 
-            <a href="<?= BASE_URL ?>/public/shop.php?category=serums">
+            <a href="<?= BASE_URL ?>/shop.php?category=serums">
                 Serums
             </a>
 
-            <a href="<?= BASE_URL ?>/public/shop.php?category=moisturizers">
+            <a href="<?= BASE_URL ?>/shop.php?category=moisturizers">
                 Moisturizers
             </a>
 
-            <a href="<?= BASE_URL ?>/public/shop.php?category=sunscreens">
+            <a href="<?= BASE_URL ?>/shop.php?category=sunscreens">
                 Sunscreens
             </a>
 
@@ -100,7 +100,7 @@
 
             <h3>DISCOVER</h3>
 
-            <a href="<?= BASE_URL ?>/skin-type-finder.php">
+            <a href="<?= BASE_URL ?>/skin-match.php?path=guided">
                 Skin Type Finder
             </a>
 
@@ -119,12 +119,12 @@
 
             <?php endif; ?>
 
-            <a href="<?= BASE_URL ?>/public/shop.php">
+            <a href="<?= BASE_URL ?>/shop.php">
                 Product Ingredients
             </a>
 
             
-            <a href="<?= BASE_URL ?>/public/about_us.php">
+            <a href="<?= BASE_URL ?>/about_us.php">
                 About PureVia
             </a>
 
@@ -200,11 +200,11 @@
                 $_SESSION['role'] == 'customer'
             ): ?>
 
-                <a href="<?= BASE_URL ?>/public/index.php">
+                <a href="<?= BASE_URL ?>/index.php">
                     Home
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/shop.php">
+                <a href="<?= BASE_URL ?>/shop.php">
                     Shop
                 </a>
 
@@ -212,11 +212,11 @@
                     My Account
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/my-orders.php">
+                <a href="<?= BASE_URL ?>/my-orders.php">
                     My Orders
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/cart.php">
+                <a href="<?= BASE_URL ?>/cart.php">
                     My Bag
                 </a>
 
@@ -225,19 +225,19 @@
 
             <?php else: ?>
 
-                <a href="<?= BASE_URL ?>/public/index.php">
+                <a href="<?= BASE_URL ?>/index.php">
                     Home
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/shop.php">
+                <a href="<?= BASE_URL ?>/shop.php">
                     Shop
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/login.php">
+                <a href="<?= BASE_URL ?>/login.php">
                     Login
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/register.php">
+                <a href="<?= BASE_URL ?>/register.php">
                     Register
                 </a>
 
@@ -254,7 +254,7 @@
 
          <h3>SUPPORT</h3>
 
-        <a href="<?= BASE_URL ?>/public/about_us.php">
+        <a href="<?= BASE_URL ?>/about_us.php">
             About Us
         </a>
 
@@ -270,11 +270,11 @@
             Shipping & Returns
         </a>
 
-        <a href="<?= BASE_URL ?>/public/privacy_policy.php">
+        <a href="<?= BASE_URL ?>/privacy_policy.php">
             Privacy Policy
         </a>
 
-        <a href="<?= BASE_URL ?>/public/terms.php">
+        <a href="<?= BASE_URL ?>/terms.php">
             Terms & Conditions
         </a>
 
@@ -317,13 +317,13 @@
 
         <div class="footer-legal">
 
-            <a href="<?= BASE_URL ?>/public/privacy_policy.php">
+            <a href="<?= BASE_URL ?>/privacy_policy.php">
                 Privacy
             </a>
 
             <span>·</span>
 
-            <a href="<?= BASE_URL ?>/public/terms.php">
+            <a href="<?= BASE_URL ?>/terms.php">
                 Terms
             </a>
 

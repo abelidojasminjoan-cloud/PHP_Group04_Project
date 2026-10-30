@@ -63,10 +63,13 @@ desktop.ini
 *.sql.gz
 *.sql.zip
 
-# Local document-root junctions (existing source directories, not copies).
-/public/assets/
-/public/uploads/
-/public/actions/
+# Public directory shortcuts refer to the original folders outside public.
 /public/account/
+/public/actions/
 /public/admin/
+/public/assets/
 /public/staff/
+/public/uploads/
+
+# Private return evidence
+/storage/

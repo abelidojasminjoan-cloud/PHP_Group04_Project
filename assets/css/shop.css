@@ -973,8 +973,8 @@ body {
 }
 
 .shop-card-add:hover:not(:disabled) {
-    background: #1d1d1d;
-    border-color: #1d1d1d;
+    background: #31382c;
+    border-color: #31382c;
     color: #ffffff;
 }
 
@@ -1315,4 +1315,22 @@ body {
     letter-spacing: 0.4px;
     line-height: 1.5;
     text-transform: uppercase;
+}
+
+/* Shop cards share the landing page's reversible image fade. */
+.shop-product-image.pv-home-image-hover > .pv-home-hover-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 350ms ease, transform 350ms ease;
+}
+.shop-product-image.pv-home-image-active > .pv-home-hover-image { opacity: 1; }
+.shop-product-image.pv-home-image-hover > .shop-match-badge,
+.shop-product-image.pv-home-image-hover > .shop-stock-badge { z-index: 1; }
+@media (prefers-reduced-motion: reduce) {
+    .shop-product-image.pv-home-image-hover > .pv-home-hover-image { transition: none; }
 }

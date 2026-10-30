@@ -16,7 +16,7 @@ require_once __DIR__ . '/../../config/db.php';
 $adminId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($adminId < 1) {
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
     exit;
 }
 

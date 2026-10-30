@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 
 if (!TWO_FACTOR_ENABLED) {
-    header('Location: ' . BASE_URL . '/public/login.php', true, 303);
+    header('Location: ' . BASE_URL . '/login.php', true, 303);
     exit;
 }
 require_once __DIR__ . '/../../services/two_factor_auth.php';
@@ -45,7 +45,7 @@ if (
     $started > time() ||
     time() - $started > 300
 ) {
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
     exit;
 }
 

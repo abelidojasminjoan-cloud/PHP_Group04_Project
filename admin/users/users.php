@@ -7,6 +7,8 @@ require_once __DIR__ . '/../../services/AdminUser.php';
 $currentUser = requirePureViaAdmin($conn);
 $pageTitle = 'Users';
 $users = AdminUser::all($conn);
+
+
 $totalUsers = count($users);
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 ?>
@@ -67,8 +69,8 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
 
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form2.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin_delete.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/form2.css?v=<?= filemtime(__DIR__ . '/../../assets/css/form2.css') ?>">
+    
 </head>
 
 
@@ -123,7 +125,7 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
 
                     <p>
                         <?= number_format($totalUsers) ?>
-                        total users
+                        total users &middot; deactivate accounts to preserve history
                     </p>
 
                 </div>
@@ -410,20 +412,6 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
                                                 <i class="fa-regular fa-pen-to-square"></i>
                                             </a>
 
-
-                                            <!-- DELETE -->
-                                            <button
-                                                type="button"
-                                                class="action-button delete-button"
-                                                title="Delete user"
-                                                aria-label="Delete <?= pvHtml($user['name']) ?>"
-                                                data-delete-user="<?= (int) $user['id'] ?>"
-                                                data-revision="<?= pvHtml($user['revision']) ?>"
-                                                data-user-name="<?= pvHtml($user['name']) ?>"
-                                            >
-                                                <i class="fa-regular fa-trash-can"></i>
-                                            </button>
-
                                         </div>
                                     </td>
 
@@ -470,83 +458,21 @@ if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_b
 
 
 
-    <div id="userModal" class="form-modal" aria-hidden="true">
-        <div class="form-modal-backdrop" data-close-user-modal></div>
-        <div class="form-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="userFormTitle" tabindex="-1">
-            <form id="userForm" class="purevia-form" action="<?= BASE_URL ?>/actions/admin/users/user.php" method="post">
-                <input type="hidden" name="csrf_token" value="<?= pvHtml(csrfToken()) ?>">
-                <input type="hidden" name="id">
-                <input type="hidden" name="revision">
-                <input type="hidden" name="action" value="create">
-                <header class="form-modal-header">
-                    <h2 id="userFormTitle">Add User</h2>
-                    <button type="button" class="form-modal-close" data-close-user-modal aria-label="Close user form">&times;</button>
-                </header>
-                <div class="form-modal-body">
-                    <p id="userFormError" class="form-alert form-alert-error" role="alert" tabindex="-1" hidden></p>
-                    <div class="form-grid form-grid-2">
-                        <div class="form-group">
-                            <label for="userFirstName">First Name <span class="form-required">*</span></label>
-                            <input id="userFirstName" class="form-control" name="first_name" maxlength="100" autocomplete="off" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="userLastName">Last Name <span class="form-required">*</span></label>
-                            <input id="userLastName" class="form-control" name="last_name" maxlength="100" autocomplete="off" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="userEmail">Email Address <span class="form-required">*</span></label>
-                        <input id="userEmail" class="form-control" name="email" type="email" maxlength="255" autocomplete="off" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userPhone">Phone</label>
-                        <input id="userPhone" class="form-control" name="phone" type="tel" maxlength="30" autocomplete="off">
-                    </div>
-                    <div class="form-grid form-grid-2">
-                        <div class="form-group">
-                            <label for="userRole">Role</label>
-                            <select id="userRole" name="role_id" class="form-control" required>
-                                <?php foreach ($roles as $role): ?>
-                                    <option value="<?= (int) $role['id'] ?>"<?= (int) $role['id'] === 3 ? ' selected' : '' ?>><?= pvHtml($role['role_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="userStatus">Status</label>
-                            <select id="userStatus" name="status" class="form-control" aria-describedby="userStatusHelp" required>
-                                <option value="active">Active</option>
-                                <option value="pending">Pending</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="locked">Locked</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="user-form-help" id="userStatusHelp">Active grants sign-in access and confirms the email on behalf of the user. Saving an account as Active also clears login locks. Pending users must verify their email.</p>
-                    <div class="form-group">
-                        <label for="userPassword" id="userPasswordLabel">Password <span class="form-required">*</span></label>
-                        <input id="userPassword" class="form-control" name="password" type="password" autocomplete="new-password" aria-describedby="userPasswordHelp" required>
-                        <p class="user-form-help" id="userPasswordHelp"><span id="userPasswordOptional" hidden>Leave blank to keep the current password. </span><?= pvHtml(implode('. ', $passwordRequirements)) ?>. Maximum 72 bytes.</p>
-                    </div>
-                </div>
-                <footer class="form-modal-footer">
-                    <button type="button" class="form-cancel-button" data-close-user-modal>Cancel</button>
-                    <button type="submit" id="userSaveButton" class="form-submit-button">Add User</button>
-                </footer>
-            </form>
-        </div>
-    </div>
+    <?php include __DIR__ . '/../../includes/user-edit-dialog.php'; ?>
+
+
 
     <!-- =====================================
          SIDEBAR JS
     ====================================== -->
 
     <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/sidemenu.js"></script>
-    <script nonce="<?= pvScriptNonce() ?>" src="../../assets/js/user.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/user.js?v=<?= filemtime(__DIR__ . '/../../assets/js/user.js') ?>"></script>
 
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<?php include __DIR__ . '/../../includes/admin_delete_modal.php'; ?>
+
 <?php include __DIR__ . '/../../includes/staff-account-dialog.php'; ?>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/staff-account.js"></script>
 </body>

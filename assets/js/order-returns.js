@@ -18,6 +18,34 @@ window.PureViaReturns = {
         let previousFocus = null;
         let previousOverflow = "";
         let submitting = false;
+        const photoInput = document.getElementById('orPhotos');
+        const photoList = document.getElementById('orPhotoList');
+        let photos = [];
+        function clearPhotos() {
+            photos.forEach(photo => URL.revokeObjectURL(photo.url));
+            photos = [];
+            photoInput.value = '';
+            photoList.replaceChildren();
+        }
+        function showPhotos() {
+            photoList.replaceChildren(...photos.map((photo, index) => {
+                const li = document.createElement('li');
+                const img = document.createElement('img'); img.src = photo.url; img.alt = 'Return evidence ' + (index + 1);
+                const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '\u00d7'; remove.setAttribute('aria-label', 'Remove photo ' + (index + 1));
+                remove.addEventListener('click', () => { URL.revokeObjectURL(photo.url); photos.splice(index, 1); showPhotos(); });
+                li.append(img, remove); return li;
+            }));
+        }
+        document.getElementById('orAddPhotos').addEventListener('click', () => photoInput.click());
+        photoInput.addEventListener('change', () => {
+            const chosen = [...photoInput.files];
+            if (photos.length + chosen.length > 5 || chosen.some(file => !['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+                error('orPhotosError', 'Choose up to 5 JPG, PNG, or WebP photos, 5 MB each.'); photoInput.value = ''; return;
+            }
+            chosen.forEach(file => photos.push({file, url: URL.createObjectURL(file)}));
+            photoInput.value = ''; error('orPhotosError', ''); showPhotos();
+        });
+        modal.addEventListener('cancel', event => { event.preventDefault(); close(); });
 
         function error(id, message) {
             const label = document.getElementById(id);
@@ -26,8 +54,9 @@ window.PureViaReturns = {
         }
 
         function close() {
-            if (modal.hidden || submitting) return;
-            modal.hidden = true;
+            if (!modal.open || submitting) return;
+            modal.close();
+            clearPhotos();
             selectedOrderId = null;
             document.body.style.overflow = previousOverflow;
             if (previousFocus?.disabled) previousFocus.closest(".mo-order-card, .od-sidebar")?.setAttribute("tabindex", "-1");
@@ -36,7 +65,7 @@ window.PureViaReturns = {
 
         function productOption(item) {
             const label = document.createElement("label");
-            label.className = "or-product";
+            label.className = "return-product";
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.name = "items[]";
@@ -69,7 +98,8 @@ window.PureViaReturns = {
                 previousFocus = button;
                 previousOverflow = document.body.style.overflow;
                 form.reset();
-                form.querySelectorAll(".oc-error").forEach((label) => error(label.id, ""));
+                clearPhotos();
+                form.querySelectorAll(".rt-error").forEach((label) => error(label.id, ""));
                 form.querySelectorAll("[aria-invalid]").forEach((control) => control.removeAttribute("aria-invalid"));
                 fields.hidden = false;
                 success.hidden = true;
@@ -77,17 +107,17 @@ window.PureViaReturns = {
                 closeButton.textContent = "Cancel";
                 document.getElementById("orOrderNumber").textContent = order.number;
                 products.replaceChildren(...order.items.map(productOption));
-                modal.hidden = false;
-                modal.querySelector(".oc-body").scrollTop = 0;
+                modal.showModal();
+                modal.querySelector(".form-modal-body").scrollTop = 0;
                 document.body.style.overflow = "hidden";
-                modal.querySelector(".oc-close").focus();
+                modal.querySelector(".form-modal-close").focus();
             });
         });
 
         modal.querySelectorAll("[data-or-close]").forEach((button) => button.addEventListener("click", close));
         modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
         document.addEventListener("keydown", (event) => {
-            if (modal.hidden) return;
+            if (!modal.open) return;
             if (event.key === "Escape") { event.preventDefault(); close(); }
             if (event.key !== "Tab") return;
             const controls = Array.from(modal.querySelectorAll("button:not(:disabled), input, select, textarea"))
@@ -133,6 +163,7 @@ window.PureViaReturns = {
             const orderId = selectedOrderId;
             try {
                 const data = new FormData(form);
+                photos.forEach(photo => data.append("photos[]", photo.file));
                 data.append("order_id", String(orderId));
                 data.append("csrf_token", config.csrfToken || "");
                 const response = await fetch(`${config.baseUrl}/actions/orders/return.php`, {

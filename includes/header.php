@@ -70,7 +70,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
 
                 
                 <a
-                    href="<?= BASE_URL ?>/public/index.php"
+                    href="<?= BASE_URL ?>/index.php"
                     class="brand"
                     aria-label="PureVia Home"
                 >
@@ -87,7 +87,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                 <nav class="main-nav">
 
                     <a
-                        href="<?= BASE_URL ?>/public/shop.php"
+                        href="<?= BASE_URL ?>/shop.php"
                         class="<?= $currentPage === 'shop.php' ? 'active' : '' ?>"
                     >
                         SHOP
@@ -129,7 +129,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                 </button>
 
                 <!-- MY FAVORITES -->
-                <a href="<?= BASE_URL ?>/public/favorites.php" class="nav-icon pv-favorites-link"
+                <a href="<?= BASE_URL ?>/favorites.php" class="nav-icon pv-favorites-link"
                    data-favorite-scope="<?= pvHtml(BASE_URL . ':' . $headerUserId, ENT_QUOTES, 'UTF-8') ?>"
                    aria-label="My Favorites">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>
@@ -173,7 +173,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                             </a>
 
                             <a
-                                href="<?= BASE_URL ?>/public/my-orders.php"
+                                href="<?= BASE_URL ?>/my-orders.php"
                                 class="account-dropdown-item"
                             >
                                 <i class="fa-solid fa-box"></i>
@@ -223,7 +223,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                 <?php else: ?>
 
                     <a
-                        href="<?= BASE_URL ?>/public/login.php"
+                        href="<?= BASE_URL ?>/login.php"
                         class="nav-icon guest-account-icon"
                         aria-label="Sign in"
                     >
@@ -249,7 +249,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                 <!-- SHOPPING BAG -->
 
                 <a
-                    href="<?= BASE_URL ?>/public/cart.php"
+                    href="<?= BASE_URL ?>/cart.php"
                     class="bag-link"
                     aria-label="Shopping Bag, <?= (int) $cartCount ?> <?= $cartCount === 1 ? 'item' : 'items' ?>"
                 >
@@ -386,7 +386,7 @@ if ($headerUserId > 0 && isset($conn) && $conn instanceof mysqli) {
                             <!-- VIEW ALL RESULTS -->
 
                             <a
-                                href="<?= BASE_URL ?>/public/shop.php"
+                                href="<?= BASE_URL ?>/shop.php"
                                 class="pv-search-view-all"
                                 id="pvSearchViewAll"
                             >

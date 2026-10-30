@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../services/order-returns.php';
+require_once __DIR__ . '/../../services/ReturnEvidence.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -59,8 +60,16 @@ if (count($itemIds) !== count(array_unique($itemIds))) {
     returnResponse(false, 'Invalid product selection.', 422);
 }
 
+$savedEvidence = [];
 try {
+    $returnMethod = $_POST['return_method'] ?? 'courier';
+    if (!is_string($returnMethod) || !in_array($returnMethod, ['courier', 'dropoff'], true)) throw new InvalidArgumentException('Choose a valid return method.');
+    $validatedEvidence = ReturnEvidence::validate($_FILES['photos'] ?? null);
     $conn->begin_transaction();
+    $active = $conn->prepare("SELECT id FROM users WHERE id = ? AND role_id = 3 AND status = 'active' FOR UPDATE");
+    $active->bind_param('i', $userId); $active->execute();
+    if (!$active->get_result()->fetch_assoc()) throw new DomainException('An active customer account is required.');
+    $active->close();
     $stmt = $conn->prepare('SELECT id, order_status FROM orders WHERE id = ? AND user_id = ? LIMIT 1 FOR UPDATE');
     $stmt->bind_param('ii', $orderId, $userId);
     $stmt->execute();
@@ -96,8 +105,10 @@ try {
         }
     }
 
-    $stmt = $conn->prepare('INSERT INTO order_return_requests (order_id, reason, resolution, details) VALUES (?, ?, ?, ?)');
-    $stmt->bind_param('isss', $orderId, $reason, $resolution, $details);
+    $savedEvidence = ReturnEvidence::store($validatedEvidence);
+    $evidenceJson = json_encode($savedEvidence, JSON_THROW_ON_ERROR);
+    $stmt = $conn->prepare('INSERT INTO order_return_requests (order_id, reason, resolution, details, return_method, evidence_json) VALUES (?, ?, ?, ?, ?, ?)');
+    $stmt->bind_param('isssss', $orderId, $reason, $resolution, $details, $returnMethod, $evidenceJson);
     $stmt->execute();
     $requestId = (int) $conn->insert_id;
     $stmt->close();
@@ -111,10 +122,13 @@ try {
     $conn->commit();
     returnResponse(true, 'Your return request has been submitted for review. Keep the products and original packaging until you receive return instructions.');
 } catch (Throwable $error) {
+    ReturnEvidence::remove($savedEvidence);
     try {
         $conn->rollback();
     } catch (Throwable $ignored) {
     }
+    if ($error instanceof InvalidArgumentException) returnResponse(false, $error->getMessage(), 422);
+    if ($error instanceof DomainException) returnResponse(false, $error->getMessage(), 409);
     error_log('PureVia return request error: ' . $error->getMessage());
     returnResponse(false, 'Unable to submit your return request right now. Please try again.', 500);
 }

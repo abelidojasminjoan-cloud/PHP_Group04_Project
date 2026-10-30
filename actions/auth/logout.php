@@ -24,7 +24,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 $logoutUserId=(int)($_SESSION['user_id']??0);
 if($logoutUserId>0){
     try{
-        require_once __DIR__.'/../../services/AuditContext.php';
+        require_once __DIR__ . '/../../services/AuditContext.php';
         mysqli_report(MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT);
         // Avoid loading session-enforcement middleware during logout; reuse the private .env settings.
         $auditConnection=new mysqli($_ENV['DB_HOST']??'localhost',$_ENV['DB_USERNAME']??'root',$_ENV['DB_PASSWORD']??'',$_ENV['DB_NAME']??'purevia_db',(int)($_ENV['DB_PORT']??3306));
@@ -67,5 +67,5 @@ session_destroy();
    REDIRECT TO PUREVIA HOMEPAGE
 ========================================================= */
 
-header('Location: ' . BASE_URL . '/public/index.php');
+header('Location: ' . BASE_URL . '/index.php');
 exit;

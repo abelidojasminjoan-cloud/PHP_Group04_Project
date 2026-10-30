@@ -5,6 +5,8 @@ function orderReturnReasons(): array
 {
     return [
         'Product arrived damaged',
+        'Product arrived opened or leaking',
+        'Skin reaction or sensitivity',
         'Received the wrong product',
         'Product is defective or has a quality issue',
         'Product does not match the description',

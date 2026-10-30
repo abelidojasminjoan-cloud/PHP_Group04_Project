@@ -8,7 +8,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
@@ -204,12 +204,12 @@ unset($_SESSION['profile_success'], $_SESSION['profile_error']);
 
                 <div class="account-sidebar-divider"></div>
 
-                <a href="<?= BASE_URL ?>/public/my-orders.php"
+                <a href="<?= BASE_URL ?>/my-orders.php"
                    class="account-nav-item">
                     <span>📦</span> My Orders
                 </a>
 
-                <a href="<?= BASE_URL ?>/public/shop.php"
+                <a href="<?= BASE_URL ?>/shop.php"
                    class="account-nav-item">
                     <span>🛒</span> Shop
                 </a>
@@ -362,7 +362,7 @@ unset($_SESSION['profile_success'], $_SESSION['profile_error']);
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/account.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../../includes/role-check.php';
+require_once __DIR__ . '/../../../includes/role-check.php';
 $admin=requirePureViaAdmin($conn);
-require_once __DIR__.'/../../../services/InventoryManagement.php';
+require_once __DIR__ . '/../../../services/InventoryManagement.php';
 header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store, private');
 try{
     $method=$_SERVER['REQUEST_METHOD'];

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Returns Design Preview | PureVia</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="assets/css/sidemenu.css"><link rel="stylesheet" href="assets/css/inventory.css"><link rel="stylesheet" href="assets/css/responsive.css"><link rel="stylesheet" href="assets/css/form2.css"><link rel="stylesheet" href="assets/css/admin-returns.css"><link rel="stylesheet" href="assets/css/my-orders.css"><link rel="stylesheet" href="assets/css/return-demo.css"></head>
+<body class="return-demo-page">
+<aside class="admin-sidebar demo-sidebar"><div class="sidebar-brand"><a class="sidebar-logo" href="#"><span class="sidebar-logo-icon" aria-hidden="true">&#10087;</span><span>PureVia</span></a><p class="demo-panel-label">Design preview</p></div><nav class="sidebar-nav"><div class="sidebar-section"><p class="sidebar-section-title">PREVIEW</p><button class="sidebar-link active" type="button" data-demo-view="admin"><span class="sidebar-link-left"><span class="sidebar-menu-icon" aria-hidden="true">&#8617;</span><span>Admin Returns</span></span></button><button class="sidebar-link" type="button" data-demo-view="customer"><span class="sidebar-link-left"><span class="sidebar-menu-icon" aria-hidden="true">&#9633;</span><span>Customer Return</span></span></button></div></nav><div class="sidebar-account"><div class="sidebar-profile"><div class="sidebar-avatar">D</div><div class="sidebar-user-information"><p class="sidebar-user-name">Demo Account</p><p class="sidebar-user-email">Sample data only</p><span class="sidebar-role-badge sidebar-role-admin">PREVIEW</span></div></div></div></aside>
+<div class="admin-layout"><header class="admin-topbar"><p class="admin-topbar-title" id="demoPageTitle">Returns Preview</p></header><main class="inventory-main returns-main">
+<div class="demo-notice" role="note"><div><strong>Frontend demo</strong><span>Sample data only. Changes stay in this page and reset on refresh. No database or backend requests.</span></div><button type="button" id="demoReset">Reset demo</button></div>
+<div class="demo-tabs" role="group" aria-label="Preview view"><button type="button" data-demo-view="admin" class="is-active" aria-pressed="true">Admin</button><button type="button" data-demo-view="customer" aria-pressed="false">Customer</button></div>
+<section id="demoAdminView"><section class="inventory-page-header"><div class="inventory-heading"><h1>Returns</h1><p id="demoReturnCount"></p></div></section>
+<section class="inventory-card"><div class="inventory-toolbar"><div class="inventory-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input id="returnsSearch" type="search" placeholder="Search returns..." aria-label="Search demo returns"></div><div class="inventory-filter-dropdown"><i class="fa-solid fa-filter inventory-filter-icon" aria-hidden="true"></i><select id="returnsFilter" class="inventory-filter-select" aria-label="Filter demo returns"><option value="">All Statuses</option><option value="pending">Pending Review</option><option value="approved">In Progress</option><option value="completed">Completed</option><option value="rejected">Rejected</option></select><i class="fa-solid fa-chevron-down inventory-filter-arrow" aria-hidden="true"></i></div></div>
+<div class="inventory-table-wrapper"><table class="inventory-table returns-table"><thead><tr><th>RETURN ID</th><th>ORDER</th><th>CUSTOMER</th><th>ITEMS</th><th>REASON</th><th>RESOLUTION</th><th>AMOUNT</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="demoReturnRows"></tbody></table></div></section></section>
+<section id="demoCustomerView" hidden><section class="inventory-page-header"><div class="inventory-heading"><h1>My orders</h1><p>Customer return preview</p></div></section><article class="demo-customer-order mo-order-card"><header><div><span class="demo-eyebrow">COMPLETED ORDER</span><h2>ORD-2026-0901</h2><p>Delivered October 28, 2026</p></div><span class="return-tag">Delivered</span></header><div id="demoCustomerItems"></div><footer><div><span>Order total</span><strong>&#8369;154.00</strong></div><button type="button" class="form-submit-button" id="demoStartReturn">Return items</button></footer></article><p class="demo-hint">Open Return items to try product selection, photos, return methods, and the confirmation screen. Your sample request also appears in the Admin preview.</p></section>
+</main></div><dialog class="return-dialog return-customer-dialog" id="orReturnModal" aria-labelledby="orReturnTitle" aria-describedby="orReturnSubtitle">
+    <form class="purevia-form" id="orReturnForm" action="#" method="dialog" enctype="multipart/form-data" novalidate>
+        <header class="form-modal-header">
+            <div>
+                <h2 id="orReturnTitle">Return Order</h2>
+                <p id="orReturnSubtitle">Choose products to return from <span id="orOrderNumber"></span></p>
+            </div>
+            <button type="button" class="form-modal-close" data-or-close aria-label="Close return dialog">&times;</button>
+        </header>
+        
+            <div class="form-modal-body">
+                <div id="orReturnFields"><ol class="return-steps" aria-label="Return request steps"><li><span>1</span>Select items</li><li><span>2</span>Describe issue</li><li><span>3</span>Choose resolution</li></ol>
+                    <fieldset class="return-fieldset form-group" id="orProductsGroup" aria-describedby="orProductsError">
+                        <legend>Select products</legend>
+                        <div class="return-products" id="orProducts"></div>
+                        <p class="rt-error" id="orProductsError" role="alert" hidden></p>
+                    </fieldset>
+                    <div class="form-group">
+                        <label for="orReason">Reason for Return <span class="form-required" aria-hidden="true">*</span></label>
+                        <div class="oc-select-wrap">
+                            <select class="form-control" id="orReason" name="reason" aria-required="true" aria-describedby="orReasonError">
+                                <option value="">Select a reason</option>
+                                                                    <option value="Product arrived damaged">Product arrived damaged</option>
+                                                                    <option value="Product arrived opened or leaking">Product arrived opened or leaking</option>
+                                                                    <option value="Skin reaction or sensitivity">Skin reaction or sensitivity</option>
+                                                                    <option value="Received the wrong product">Received the wrong product</option>
+                                                                    <option value="Product is defective or has a quality issue">Product is defective or has a quality issue</option>
+                                                                    <option value="Product does not match the description">Product does not match the description</option>
+                                                                    <option value="Other">Other</option>
+                                                            </select>
+                        </div>
+                        <p class="rt-error" id="orReasonError" role="alert" hidden></p>
+                    </div>
+                    <fieldset class="return-fieldset form-group" id="orResolutionGroup" aria-describedby="orResolutionError">
+                        <legend>Preferred Resolution <span class="form-required" aria-hidden="true">*</span></legend>
+                        <div class="return-choices">
+                            <label class="return-choice">
+                                <input type="radio" name="resolution" value="refund" checked aria-required="true">
+                                <span><strong>Refund</strong><small>Return payment to the original method</small></span>
+                            </label>
+                            <label class="return-choice">
+                                <input type="radio" name="resolution" value="replacement" aria-required="true">
+                                <span><strong>Replacement</strong><small>Send the same products again</small></span>
+                            </label>
+                        </div>
+                        <p class="rt-error" id="orResolutionError" role="alert" hidden></p>
+                    </fieldset>
+                    <div class="form-group">
+                        <label for="orDetails">Return Details</label>
+                        <textarea class="form-control form-textarea" id="orDetails" name="details" rows="3" maxlength="1000" placeholder="Describe the issue, condition of the products, and packaging"></textarea>
+                    </div>
+                    <div class="return-upload"><div><strong>Upload evidence</strong><small>Add photos of the product, packaging, damage, or issue. Up to 5 images, 5 MB each.</small></div><button type="button" class="return-outline" id="orAddPhotos">&#8593; Add photos</button><input type="file" id="orPhotos" accept="image/jpeg,image/png,image/webp" multiple hidden></div>
+                    <ul id="orPhotoList" class="return-photos" aria-label="Selected evidence photos"></ul><p class="rt-error" id="orPhotosError" role="alert" hidden></p>
+                    <fieldset class="return-fieldset form-group"><legend>How will you return the products? <span class="form-required">*</span></legend><div class="return-choices"><label class="return-choice"><input type="radio" name="return_method" value="courier" checked required><span><strong>Courier Pickup</strong><small>Request collection from your delivery address</small></span></label><label class="return-choice"><input type="radio" name="return_method" value="dropoff"><span><strong>Drop-off</strong><small>Bring the parcel to an approved location</small></span></label></div></fieldset>
+                    <p class="return-note">Return requests are reviewed within 1–2 business days. Keep the products and original packaging until you receive return instructions.</p>
+                </div>
+                <p class="rt-error" id="orSubmitError" role="alert" hidden></p>
+                <p class="return-success" id="orSuccess" role="status" hidden></p>
+
+            </div>
+                <footer class="form-modal-footer">
+                    <button type="button" class="form-cancel-button" data-or-close id="orKeepOrder">Cancel</button>
+                    <button type="submit" class="form-submit-button" id="orSubmitReturn">Submit Return Request</button>
+                </footer>
+        </form>
+
+</dialog><dialog class="return-dialog return-admin-dialog" id="manageReturnDialog" aria-labelledby="manageReturnTitle"><form id="manageReturnForm" class="purevia-form" action="#" method="dialog" data-base-url="">
+<header class="form-modal-header"><div><h2 id="manageReturnTitle">Manage Return Request</h2><p id="manageReturnNumber"></p></div><button type="button" class="form-modal-close" data-return-close aria-label="Close manage return">&times;</button></header>
+<div class="form-modal-body"><p id="manageReturnMessage" class="rt-error" role="status" tabindex="-1" hidden></p><div id="manageReturnFields">
+<input type="hidden" name="id" id="manageReturnId"><input type="hidden" name="revision" id="manageReturnRevision">
+<dl class="return-details-grid"><div><dt>Reason</dt><dd id="manageReturnReason"></dd></div><div><dt>Requested</dt><dd id="manageReturnDate"></dd></div><div><dt>Resolution</dt><dd id="manageReturnResolution"></dd></div><div><dt>Return Method</dt><dd id="manageReturnMethod"></dd></div><div class="return-details-wide"><dt>Customer Details</dt><dd id="manageReturnDetails"></dd></div></dl>
+<h3>Evidence</h3><div id="manageReturnEvidence" class="return-evidence"></div>
+<div class="form-grid form-grid-2"><div class="form-group"><label for="manageReturnStatus">Return Status <span class="form-required">*</span></label><select id="manageReturnStatus" name="status" class="form-control" required><option value="pending">Pending Review</option><option value="approved">Approved / In Progress</option><option value="rejected">Rejected</option><option value="completed">Completed</option></select></div><div class="form-group"><label for="manageReturnNote">Internal Note <span class="form-required">*</span></label><textarea class="form-control form-textarea" id="manageReturnNote" name="internal_note" rows="3" maxlength="2000" required placeholder="Add review notes or processing details"></textarea></div></div>
+<section id="manageReturnCompletion" hidden><div class="form-group"><label for="manageReturnReference">Refund transaction or replacement shipment reference <span class="form-required">*</span></label><input id="manageReturnReference" class="form-control" name="resolution_reference" maxlength="200"></div><label class="return-check"><input type="checkbox" name="confirm_resolution" value="1">I confirm the refund or replacement has already been fulfilled.</label><p class="return-note">Saving a return does not issue a PayPal refund, send a replacement, or schedule a courier. Record the reference after completing those actions.</p><h3>Received stock</h3><p>Restock only unopened, undamaged, inspected items. Leave damaged or opened items as “Do not restock”. Choose the exact size received.</p><div id="manageReturnStock"></div><label class="return-check"><input type="checkbox" name="confirm_inspected" value="1">The items selected for restocking have been received and inspected as sellable.</label></section>
+<p class="return-note" id="manageReturnReadOnly" hidden>This request is closed and read-only.</p>
+</div></div><footer class="form-modal-footer"><button type="button" class="form-cancel-button" data-return-close>Cancel</button><button type="submit" class="form-submit-button" id="manageReturnSave">Save Changes</button></footer></form></dialog><script src="assets/js/return-demo.js"></script></body></html>

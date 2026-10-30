@@ -9,7 +9,7 @@ function requireLogin(mysqli $conn): array
     $userId = (int) ($_SESSION['user_id'] ?? 0);
 
     if ($userId <= 0) {
-        header('Location: ' . BASE_URL . '/public/login.php');
+        header('Location: ' . BASE_URL . '/login.php');
         exit;
     }
 
@@ -31,7 +31,7 @@ function requireLogin(mysqli $conn): array
         $_SESSION = [];
         session_destroy();
 
-        header('Location: ' . BASE_URL . '/public/login.php');
+        header('Location: ' . BASE_URL . '/login.php');
         exit;
     }
 

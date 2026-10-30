@@ -56,7 +56,7 @@ $baseUrl = htmlspecialchars(
 
     <a
         class="pv-privacy-brand"
-        href="<?= $baseUrl ?>/public/index.php"
+        href="<?= $baseUrl ?>/index.php"
         aria-label="PureVia Homepage"
     >
         PureVia<span>.</span>
@@ -64,7 +64,7 @@ $baseUrl = htmlspecialchars(
 
     <a
         class="pv-privacy-back"
-        href="<?= $baseUrl ?>/public/register.php"
+        href="<?= $baseUrl ?>/register.php"
     >
         &larr; Back to Registration
     </a>
@@ -516,7 +516,7 @@ $baseUrl = htmlspecialchars(
                 <p>
                     Read our
                     <a
-                        href="<?= $baseUrl ?>/public/privacy_policy.php"
+                        href="<?= $baseUrl ?>/privacy_policy.php"
                     >
                         Privacy Policy
                     </a>
@@ -695,7 +695,7 @@ $baseUrl = htmlspecialchars(
 
     <div class="pv-privacy-footer-action">
 
-        <a href="<?= $baseUrl ?>/public/register.php">
+        <a href="<?= $baseUrl ?>/register.php">
             &larr; Return to Registration
         </a>
 

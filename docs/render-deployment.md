@@ -14,7 +14,7 @@
    Transfer existing product images to `/var/www/storage/uploads/products` and other
    uploads to their corresponding subdirectories. The image starts with empty upload
    directories; images under `assets` remain part of the image.
-6. Deploy, then check `/`, `/public/shop.php`, sign-in, image uploads, and checkout.
+6. Deploy, then check `/`, `/shop.php`, sign-in, image uploads, and checkout.
 
 The container runs Apache on `0.0.0.0:$PORT` (10000 by default). Render supplies the
 public HTTPS endpoint. [Render web services](https://render.com/docs/web-services)
@@ -45,6 +45,7 @@ Docker, and credentials are not passed as Docker build arguments.
 | `PAYPAL_MODE` | `sandbox` while testing |
 | `PAYPAL_CLIENT_ID` | Matching PayPal Sandbox app Client ID |
 | `PAYPAL_CLIENT_SECRET` | Matching PayPal Sandbox app Secret |
+| `PAYPAL_WEBHOOK_ID` | Registered webhook ID from the same app; see [webhook setup](paypal-setup.md#render-payment-webhook) |
 
 Use an external MySQL/MariaDB server and import `database/purevia_db.sql` plus the
 required migrations through that provider's tools. This Docker image does not run
@@ -83,9 +84,6 @@ Render must use `production` and its HTTPS URL. Linux Docker hosts may need an
 explicit host-gateway mapping to reach a host database.
 
 This setup preserves `php -S localhost:8000 -t public` and the existing Apache/XAMPP
-subdirectory URLs. Production URL paths come from APP_URL. Windows-only public
-junctions are excluded from Docker; the image creates Linux links to the same web
-folders. The existing layout, forms, payment choices, and business logic are unchanged.
 
 ## Registration and database rollout
 
@@ -129,14 +127,33 @@ application table. Keep the Dockerfile path, build context, and command unchange
 3. If this is a new, empty database, import a reviewed/sanitized copy of
    `database/purevia_db.sql` into it. Importing via LOCAL XAMPP phpMyAdmin only
    changes your computer's database, unless explicitly connected to the hosted DB.
-4. If the other application tables already exist and only security_settings is
-   missing, execute `database/migrations/20261030_security_settings.sql` on the
-   hosted database. It creates the missing table and seeds defaults only when
-   there are no settings, preserving existing policy values. This migration is
-   not a replacement for importing the rest of the schema.
+4. If only `security_settings` is missing, copy and execute its `CREATE TABLE`
+   statement from `database/purevia_db.sql` in the hosted database. Preserve
+   existing tables and policy records; do not reimport the full SQL file over
+   an existing database just to repair one missing table.
 5. Reload the site and inspect Render logs for any remaining missing schema.
    If you changed Render DB_NAME, save the environment settings and redeploy.
 
 Pushing this SQL file to Git does not execute it. The image intentionally does not
 run schema imports automatically. Do not enable public PHP error display or bypass
 security policy checks to hide missing tables.
+## MySQL Error 3750 during SQL import
+
+Aiven requires a primary key in each CREATE TABLE statement. Older phpMyAdmin dumps
+add primary keys later with ALTER TABLE, so their initial CREATE statements fail.
+The current database/purevia_db.sql defines all primary keys, including composite
+keys, inside CREATE TABLE and retains secondary indexes and auto-increment setup.
+Re-exporting from phpMyAdmin may produce the older order again.
+
+Use the corrected SQL export with defaultdb selected as your Workbench default
+schema. Execute the entire script, not only the current statement or selection.
+Refresh Schemas afterward and check that security_settings and the other tables
+exist. Keep sql_require_primary_key enabled.
+
+If an earlier import created some tables, inspect the import errors and existing
+tables before retrying a full import; do not drop a database containing data you
+need. These SQL dumps initialize a database and are not incremental migrations.
+Public-page links now use /login.php, /shop.php and /order-success.php at the deployed origin. No nested public compatibility directory is needed. Apache redirects legacy /public/page.php requests to the clean page URLs.
+
+
+The original account, actions, admin, staff, assets and uploads folders remain outside public/. Windows uses local junctions and Docker creates Linux links so the application keeps the same URLs without a routes folder. Local startup is php -S localhost:8000 -t public.

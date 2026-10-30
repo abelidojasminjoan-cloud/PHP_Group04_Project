@@ -82,7 +82,14 @@ $sql = "
             WHERE pi.product_id = p.id
             ORDER BY pi.sort_order ASC, pi.id ASC
             LIMIT 1
-        ) AS primary_image
+        ) AS primary_image,
+        (
+            SELECT pi.image_path
+            FROM product_images pi
+            WHERE pi.product_id = p.id
+            ORDER BY pi.sort_order ASC, pi.id ASC
+            LIMIT 1 OFFSET 1
+        ) AS secondary_image
 
     FROM products p
 
@@ -154,64 +161,33 @@ if ($productResult && $productResult->num_rows > 0) {
     $productResult->data_seek(0);
 }
 
+function homeProductImageUrl(?string $path): ?string
+{
+    $path = trim($path ?? '');
+    if ($path === '') return null;
+    if (filter_var($path, FILTER_VALIDATE_URL)
+        && in_array(strtolower((string) parse_url($path, PHP_URL_SCHEME)), ['http', 'https'], true)) {
+        return $path;
+    }
+    $filename = basename(str_replace('\\', '/', $path));
+    if ($filename === '.' || $filename === '..'
+        || !is_file(__DIR__ . '/../uploads/products/' . $filename)) return null;
+    return BASE_URL . '/uploads/products/' . rawurlencode($filename);
+}
+
 function renderHomeProductCard(array $product, array $homeVariants): void
 {
 ?>
 <article class="product-card">               
                                 <?php
-                                $imagePath = trim(
-                                    (string) (
-                                        $product['primary_image']
-                                        ?: $product['image']
-                                        ?: ''
-                                    )
-                                );
-
                                 $defaultImage = BASE_URL . '/assets/images/products/default-product.jpg';
-
-                                if ($imagePath === '') {
-
-                                    $productImage = $defaultImage;
-
-                                } elseif (
-                                    filter_var($imagePath, FILTER_VALIDATE_URL) &&
-                                    in_array(
-                                        strtolower((string) parse_url($imagePath, PHP_URL_SCHEME)),
-                                        ['http', 'https'],
-                                        true
-                                    )
-                                ) {
-
-                                    // External image URL
-                                    $productImage = $imagePath;
-
-                                } else {
-
-                                    // Local image path
-                                    $imagePath = str_replace('\\', '/', $imagePath);
-                                    $imagePath = ltrim($imagePath, '/');
-
-                                    // Only allow files in the product uploads directory
-                                    $filename = basename($imagePath);
-
-                                    $fullPath = __DIR__ . '/../uploads/products/' . $filename;
-
-                                    if (
-                                        $filename !== '.' &&
-                                        $filename !== '..' &&
-                                        is_file($fullPath)
-                                    ) {
-                                        $productImage =
-                                            BASE_URL . '/uploads/products/' . rawurlencode($filename);
-                                    } else {
-                                        $productImage = $defaultImage;
-                                    }
-                                }
+                                $productImage = homeProductImageUrl($product['primary_image'] ?: $product['image']) ?? $defaultImage;
+                                $hoverImage = homeProductImageUrl($product['secondary_image'] ?? null);
                                 ?>
 
                                 <div class="pv-product-photo">
                                 <a
-                                    href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $product['id'] ?>"
+                                    href="<?= BASE_URL ?>/product.php?id=<?= (int) $product['id'] ?>"
                                     class="product-image-wrapper"
                                 >
                                     <img
@@ -226,6 +202,9 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                                             'UTF-8'
                                         ) ?>"
                                         class="product-image"
+                                        <?php if ($hoverImage !== null && $hoverImage !== $productImage): ?>
+                                        data-hover-image="<?= pvHtml($hoverImage, ENT_QUOTES, 'UTF-8') ?>"
+                                        <?php endif; ?>
                                         loading="lazy"
                                         data-image-fallback="<?= BASE_URL ?>/assets/images/products/default-product.jpg"
                                     >
@@ -238,7 +217,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
                                         <h3 class="product-name">
                                             <a
-                                                href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $product['id'] ?>"
+                                                href="<?= BASE_URL ?>/product.php?id=<?= (int) $product['id'] ?>"
                                             >
                                                 <?= pvHtml(
                                                     $product['product_name']
@@ -504,7 +483,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
 
                             <a
-                                href="<?= BASE_URL ?>/skin-type-finder.php"
+                                href="<?= BASE_URL ?>/skin-match.php?path=guided"
                                 class="hero-secondary-btn"
                             >
                                 See how it works
@@ -583,7 +562,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
             <div class="bestsellers-container">
                 <div class="new-arrivals-heading">
                     <h2 id="newArrivalsTitle">New Arrivals</h2>
-                    <a class="shop-all-link" href="<?= BASE_URL ?>/public/shop.php">View all products</a>
+                    <a class="shop-all-link" href="<?= BASE_URL ?>/shop.php">View all products</a>
                 </div>
                 <div class="new-arrivals-carousel">
                     <div class="new-arrivals-track" id="newArrivalsTrack" tabindex="0" aria-label="New arrival products">
@@ -636,7 +615,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                         </p>
 
                         <a
-                            href="<?= BASE_URL ?>/public/shop.php"
+                            href="<?= BASE_URL ?>/shop.php"
                             class="shop-all-link"
                         >
                             <span>SEE ALL PRODUCTS</span>
@@ -712,7 +691,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
                     </p>
                   
             <a
-                href="<?= BASE_URL ?>/public/about_us.php"
+                href="<?= BASE_URL ?>/about_us.php"
                 class="pv-story-full-link"
             >
                 Read our full story
@@ -937,7 +916,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
 
                     <a
-                        href="<?= BASE_URL ?>/public/forgot-password.php"
+                        href="<?= BASE_URL ?>/forgot-password.php"
                         class="forgot-password"
                     >
                         Forgot Password?
@@ -1238,7 +1217,8 @@ function renderHomeProductCard(array $product, array $homeVariants): void
          JAVASCRIPT
     ====================================== -->
     <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
-    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/home-product-hover.js"></script>
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
     <script nonce="<?= pvScriptNonce() ?>">
         window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
     </script>

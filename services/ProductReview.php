@@ -53,7 +53,7 @@ function submitProductReview(mysqli $conn, int $userId, int $orderId, int $produ
         $reviewId = (int) $conn->insert_id;
         $stmt->close();
         if ($validated) {
-            $directory = dirname(__DIR__) . '/uploads/reviews';
+            $directory = __DIR__ . '/../uploads/reviews';
             if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) throw new RuntimeException('Review upload directory unavailable.');
             $stmt = $conn->prepare('INSERT INTO review_images (review_id, image_path) VALUES (?, ?)');
             foreach ($validated as $photo) {

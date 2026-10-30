@@ -12,7 +12,7 @@ $sessionTimeoutPolicy = securityPolicy($conn);
 <script nonce="<?= pvScriptNonce() ?>"
     src="<?= BASE_URL ?>/assets/js/session_timeout.js"
     data-session-check-url="<?= BASE_URL ?>/actions/auth/session-status.php"
-    data-login-url="<?= BASE_URL ?>/public/login.php"
+    data-login-url="<?= BASE_URL ?>/login.php"
     data-session-remaining-seconds="<?= securitySessionRemainingSeconds($sessionTimeoutPolicy) ?>"
     defer
 ></script>

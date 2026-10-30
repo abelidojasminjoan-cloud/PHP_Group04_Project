@@ -63,8 +63,7 @@ function shopImage(?string $path): string
     }
 
     // Verify local product image exists.
-    $fullPath = __DIR__ .
-        '/../uploads/products/' .
+    $fullPath = __DIR__ . '/../uploads/products/' .
         $filename;
 
     if (is_file($fullPath)) {
@@ -209,6 +208,13 @@ $skinConcerns = shopFetchAll($conn, "
    PRODUCTS
 ========================================= */
 
+$ingredients = shopFetchAll($conn, "
+    SELECT id, ingredient_name
+    FROM ingredients
+    WHERE status = 'active'
+    ORDER BY ingredient_name ASC
+");
+
 $products = shopFetchAll($conn, "
     SELECT
         p.id,
@@ -220,6 +226,18 @@ $products = shopFetchAll($conn, "
         p.image,
         p.stock_quantity,
         p.created_at,
+        (
+            SELECT pi.image_path FROM product_images pi
+            WHERE pi.product_id = p.id
+            ORDER BY pi.sort_order ASC, pi.id ASC
+            LIMIT 1
+        ) AS primary_image,
+        (
+            SELECT pi.image_path FROM product_images pi
+            WHERE pi.product_id = p.id
+            ORDER BY pi.sort_order ASC, pi.id ASC
+            LIMIT 1 OFFSET 1
+        ) AS secondary_image,
 
         c.category_name,
 
@@ -240,6 +258,11 @@ $products = shopFetchAll($conn, "
             FROM product_concerns pc
             WHERE pc.product_id = p.id
         ) AS concern_ids,
+        (
+            SELECT GROUP_CONCAT(DISTINCT pin.ingredient_id)
+            FROM product_ingredients pin
+            WHERE pin.product_id = p.id
+        ) AS ingredient_ids,
 
         (
             SELECT COUNT(*)
@@ -621,6 +644,24 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
             </div>
 
+            <!-- INGREDIENTS -->
+            <div class="shop-filter-group shop-accordion">
+                <button type="button" class="shop-filter-toggle" aria-expanded="false" aria-controls="shopIngredientPanel">
+                    <span>Ingredients</span>
+                    <span class="shop-filter-symbol">+</span>
+                </button>
+                <div class="shop-filter-content" id="shopIngredientPanel" hidden>
+                    <?php foreach ($ingredients as $ingredient): ?>
+                        <label class="shop-checkbox">
+                            <input type="checkbox" name="ingredient" value="<?= (int) $ingredient['id'] ?>">
+                            <?= shopEscape($ingredient['ingredient_name']) ?>
+                        </label>
+                    <?php endforeach; ?>
+                    <?php if (!$ingredients): ?>
+                        <p>No ingredients available.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
             <!-- PRICE RANGE -->
 
             <div class="shop-filter-group shop-accordion is-open">
@@ -850,7 +891,10 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
                     $fullStars = min(5, max(0, (int) round($rating)));
 
-                    $productUrl = BASE_URL . '/public/product.php?id=' . $productId;
+                    $productUrl = BASE_URL . '/product.php?id=' . $productId;
+                    $cardImage = shopImage($product['primary_image'] ?: $product['image']);
+                    $hoverImage = !empty($product['secondary_image']) ? shopImage($product['secondary_image']) : null;
+                    if ($hoverImage === shopImage(null) || $hoverImage === $cardImage) $hoverImage = null;
 
                     ?>
 
@@ -864,6 +908,7 @@ $maxPrice = max(1, (int) ceil($maxPrice));
                         data-stock="<?= $totalStock ?>"
                         data-types="<?= shopEscape($skinIds) ?>"
                         data-concerns="<?= shopEscape($concernIds) ?>"
+                        data-ingredients="<?= shopEscape(shopIds($product['ingredient_ids'])) ?>"
                         data-match="<?= $isMatch ? 1 : 0 ?>"
                         data-concern-match="<?= $concernMatches ?>"
                         data-sales="<?= (int) $product['sales_count'] ?>"
@@ -879,7 +924,10 @@ $maxPrice = max(1, (int) ceil($maxPrice));
                         >
 
                             <img
-                                src="<?= shopEscape(shopImage($product['image'])) ?>"
+                                src="<?= shopEscape($cardImage) ?>"
+                                <?php if ($hoverImage !== null): ?>
+                                data-hover-image="<?= shopEscape($hoverImage) ?>"
+                                <?php endif; ?>
                                 alt="<?= shopEscape($product['product_name']) ?>"
                                 loading="lazy"
                             >
@@ -1066,7 +1114,8 @@ $maxPrice = max(1, (int) ceil($maxPrice));
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/shop.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/home-product-hover.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
 <script nonce="<?= pvScriptNonce() ?>">
     window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
 </script>

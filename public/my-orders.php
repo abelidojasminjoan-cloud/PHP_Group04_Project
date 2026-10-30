@@ -8,7 +8,7 @@ require_once __DIR__ . '/../services/order-returns.php';
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
@@ -311,7 +311,7 @@ $csrfToken = $_SESSION['csrf_token'];
                     <?php endif; ?>
                 </div>
             </div>
-            <a class="mo-delivery-button" href="<?= BASE_URL ?><?= $nextDelivery ? '/public/order-details.php?id=' . (int) $nextDelivery['id'] : '/public/shop.php' ?>">
+            <a class="mo-delivery-button" href="<?= BASE_URL ?><?= $nextDelivery ? '/order-details.php?id=' . (int) $nextDelivery['id'] : '/shop.php' ?>">
                 <?= $nextDelivery ? 'Track delivery' : 'Explore skincare' ?> <?= moIcon('chevron') ?>
             </a>
         </section>
@@ -342,7 +342,7 @@ $csrfToken = $_SESSION['csrf_token'];
                         $tab = moTab($order);
                         $presentation = moPresentation($order);
                         $canCancel = canCancelCustomerOrder($order);
-                        $detailsUrl = BASE_URL . '/public/order-details.php?id=' . $orderId;
+                        $detailsUrl = BASE_URL . '/order-details.php?id=' . $orderId;
                         $productNames = implode(' ', array_column($items, 'product_name'));
                         $firstProductId = 0;
                         foreach ($items as $item) {
@@ -351,7 +351,7 @@ $csrfToken = $_SESSION['csrf_token'];
                                 break;
                             }
                         }
-                        $buyAgainUrl = $firstProductId ? BASE_URL . '/public/product.php?id=' . $firstProductId : BASE_URL . '/public/shop.php';
+                        $buyAgainUrl = $firstProductId ? BASE_URL . '/product.php?id=' . $firstProductId : BASE_URL . '/shop.php';
                         $supportUrl = 'mailto:purevia@gmail.com?subject=' . rawurlencode('Order ' . $order['order_number']);
                         ?>
                         <article class="mo-order-card mo-card-<?= moEsc($tab) ?>"
@@ -380,7 +380,7 @@ $csrfToken = $_SESSION['csrf_token'];
                                             <div class="mo-product-info">
                                                 <span class="mo-product-state"><?= moEsc($presentation['state']) ?></span>
                                                 <?php if ((int) $item['product_id'] > 0): ?>
-                                                    <a href="<?= BASE_URL ?>/public/product.php?id=<?= (int) $item['product_id'] ?>" class="mo-product-name"><?= moEsc($productName) ?></a>
+                                                    <a href="<?= BASE_URL ?>/product.php?id=<?= (int) $item['product_id'] ?>" class="mo-product-name"><?= moEsc($productName) ?></a>
                                                 <?php else: ?>
                                                     <strong class="mo-product-name"><?= moEsc($productName) ?></strong>
                                                 <?php endif; ?>
@@ -431,7 +431,7 @@ $csrfToken = $_SESSION['csrf_token'];
                     <span class="mo-empty-icon"><?= moIcon('bag') ?></span>
                     <h2><?= $orders ? 'No matching orders' : 'Your orders start here' ?></h2>
                     <p><?= $orders ? 'Try another status or search term.' : 'Your purchases will appear here once you place an order.' ?></p>
-                    <a href="<?= BASE_URL ?>/public/shop.php" class="mo-button mo-button-outline">Explore skincare</a>
+                    <a href="<?= BASE_URL ?>/shop.php" class="mo-button mo-button-outline">Explore skincare</a>
                 </div>
             </div>
         </section>
@@ -454,7 +454,7 @@ $csrfToken = $_SESSION['csrf_token'];
 </script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-cancellation.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/order-returns.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/my-orders.js"></script>

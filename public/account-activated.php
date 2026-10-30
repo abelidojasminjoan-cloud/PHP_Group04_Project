@@ -14,7 +14,7 @@ if (
     $activation['completed_at'] < time() - 1800
 ) {
     unset($_SESSION['account_activation']);
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
     exit;
 }
 
@@ -46,7 +46,7 @@ unset($_SESSION['otp_error']);
 <body class="auth-page">
 <main class="auth-shell">
     <section class="auth-visual" aria-label="PureVia skincare">
-        <a class="auth-brand" href="<?= BASE_URL ?>/public/index.php" aria-label="PureVia home">
+        <a class="auth-brand" href="<?= BASE_URL ?>/index.php" aria-label="PureVia home">
             <img src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png" alt="PureVia" width="168" height="168">
         </a>
         <h2 class="auth-visual-title">Skincare,<br>made simple.</h2>

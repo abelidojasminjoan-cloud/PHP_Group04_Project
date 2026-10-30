@@ -179,7 +179,7 @@ $pageTitle = 'Shopping Bag | PureVia';
                 <i class="fa-solid fa-bag-shopping"></i>
                 <h2>Sign in to view your shopping bag</h2>
                 <p>Your saved skincare products will appear here.</p>
-                <a href="<?= BASE_URL ?>/public/index.php">
+                <a href="<?= BASE_URL ?>/index.php">
                     Return to PureVia
                 </a>
             </section>
@@ -278,7 +278,7 @@ $pageTitle = 'Shopping Bag | PureVia';
 
                                 <a
                                     class="pv-cart-image"
-                                    href="<?= BASE_URL ?>/public/product.php?id=<?= $productId ?>"
+                                    href="<?= BASE_URL ?>/product.php?id=<?= $productId ?>"
                                 >
                                     <img
                                         src="<?= cartEsc($image) ?>"
@@ -296,7 +296,7 @@ $pageTitle = 'Shopping Bag | PureVia';
 
                                     <a
                                         class="pv-cart-product-name"
-                                        href="<?= BASE_URL ?>/public/product.php?id=<?= $productId ?>"
+                                        href="<?= BASE_URL ?>/product.php?id=<?= $productId ?>"
                                     >
                                         <?= cartEsc($item['product_name']) ?>
                                     </a>
@@ -394,13 +394,13 @@ $pageTitle = 'Shopping Bag | PureVia';
                         <i class="fa-solid fa-bag-shopping"></i>
                         <h2>Your shopping bag is empty</h2>
                         <p>Explore skincare essentials made for your routine.</p>
-                        <a href="<?= BASE_URL ?>/public/shop.php">
+                        <a href="<?= BASE_URL ?>/shop.php">
                             Shop Products
                         </a>
                     </div>
 
                     <a
-                        href="<?= BASE_URL ?>/public/shop.php"
+                        href="<?= BASE_URL ?>/shop.php"
                         class="pv-cart-continue"
                     >
                         <i class="fa-solid fa-chevron-left"></i>
@@ -477,8 +477,8 @@ window.PUREVIA_CART = <?= pvJson([
 </script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart.js?v=public-root-1"></script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

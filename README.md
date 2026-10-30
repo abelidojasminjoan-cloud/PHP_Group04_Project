@@ -43,9 +43,9 @@ Requirements: PHP, MySQL/MariaDB (available through XAMPP), and Composer.
 1. Open the PureVia project folder in Visual Studio Code.
 2. Start MySQL in XAMPP. The terminal command below serves the website, so Apache is not required for the website. If using XAMPP's phpMyAdmin, also start Apache to access phpMyAdmin.
 3. Create the `purevia_db` database in phpMyAdmin and import `database/purevia_db.sql`.
-4. Configure the database connection and other required settings in `.env`.
+4. Configure the database connection and other required settings in `.env`. The main SQL file includes the required admin, staff, and customer roles; preserve these records if clearing application data.
 5. Run `composer install` from the project root if the Composer dependencies are not installed.
-6. When setting up a fresh checkout or moving the project, follow the [local PHP server setup](docs/local-php-server.md) to recreate the public directory junctions.
+6. Follow the [local PHP server setup](docs/local-php-server.md). The original web folders stay outside `public/`; local directory shortcuts let the exact command below serve them. There is no `routes` folder or `public/public` folder.
 7. Open a terminal in the project root (the folder containing `public`, `config`, and `composer.json`) and run:
 
 ```powershell
@@ -63,3 +63,11 @@ See [assessment evidence, limitations and verification](docs/skin-assessment-evi
 ## Deploy to Render
 
 Use the [Render deployment guide](docs/render-deployment.md) for Docker setup, hosted MySQL, environment variables, persistent uploads, email, and PayPal testing. The local PHP server command above remains supported.
+
+## Return management
+
+After updating an existing database, run `php tools/migrate-returns.php`. Customer return dialogs and Operations > Returns now support private evidence, return methods and admin review. See [docs/returns.md](docs/returns.md) for completion and stock rules.
+
+## Configurable assessment questions
+
+After updating, run `php tools/migrate-question-configuration.php`. See [docs/configurable-assessment.md](docs/configurable-assessment.md) for source citations, multiple mappings, answer weights and delete behavior.

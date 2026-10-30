@@ -8,7 +8,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 if (!productAdminAllowed($conn)) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
@@ -415,11 +415,7 @@ include __DIR__ . '/../../includes/sidemenu.php';
                                             <?= productEscape($size) ?>
                                         </span>
 
-                                        <?php if ($label !== ''): ?>
-                                            <span class="size-badge variant-label-badge">
-                                                <?= productEscape($label) ?>
-                                            </span>
-                                        <?php endif; ?>
+
 
                                     <?php endforeach; ?>
 
@@ -565,9 +561,9 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
             <div class="form-modal-body">
 
-                <!-- PRODUCT NAME AND SKU -->
+                <!-- PRODUCT NAME; ID AND SKU ARE ASSIGNED AUTOMATICALLY -->
 
-                <div class="form-grid form-grid-2">
+                <div class="form-grid">
 
                     <div class="form-group">
                         <label for="productName">
@@ -586,22 +582,7 @@ include __DIR__ . '/../../includes/sidemenu.php';
                         >
                     </div>
 
-                    <div class="form-group">
-                        <label for="productCode">
-                            SKU
-                            <span class="form-required">*</span>
-                        </label>
 
-                        <input
-                            type="text"
-                            id="productCode"
-                            name="product_code"
-                            class="form-control"
-                            placeholder="e.g. SRM-005"
-                            maxlength="100"
-                            required
-                        >
-                    </div>
 
                 </div>
 
@@ -765,7 +746,8 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                         <label class="product-match-label">Skin Types</label>
 
-                        <div class="skin-type-options product-match-options" role="group" aria-label="Skin Types">
+                        <label class="product-checkbox product-select-all"><input type="checkbox" id="selectAllSkinTypes" aria-controls="skinTypeOptions"><span>Select all skin types</span></label>
+                        <div id="skinTypeOptions" class="skin-type-options product-match-options" role="group" aria-label="Skin Types">
 
                             <?php foreach ($skinTypes as $item): ?>
 
@@ -816,6 +798,8 @@ include __DIR__ . '/../../includes/sidemenu.php';
                             placeholder="Search skin concerns..."
                         >
 
+                        <label class="product-checkbox product-select-all"><input type="checkbox" id="selectAllConcerns" aria-controls="concernOptions"><span>Select all skin concerns</span></label>
+
                         <div
                             class="checkbox-list"
                             id="concernOptions"
@@ -857,6 +841,8 @@ include __DIR__ . '/../../includes/sidemenu.php';
                             class="form-control checkbox-search"
                             placeholder="Search ingredients..."
                         >
+
+                        <label class="product-checkbox product-select-all"><input type="checkbox" id="selectAllIngredients" aria-controls="ingredientOptions"><span>Select all ingredients</span></label>
 
                         <div
                             class="checkbox-list"

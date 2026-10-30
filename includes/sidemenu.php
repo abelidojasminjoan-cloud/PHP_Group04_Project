@@ -587,6 +587,7 @@ else {
                 </a>
 
 
+                <a href="<?= $adminBase ?>/returns/returns.php" class="sidebar-link <?= sidebarActive('/returns/') ?>"><span class="sidebar-link-left"><span class="sidebar-menu-icon" aria-hidden="true">&#8617;</span><span>Returns</span></span></a>
                 <a
                     href="<?= $paymentsUrl ?>"
                     class="sidebar-link <?= sidebarActive('/payments/') ?>"
@@ -752,6 +753,11 @@ else {
             </div>
 
 
+            <?php if ($isAdmin || $isStaff): ?>
+                <a href="<?= BASE_URL ?>/account/manage.php" class="sidebar-profile-edit" aria-label="Manage Account" title="Manage Account">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m16 3 5 5M9 15l1-5L18 2a2.1 2.1 0 0 1 3 3l-8 8-4 2Z"/></svg>
+                </a>
+            <?php endif; ?>
         </div>
 
 

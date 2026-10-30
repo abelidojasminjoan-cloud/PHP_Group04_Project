@@ -7,14 +7,14 @@ require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/db.php';
 
 if (!TWO_FACTOR_ENABLED) {
-    header('Location: ' . BASE_URL . '/public/login.php', true, 303);
+    header('Location: ' . BASE_URL . '/login.php', true, 303);
     exit;
 }
 require_once __DIR__ . '/../../services/two_factor_auth.php';
 require_once __DIR__ . '/../../services/complete_2fa_login.php';
 
 $setupUrl = BASE_URL . '/account/setup_2fa_login.php';
-$loginUrl = BASE_URL . '/public/login.php';
+$loginUrl = BASE_URL . '/login.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

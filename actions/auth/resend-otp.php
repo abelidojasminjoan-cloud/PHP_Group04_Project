@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../services/EmailService.php';
 
 function resendRedirect(): never {
-    header('Location: ' . BASE_URL . '/public/verify-email.php');
+    header('Location: ' . BASE_URL . '/verify-email.php');
     exit;
 }
 
@@ -30,7 +30,7 @@ $userId = (int) (
 );
 
 if ($userId <= 0) {
-    header('Location: ' . BASE_URL . '/public/register.php');
+    header('Location: ' . BASE_URL . '/register.php');
     exit;
 }
 
@@ -55,7 +55,7 @@ try {
 
         unset($_SESSION['pending_verification_user_id']);
 
-        header('Location: ' . BASE_URL . '/public/login.php');
+        header('Location: ' . BASE_URL . '/login.php');
         exit;
     }
 

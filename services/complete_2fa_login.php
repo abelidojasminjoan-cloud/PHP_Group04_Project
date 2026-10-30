@@ -225,5 +225,5 @@ function pvCompleteLogin(mysqli $conn, int $userId, bool $secondFactorVerified):
         return BASE_URL . '/staff/dashboard.php';
     }
 
-    return BASE_URL . '/public/index.php';
+    return BASE_URL . '/index.php';
 }

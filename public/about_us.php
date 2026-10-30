@@ -507,7 +507,7 @@ $baseUrl = htmlspecialchars(
             </p>
 
             <a
-                href="<?= $baseUrl ?>/public/shop.php"
+                href="<?= $baseUrl ?>/shop.php"
                 class="pv-about-primary-link pv-about-cta-link"
             >
                 Explore skincare products

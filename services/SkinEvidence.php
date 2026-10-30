@@ -25,12 +25,13 @@ final class SkinEvidence
         $items=[];
         $add=static function(string $title,string $text,array $sources) use (&$items): void {$items[]=compact('title','text','sources');};
         $a=$p['answers'];
-        if(in_array($a['q6']??'', ['A','D'], true))$add('Possible dryness or flaking','You reported dry patches. This is a symptom to review, not a diagnosis of dehydration or eczema.',['baumann']);
+        $configured=($p['rule_version']??'')==='configured-question-bank-v1';
+        if(!$configured&&in_array($a['q6']??'', ['A','D'], true))$add('Possible dryness or flaking','You reported dry patches. This is a symptom to review, not a diagnosis of dehydration or eczema.',['baumann']);
         if($p['sensitivity']['frequent_reaction']||$p['sensitivity']['level']==='high') {
             $add('Reported irritation','Your answers describe product-related discomfort. Persistent, severe or recurring irritation needs a dermatologist; this quiz cannot identify an allergy or rosacea.',['baumann','bstq2025']);
             $add('Ingredients to approach cautiously','Consider fragrance-free products if fragrance has caused discomfort. Avoid products that previously caused a reaction and discuss suspected allergies with a clinician. Strong exfoliating acids and retinoids may worsen already irritated skin; this is a caution, not a blanket ban or allergy finding.',['baumann']);
         }
-        if(($a['q11']??'')==='C')$add('Fragrance caution','You reported frequent discomfort with fragranced or strong formulas. Consider fragrance / parfum when reviewing labels, but this answer cannot tell which ingredient caused the reaction.',['baumann']);
+        if(!$configured&&($a['q11']??'')==='C')$add('Fragrance caution','You reported frequent discomfort with fragranced or strong formulas. Consider fragrance / parfum when reviewing labels, but this answer cannot tell which ingredient caused the reaction.',['baumann']);
         $add('Your ingredient exclusions','Only ingredients you explicitly select are excluded from matching. These observations do not prove an ingredient allergy or establish that a product is safe. Check the current full product label.',['baumann']);
         return $items;
     }

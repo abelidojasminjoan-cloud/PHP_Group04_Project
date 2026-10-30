@@ -13,7 +13,7 @@ if (!empty($_SESSION['user_id'])) {
     } elseif ($role === 'staff') {
         header('Location: ' . BASE_URL . '/staff/dashboard.php');
     } else {
-        header('Location: ' . BASE_URL . '/public/index.php');
+        header('Location: ' . BASE_URL . '/index.php');
     }
     exit;
 }
@@ -56,7 +56,7 @@ function escapeHtml(string $value): string{
 <main class="auth-shell">
 
     <section class="auth-visual" aria-label="PureVia skincare">
-        <a class="auth-brand" href="<?= BASE_URL ?>/public/index.php" aria-label="PureVia home">
+        <a class="auth-brand" href="<?= BASE_URL ?>/index.php" aria-label="PureVia home">
             <img src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png" alt="PureVia" width="168" height="168">
         </a>
         <h2 class="auth-visual-title">
@@ -154,7 +154,7 @@ function escapeHtml(string $value): string{
                 </div>
 
                 <div class="auth-forgot">
-                    <a href="<?= BASE_URL ?>/public/forgot-password.php">
+                    <a href="<?= BASE_URL ?>/forgot-password.php">
                         Forgot password?
                     </a>
                 </div>
@@ -167,7 +167,7 @@ function escapeHtml(string $value): string{
 
             <p class="auth-bottom-link">
                 New to PureVia?
-                <a href="<?= BASE_URL ?>/public/register.php">
+                <a href="<?= BASE_URL ?>/register.php">
                     Create an account
                 </a>
             </p>
@@ -182,8 +182,8 @@ function escapeHtml(string $value): string{
                 <a href="mailto:purevia@gmail.com">purevia@gmail.com</a>
             </div>
             <div class="auth-footer-links">
-               <a href="<?= BASE_URL ?>/public/privacy_policy.php">Privacy</a>
-                <a href="<?= BASE_URL ?>/public/terms.php">Terms</a>
+               <a href="<?= BASE_URL ?>/privacy_policy.php">Privacy</a>
+                <a href="<?= BASE_URL ?>/terms.php">Terms</a>
                 <span>&copy; <?= date('Y') ?> PureVia</span>
             </div>
         </footer>
