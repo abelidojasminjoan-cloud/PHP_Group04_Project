@@ -37,7 +37,7 @@ if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_byt
             <span class="fv-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></span>
             <h2 id="fvEmptyTitle">Your favorites list is empty</h2>
             <p>Tap the heart on products you love to keep them together here.</p>
-            <a class="fv-explore" id="fvExplore" href="<?= BASE_URL ?>/public/shop.php">Explore Products</a>
+            <a class="fv-explore" id="fvExplore" href="<?= BASE_URL ?>/shop.php">Explore Products</a>
         </section>
         <div class="fv-grid" id="fvGrid"></div>
         <p class="fv-status" id="fvStatus" role="status">Loading saved products…</p>
@@ -52,8 +52,8 @@ window.PUREVIA_FAVORITES_PAGE = <?= pvJson([
 window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
 </script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/favorites.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/favorites.js?v=public-root-1"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/cart_add.js"></script>
 </body>
 </html>

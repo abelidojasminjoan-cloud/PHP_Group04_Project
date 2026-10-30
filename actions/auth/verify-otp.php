@@ -25,7 +25,7 @@ function otpRedirect(string $path, bool $verified = false): never
     if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')) {
         header('Content-Type: application/json; charset=UTF-8');
         $result = ['redirect' => $url, 'verified' => $verified];
-        if ($path === '/public/verify-email.php' && !empty($_SESSION['otp_error'])) {
+        if ($path === '/verify-email.php' && !empty($_SESSION['otp_error'])) {
             $result['error'] = $_SESSION['otp_error'];
             unset($_SESSION['otp_error']);
         }
@@ -39,12 +39,12 @@ function otpRedirect(string $path, bool $verified = false): never
 
 function redirectToOtp(): never
 {
-    otpRedirect('/public/verify-email.php');
+    otpRedirect('/verify-email.php');
 }
 
 function redirectToLogin(): never
 {
-    otpRedirect('/public/login.php');
+    otpRedirect('/login.php');
 }
 
 /*
@@ -87,7 +87,7 @@ $userId = (int) (
 );
 
 if ($userId <= 0) {
-    otpRedirect('/public/register.php');
+    otpRedirect('/register.php');
 }
 
 /*
@@ -394,7 +394,7 @@ try {
     |--------------------------------------------------------------------------
     */
 
-    otpRedirect('/public/account-activated.php', true);
+    otpRedirect('/account-activated.php', true);
 
 } catch (Throwable $e) {
 

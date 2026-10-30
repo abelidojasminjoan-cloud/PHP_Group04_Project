@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let opener = null, current = null, pending = false, loadController = null, priorInert = [], priorOverflow = "";
     function error(message) { el("saFormError").textContent = message; el("saFormError").hidden = false; el("saFormError").focus(); }
     function open(title, subtitle = "") {
-        loadController?.abort(); loadController = null; current = null; fields.replaceChildren(); el("saFormError").hidden = true;
+        loadController?.abort(); loadController = null; current = null; modal.classList.remove("sa-question-editor"); fields.replaceChildren(); el("saFormError").hidden = true;
         el("saModalTitle").textContent = title; el("saModalSubtitle").textContent = subtitle; el("saSubmit").hidden = false; el("saSubmit").disabled = false; el("saSubmit").textContent = "Save Changes";
         if (!modal.classList.contains("is-open")) { opener = document.activeElement; priorOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; priorInert = [...document.body.children].filter(n => n !== modal && !["SCRIPT", "STYLE", "LINK"].includes(n.tagName)).map(n => [n, n.inert]); priorInert.forEach(([n]) => { n.inert = true; }); }
         modal.classList.add("is-open"); modal.setAttribute("aria-hidden", "false"); modal.querySelector(".form-modal-dialog").focus();
@@ -69,21 +69,59 @@ document.addEventListener("DOMContentLoaded", () => {
             control("Status", "status", record?.status || "active", "select", [["active", "Active"], ["inactive", "Inactive"]]); name.focus();
         }
     }
-    function questionEditor(id, deleting = false) {
-        const r = id ? c.questionBank.find(q => Number(q.id) === id) : null;
-        if (id && !r) return;
-        open(deleting ? "Delete observation question" : id ? "Edit assessment question" : "Add observation question", "Custom questions are not clinically validated. Changes affect new assessments; saved answers keep their original wording.");
-        current = { action: deleting ? "question.delete" : "question.save", id, revision: Number(r?.revision || 0) };
-        if (deleting) { fields.append(node("p", `Delete ${r.prompt}? Existing assessment snapshots are retained.`)); el("saSubmit").textContent = "Delete question"; return; }
-        control("Question", "prompt", r?.prompt || "", "textarea").maxLength = 1000;
-        const options = r ? JSON.parse(r.options_json) : ["Yes", "No", "Not sure"];
-        fields.append(node("p", r?.is_core ? "Preserve each answer's meaning and order. Scoring rules remain fixed." : "Keep answer meanings: A = symptom present, B = absent, C = unsure. Concern suggestions require customer confirmation.", "sa-help"));
-        options.forEach((o, i) => { control(`Answer ${String.fromCharCode(65 + i)}`, `option_${i}`, o).maxLength = 300; });
-        control("Supplied source", "source_key", r?.source_key || "baumann", "select", Object.entries(c.sources).map(([k, v]) => [k, v.title]));
-        control("Evidence note / adaptation limits", "rationale", r?.rationale || "Original symptom observation informed by the supplied reference; not a validated diagnostic question.", "textarea").maxLength = 2000;
-        if (!r?.is_core) control("Concern to suggest when Yes (optional)", "concern_id", r?.concern_id || "", "select", [["", "No concern mapping"], ...c.concerns.map(v => [String(v.id), v.label])]);
-        control("Status", "status", r?.status || "active", "select", r?.is_core ? [["active", "Active"]] : [["active", "Active"], ["inactive", "Inactive"]]);
-        current.optionCount = options.length;
+    function questionEditor(id, deleting=false) {
+        const r=id?c.questionBank.find(q=>Number(q.id)===id):null;if(id&&!r)return;
+        open(deleting?'Delete assessment question':id?'Edit assessment question':'Add assessment question','Changes affect new assessments. Saved answers and scoring snapshots are retained. Custom scoring is not clinically validated.');
+        modal.classList.add('sa-question-editor');
+        current={action:deleting?'question.delete':'question.save',id,revision:Number(r?.revision||0)};
+        if(deleting){fields.append(node('p','Delete this '+(r.question_kind||'assessment')+' question: '+r.prompt+'? It will no longer be asked or scored in new assessments. Saved assessments remain unchanged.'));el('saSubmit').textContent='Delete question';return;}
+        const prompt=control('Question','prompt',r?.prompt||'','textarea');prompt.maxLength=1000;prompt.required=true;
+        const purpose=control('Question purpose','question_kind',r?.question_kind||'observation','select',[['skin_type','Skin-type scoring'],['sensitivity','Sensitivity scoring'],['clarification','Clarification scoring'],['observation','Concern observation']]);
+        fields.append(node('p','Skin-type and clarification weights are awarded to each type when an answer is selected. Zero weights skip that answer. Sensitivity uses 0–2 points; leave Not sure unscored. Applicability tags below do not add scoring points.','sa-help'));
+        let answers=(r?JSON.parse(r.options_json):['Yes','No','Not sure']).map((label,index)=>({label,scores:{...(r?.answer_scores?.[String.fromCharCode(65+index)]||{})}}));
+        const answerArea=node('div',undefined,'sa-question-answers');fields.append(answerArea);
+        let rows=[];let trigger=null;
+        const capture=()=>rows.forEach((row,index)=>{answers[index].label=row.label.value;answers[index].scores={};row.weights.forEach(([key,input])=>{if(input.value!=='')answers[index].scores[key]=Number(input.value);});});
+        const refreshTrigger=()=>{if(!trigger)return;const selected=trigger.value;trigger.replaceChildren(...answers.map((answer,index)=>new Option(String.fromCharCode(65+index)+' — '+answer.label,String.fromCharCode(65+index))));trigger.value=[...trigger.options].some(option=>option.value===selected)?selected:'A';};
+        function renderAnswers(){
+            answerArea.replaceChildren();rows=[];
+            answers.forEach((answer,index)=>{
+                const card=node('div',undefined,'sa-question-answer');
+                const label=node('label','Answer '+String.fromCharCode(65+index));const input=node('input');input.id='sa-answer-'+index;label.htmlFor=input.id;input.className='form-control';input.value=answer.label;input.maxLength=300;input.required=true;
+                input.addEventListener('input',()=>{capture();refreshTrigger();});card.append(label,input);
+                const row={label:input,weights:[]};
+                if(['skin_type','clarification'].includes(purpose.value)){
+                    const weights=node('div',undefined,'sa-question-weights');
+                    ['normal','dry','oily','combination'].forEach(type=>{const group=node('label',c.types?.find(item=>item.assessment_key===type)?.label||type[0].toUpperCase()+type.slice(1));const weight=node('input');weight.type='number';weight.min='0';weight.max='5';weight.step='1';weight.value=answer.scores[type]||0;weight.className='form-control';weight.setAttribute('aria-label','Answer '+String.fromCharCode(65+index)+' '+type+' weight');group.append(weight);weights.append(group);row.weights.push([type,weight]);});card.append(weights);
+                }else if(purpose.value==='sensitivity'){
+                    const label=node('label','Sensitivity points');const points=node('select');points.className='form-control';[['','Unscored / Not sure'],['0','0 — Rare or no reaction'],['1','1 — Occasional reaction'],['2','2 — Frequent reaction']].forEach(([value,text])=>points.append(new Option(text,value)));points.value=answer.scores.sensitivity===undefined?'':String(answer.scores.sensitivity);label.append(points);card.append(label);row.weights.push(['sensitivity',points]);
+                }
+                const remove=node('button','Remove answer','sa-secondary');remove.type='button';remove.disabled=answers.length<=2;remove.addEventListener('click',()=>{capture();answers.splice(index,1);renderAnswers();refreshTrigger();});card.append(remove);answerArea.append(card);rows.push(row);
+            });
+        }
+        renderAnswers();
+        const add=node('button','+ Add answer','sa-secondary');add.type='button';add.addEventListener('click',()=>{if(answers.length>=8)return error('A question can have up to 8 answers.');capture();answers.push({label:'',scores:{}});renderAnswers();refreshTrigger();});fields.append(add);
+        purpose.addEventListener('change',()=>{capture();if(!id&&answers.map(answer=>answer.label).join('|')==='Yes|No|Not sure'&&purpose.value!=='observation'){
+            answers=purpose.value==='sensitivity'?[{label:'Never or rarely',scores:{sensitivity:0}},{label:'Occasionally',scores:{sensitivity:1}},{label:'Frequently',scores:{sensitivity:2}},{label:'Not sure',scores:{}}]:[{label:'Dry',scores:{dry:1}},{label:'Balanced',scores:{normal:1}},{label:'Oily',scores:{oily:1}},{label:'Combination',scores:{combination:1}},{label:'Not sure',scores:{}}];
+        }else answers.forEach(answer=>answer.scores={});renderAnswers();refreshTrigger();});
+        const source=control('Source','source_key',r?.source_key||'custom','select',[...Object.entries(c.sources).map(([key,value])=>[key,value.title]),['custom','Other source — enter citation below']]);
+        const title=control('Source title','source_title',r?.source_title||c.sources[r?.source_key]?.title||'');title.maxLength=1000;title.required=true;
+        const author=control('Author(s)','source_author',r?.source_author||'');author.maxLength=500;author.placeholder='Author names or organization';
+        const url=control('Source link','source_url',r?.source_url||c.sources[r?.source_key]?.url||'');url.type='url';url.maxLength=2048;url.placeholder='https://...';
+        function sourceRequirements(){author.required=source.value==='custom';url.required=source.value==='custom';}
+        source.addEventListener('change',()=>{const selected=c.sources[source.value];title.value=selected?.title||'';author.value='';url.value=selected?.url||'';sourceRequirements();});sourceRequirements();
+        const rationale=control('Evidence note / adaptation limits','rationale',r?.rationale||'Custom question informed by the source above; scoring and concern suggestions are not clinically validated.','textarea');rationale.maxLength=2000;rationale.required=true;
+        function mappings(legend,name,choices,selected){
+            const fieldset=node('fieldset',undefined,'sa-question-mapping');fieldset.append(node('legend',legend));const list=node('div',undefined,'sa-question-mapping-options');
+            choices.forEach(choice=>{const label=node('label'),input=node('input');input.type='checkbox';input.name=name;input.value=choice.id;input.checked=(selected||[]).map(Number).includes(Number(choice.id));input.disabled=choice.status==='inactive'&&!input.checked;label.append(input,node('span',choice.label+(choice.status==='inactive'?' (inactive)':'')));list.append(label);});
+            if(!choices.length)list.append(node('p','No catalog entries available.','sa-help'));fieldset.append(list);fields.append(fieldset);
+        }
+        mappings('Related concerns — select all that apply','concern_ids',c.concerns||[],r?.concern_ids||[]);
+        trigger=control('Suggest selected concerns when answer is','concern_answer',r?.concern_answer||'A','select',answers.map((answer,index)=>[String.fromCharCode(65+index),String.fromCharCode(65+index)+' — '+answer.label]));
+        fields.append(node('p','Concern mappings suggest options for the customer to confirm; they do not automatically select a concern or diagnose a condition.','sa-help'));
+        mappings('Applies to skin types — select all that apply','skin_type_ids',c.types||[],r?.skin_type_ids||[]);
+        control('Status','status',r?.status||'active','select',[['active','Active'],['inactive','Inactive']]);
+        current.questionData=()=>{capture();const data=new FormData(form);return {prompt:data.get('prompt'),question_kind:purpose.value,options:answers.map(answer=>answer.label),answer_scores:Object.fromEntries(answers.map((answer,index)=>[String.fromCharCode(65+index),answer.scores])),source_key:source.value,source_title:title.value,source_author:author.value,source_url:url.value,rationale:data.get('rationale'),concern_ids:data.getAll('concern_ids'),skin_type_ids:data.getAll('skin_type_ids'),concern_answer:trigger.value,status:data.get('status')};};
     }
     async function assessmentViewer(id) {
         open("Assessment Details", "Loading assessment…"); el("saSubmit").hidden = true;
@@ -115,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault(); if (pending || !current || !form.reportValidity()) return; pending = true; el("saSubmit").disabled = true; el("saFormError").hidden = true;
         const data = new FormData(form), payload = { ...current, csrf_token: c.csrfToken };
         if (["type.save", "tag.save"].includes(current.action)) for (const key of ["name", "description", "status"]) payload[key] = data.get(key);
-        if (current.action === "question.save") { for (const key of ["prompt", "source_key", "rationale", "status"]) payload[key] = data.get(key); payload.concern_id = data.get("concern_id") || ""; payload.options = Array.from({ length: current.optionCount }, (_, i) => data.get(`option_${i}`)); }
+        if(current.action==="question.save"){Object.assign(payload,current.questionData());delete payload.questionData;}
         if (current.action === "suitability.save") { for (const key of ["product_skin_types", "product_concerns", "product_ingredients"]) payload[key] = data.getAll(key); for (const key of ["ingredients_complete", "gentle", "targeted_approved", "sunscreen_verified"]) payload[key] = data.has(key); for (const key of ["routine_role", "usage_period", "routine_instructions"]) payload[key] = data.get(key); }
         try { const response = await fetch(`${c.baseUrl}/actions/admin/skin.php`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(payload) }); const result = await response.json(); if (!response.ok || !result.success) throw new Error(result.message || "Unable to save this record."); window.location.reload(); }
         catch (e) { error(e.message || "Unable to save this record."); pending = false; el("saSubmit").disabled = false; }

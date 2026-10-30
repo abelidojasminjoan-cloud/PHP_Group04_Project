@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../../config/db.php';
-require_once __DIR__.'/../../../services/AdminOrder.php';
+require_once __DIR__ . '/../../../config/db.php';
+require_once __DIR__ . '/../../../services/AdminOrder.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, private');
 function adminOrderReply(array $data,int $status=200): never {http_response_code($status);echo pvJson($data);exit;}

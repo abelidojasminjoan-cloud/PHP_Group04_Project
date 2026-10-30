@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../includes/role-check.php';
-require_once __DIR__.'/../../includes/ip-address.php';
+require_once __DIR__ . '/../../includes/role-check.php';
+require_once __DIR__ . '/../../includes/ip-address.php';
 requirePureViaAdmin($conn);
 $pageTitle='Account Lockout Logs';
 $policy=securityPolicy($conn);
@@ -22,7 +22,7 @@ natcasesort($browsers);
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/account-lockouts.css">
 </head><body>
-<?php include __DIR__.'/../../includes/sidemenu.php'; ?>
+<?php include __DIR__ . '/../../includes/sidemenu.php'; ?>
 <div class="admin-layout">
 <header class="admin-topbar"><p class="admin-topbar-title">Account Lockout Logs</p></header>
 <main class="login-attempts-main account-lockouts-main">

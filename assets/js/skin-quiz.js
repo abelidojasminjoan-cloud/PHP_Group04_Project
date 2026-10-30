@@ -9,7 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const label = (list, id) => list.find(r => String(r.id) === String(id))?.label || "Unavailable selection";
     const setRadio = (name, value) => document.querySelectorAll(`input[name="${name}"]`).forEach(i => { i.checked = i.value === String(value); });
     let screen = "awareness", busy = false, lastProfile = null, saved = false, assessmentId = null;
-    const path = () => ["awareness", ...(selected("awareness") === "yes" ? ["manual"] : ["q2", "q3", "q4", "q5", "q6", "q7", "q8"]), "sensitivity", ...(c.observations?.length ? ["observations"] : []), "concerns", "ingredients", "routine"];
+    const scoringKeys=c.scoringKeys||[], sensitivityKeys=c.sensitivityKeys||[], clarificationKeys=c.clarificationKeys||[];
+    const allQuestionKeys=Object.keys(c.questions);
+    const guidedFirst=()=>scoringKeys[0]||(sensitivityKeys.length?'sensitivity':c.observations?.length?'observations':'concerns');
+    const path=()=>['awareness',...(selected('awareness')==='yes'?['manual']:scoringKeys),...(sensitivityKeys.length?['sensitivity']:[]),...(c.observations?.length?['observations']:[]),'concerns','ingredients','routine'];
     function error(message) { el("sqError").textContent = message; el("sqError").hidden = false; el("sqError").scrollIntoView({ block: "center" }); }
     function clearError() { el("sqError").hidden = true; }
     function phase(value) { return value === "review" ? 5 : ({ sensitivity: 1, observations: 2, concerns: 2, ingredients: 3, routine: 4 }[value] || 0); }
@@ -31,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
         el("sqMainConcern").replaceChildren(new Option("Select your main concern", ""), ...ids.map(id => new Option(label(c.choices.concerns, id), id)));
         if (ids.includes(old)) el("sqMainConcern").value = old; else if (ids.length === 1) el("sqMainConcern").value = ids[0];
         el("sqMainConcernField").hidden = !ids.length; el("sqConcernCount").textContent = `${ids.length} ${ids.length === 1 ? "concern" : "concerns"} selected`;
-        const suggestions = [...new Set((c.observations || []).filter(q => q.concern_id && selected(q.question_key) === "A").map(q => label(c.choices.concerns, q.concern_id)))];
+        const suggestions = [...new Set((c.questionBank || []).filter(q => selected(q.question_key) === q.concern_answer).flatMap(q => (q.concern_ids || []).map(id => label(c.choices.concerns, id))))];
         el("sqConcernSuggestions").hidden = !suggestions.length;
         el("sqConcernSuggestions").textContent = `Your observations may relate to: ${suggestions.join(", ")}. Select only concerns that fit your experience. This is not a diagnosis.`;
     }
@@ -39,9 +42,12 @@ document.addEventListener("DOMContentLoaded", () => {
         let message = "";
         if (screen === "awareness" && !selected("awareness")) message = "Choose whether you already know your skin type.";
         if (screen === "manual" && !selected("skin_type")) message = "Select your skin type, or use the guided finder.";
-        if (/^q[2-8]$/.test(screen) && screen !== "q8" && !selected(screen)) message = "Choose an answer. You may select Not sure.";
-        if (screen === "q8" && Array.from({ length: 7 }, (_, i) => selected(`q${i + 2}`)).filter(v => v && v !== "E").length < 5) message = "Answer at least five skin-type questions with an observation. Go back to update your answers, or choose your skin type manually.";
-        if (screen === "sensitivity" && [9, 10, 11].some(q => !selected(`q${q}`))) message = "Answer all three sensitivity questions. You can select Not sure.";
+        if(scoringKeys.includes(screen)&&!selected(screen))message='Choose an answer for this question.';
+        if(screen===scoringKeys.at(-1)){
+            const answered=(c.questionBank||[]).filter(q=>q.question_kind==='skin_type'&&Object.values(q.answer_scores?.[selected(q.question_key)]||{}).reduce((sum,weight)=>sum+Number(weight),0)>0).length;
+            if(answered<Math.min(5,scoringKeys.length))message='Choose observations for at least '+Math.min(5,scoringKeys.length)+' scoring questions, or select your skin type manually.';
+        }
+        if(screen==='sensitivity'&&sensitivityKeys.some(key=>!selected(key)))message='Answer all available sensitivity questions.';
         if (screen === "concerns" && !checked("concerns").length && !el("sqNoConcerns").checked) message = "Select your concerns or No specific concern.";
         if (screen === "concerns" && checked("concerns").length && !el("sqMainConcern").value) message = "Choose your main concern from the selected concerns.";
         if (screen === "ingredients" && (!selected("ingredient_preference") || (selected("ingredient_preference") === "selected" && !checked("avoided_ingredients").length))) message = "Choose your ingredient preference and any ingredients to avoid.";
@@ -49,15 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (message) { error(message); return false; } return true;
     }
     function payload() {
-        const answers = {}; for (const key of [...Array.from({ length: 10 }, (_, i) => `q${i + 2}`), "f1", "f2"]) answers[key] = selected(key);
-        for (const q of c.observations || []) answers[q.question_key] = selected(q.question_key) || "C";
+        const answers=Object.fromEntries(allQuestionKeys.map(key=>[key,selected(key)]));
         return { assessment_method: selected("awareness") === "yes" ? "manual" : "guided", skin_type: selected("skin_type"), answers,
             concerns: checked("concerns"), main_concern_id: el("sqMainConcern").value, ingredient_preference: selected("ingredient_preference"), avoided_ingredients: checked("avoided_ingredients"), avoidance_reason: el("sqAvoidanceReason").value, routine_preference: selected("routine_preference") };
     }
     function hydrate(p, editing = false) {
         setRadio("awareness", editing && p.skin_type ? "yes" : p.assessment_method === "manual" ? "yes" : "no"); setRadio("skin_type", p.skin_type || "");
-        for (const key of [...Array.from({ length: 10 }, (_, i) => `q${i + 2}`), "f1", "f2"]) setRadio(key, p.answers[key] || "");
-        for (const q of c.observations || []) setRadio(q.question_key, p.answers[q.question_key] || "C");
+        for(const key of allQuestionKeys)setRadio(key,p.answers[key]||'');
         for (const key of ["concerns", "avoided_ingredients"]) document.querySelectorAll(`input[name="${key}"]`).forEach(i => { i.checked = p[key].map(String).includes(i.value); });
         el("sqNoConcerns").checked = !p.concerns.length; concerns(); el("sqMainConcern").value = p.main_concern_id || "";
         setRadio("ingredient_preference", p.ingredient_preference); el("sqAvoided").hidden = p.ingredient_preference !== "selected"; el("sqAvoidanceReason").value = p.avoidance_reason; setRadio("routine_preference", p.routine_preference);
@@ -92,16 +96,16 @@ document.addEventListener("DOMContentLoaded", () => {
         el("sqGuidance").replaceChildren(...guidance);
         el("sqMatchNotice").textContent = p.avoided_ingredients.length ? "Ranked using catalog skin-type and concern information. Products with selected ingredients or unverified ingredient lists are excluded. Compatibility is not guaranteed." : "Ranked using catalog skin-type and concern information. Check full product labels; ingredient information may be incomplete. Compatibility is not guaranteed.";
         el("sqProducts").replaceChildren(...matches.products.map(product => {
-            const article = node("article", undefined, "sq-product"), imageLink = node("a"); imageLink.href = `${c.baseUrl}/public/product.php?id=${product.id}`;
+            const article = node("article", undefined, "sq-product"), imageLink = node("a"); imageLink.href = `${c.baseUrl}/product.php?id=${product.id}`;
             const image = node("img"); image.src = product.image; image.alt = product.name; image.loading = "lazy"; image.addEventListener("error", () => { image.src = `${c.baseUrl}/assets/images/products/default-product.svg`; }, { once: true }); imageLink.append(image);
             const body = node("div"), h = node("h3"), title = node("a", product.name); title.href = imageLink.href; h.append(title);
             body.append(node("p", product.category, "sq-kicker"), h, node("p", product.reasons.join(" · ") || "Available catalog product", "sq-help"), node("p", product.ingredient_status === "unverified" ? "Ingredient information unverified" : "Catalog ingredients screened — check the full label", "sq-help"), node("strong", new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(product.price), "sq-price")); article.append(imageLink, body); return article;
         }));
         if (!matches.products.length) el("sqProducts").append(node("p", "No matching product available. You can edit your preferences or browse the catalog.", "sq-empty"));
-        const item = entry => { const li = node("li"); li.append(node("strong", entry.step)); if (entry.product) { const link = node("a", entry.product.name); link.href = `${c.baseUrl}/public/product.php?id=${entry.product.id}`; li.append(link); } else li.append(node("span", "No matching product available.")); return li; };
+        const item = entry => { const li = node("li"); li.append(node("strong", entry.step)); if (entry.product) { const link = node("a", entry.product.name); link.href = `${c.baseUrl}/product.php?id=${entry.product.id}`; li.append(link); } else li.append(node("span", "No matching product available.")); return li; };
         el("sqRoutine").replaceChildren(...["am", "pm"].map(period => { const card = node("div", undefined, "sq-routine-card"); card.append(node("h3", period === "am" ? "Morning routine" : "Evening routine")); const list = node("ol"); list.append(...matches.routine[period].map(item)); card.append(list); return card; }));
         el("sqTargeted").replaceChildren();
-        if (matches.routine.targeted) { const card = node("div", undefined, "sq-routine-card"); card.append(node("h3", "Optional targeted product")); const link = node("a", matches.routine.targeted.name); link.href = `${c.baseUrl}/public/product.php?id=${matches.routine.targeted.id}`; card.append(link, node("p", matches.routine.targeted.instructions, "sq-help")); el("sqTargeted").append(card); }
+        if (matches.routine.targeted) { const card = node("div", undefined, "sq-routine-card"); card.append(node("h3", "Optional targeted product")); const link = node("a", matches.routine.targeted.name); link.href = `${c.baseUrl}/product.php?id=${matches.routine.targeted.id}`; card.append(link, node("p", matches.routine.targeted.instructions, "sq-help")); el("sqTargeted").append(card); }
         if (focus) { el("sqResultTitle").focus({ preventScroll: true }); el("sqProgress").scrollIntoView({ block: "start" }); }
     }
     async function api(action, data) {
@@ -117,22 +121,22 @@ document.addEventListener("DOMContentLoaded", () => {
         catch (e) { error(e.message || "Unable to process your profile. Please try again."); }
         finally { busy = false; buttons.forEach(b => { b.disabled = false; }); el("sqSave").disabled = saved; el("sqReview").removeAttribute("aria-busy"); }
     }
-    el("sqForm").addEventListener("submit", event => { event.preventDefault(); if (busy || !validate()) return; if (screen === "routine") submit("preview", payload()); else show(path()[path().indexOf(screen) + 1]); });
-    el("sqBack").addEventListener("click", () => { if (busy) return; if (screen === "awareness") window.location.assign(`${c.baseUrl}/public/shop.php`); else show(path()[path().indexOf(screen) - 1]); });
-    el("sqSensitiveOnly").addEventListener("click", () => { setRadio("awareness", "no"); show("q2"); });
+    el("sqForm").addEventListener("submit", event => { event.preventDefault(); if (busy || !validate()) return; if(screen==="awareness"&&selected("awareness")==="no"&&!scoringKeys.length){setRadio("awareness","yes");show("manual");error("No active skin-type scoring questions are available. Please choose manually.");return;} if (screen === "routine") submit("preview", payload()); else show(path()[path().indexOf(screen) + 1]); });
+    el("sqBack").addEventListener("click", () => { if (busy) return; if (screen === "awareness") window.location.assign(`${c.baseUrl}/shop.php`); else show(path()[path().indexOf(screen) - 1]); });
+    el("sqSensitiveOnly").addEventListener("click",()=>{if(!scoringKeys.length){setRadio("awareness","yes");show("manual");return error("No active skin-type scoring questions are available. Please choose manually.");}setRadio("awareness","no");show(guidedFirst());});
     el("sqForm").addEventListener("change", event => {
-        clearError(); if (/^q[2-8]$/.test(event.target.name)) ["f1", "f2"].forEach(k => setRadio(k, ""));
+        clearError(); if(scoringKeys.includes(event.target.name))clarificationKeys.forEach(key=>setRadio(key,""));
         if (event.target.name === "concerns") { el("sqNoConcerns").checked = false; concerns(); }
         if (event.target.id === "sqNoConcerns") { if (event.target.checked) document.querySelectorAll('[name="concerns"]').forEach(i => { i.checked = false; }); concerns(); }
         if (event.target.name === "ingredient_preference") el("sqAvoided").hidden = selected("ingredient_preference") !== "selected";
-        if (event.target.name?.startsWith("obs_")) concerns();
+        if(allQuestionKeys.includes(event.target.name))concerns();
     });
     el("sqIngredientSearch").addEventListener("input", event => { const query = event.target.value.trim().toLocaleLowerCase(), rows = [...el("sqIngredientList").children]; rows.forEach(r => { r.hidden = !r.textContent.toLocaleLowerCase().includes(query); }); el("sqIngredientEmpty").hidden = rows.some(r => !r.hidden); });
-    el("sqRecalculate").addEventListener("click", () => { if (!selected("f1") || !selected("f2")) return error("Answer both clarification questions, or choose your skin type manually."); submit("preview", { ...lastProfile, answers: { ...lastProfile.answers, f1: selected("f1"), f2: selected("f2") } }); });
+    el("sqRecalculate").addEventListener("click",()=>{if(clarificationKeys.some(key=>!selected(key)))return error("Answer all available clarification questions, or choose your skin type manually.");submit("preview",{...lastProfile,answers:{...lastProfile.answers,...Object.fromEntries(clarificationKeys.map(key=>[key,selected(key)]))}});});
     el("sqSave").addEventListener("click", () => submit("save", lastProfile));
     el("sqManualOverride").addEventListener("click", () => { if (!busy) { setRadio("awareness", "yes"); setRadio("skin_type", ""); show("manual"); } });
-    el("sqEdit").addEventListener("click", () => { if (busy) return; if (saved) window.location.assign(`${c.baseUrl}/account/skin-profile.php?edit=1`); else { hydrate(lastProfile); show(selected("awareness") === "yes" ? "manual" : "q2"); } });
+    el("sqEdit").addEventListener("click", () => { if (busy) return; if (saved) window.location.assign(`${c.baseUrl}/account/skin-profile.php?edit=1`); else { hydrate(lastProfile); show(selected("awareness") === "yes" ? "manual" : guidedFirst()); } });
     el("sqRating").addEventListener("click", async event => { const button = event.target.closest("[data-rating]"); if (!button || busy) return; busy = true; try { await api("rate", { assessment_id: assessmentId, rating: Number(button.dataset.rating) }); el("sqRating").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === button))); el("sqRatingStatus").textContent = "Thank you for your feedback."; } catch (e) { error(e.message); } finally { busy = false; } });
     if (c.saved) { hydrate(c.saved.profile, c.edit); if (c.edit) show(c.saved.profile.skin_type ? "manual" : "awareness", false); else review(c.saved, false); }
-    else if (c.guided) { setRadio("awareness", "no"); show("q2", false); } else show("awareness", false);
+    else if(c.guided&&!scoringKeys.length){setRadio("awareness","yes");show("manual",false);error("No active skin-type scoring questions are available. Please choose your skin type manually.");} else if(c.guided){setRadio("awareness","no");show(guidedFirst(),false);}else show("awareness",false);
 });

@@ -4,6 +4,7 @@ session_start();
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../services/StaffPassword.php';
 
 
 /* =========================================================
@@ -11,7 +12,7 @@ require_once __DIR__ . '/../config/db.php';
 ========================================================= */
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
@@ -25,6 +26,9 @@ $userId = (int) $_SESSION['user_id'];
 $stmt = $conn->prepare("
     SELECT
         u.id,
+        u.role_id,
+        u.password,
+        u.password_changed_at,
         u.first_name,
         u.last_name,
         u.email,
@@ -51,11 +55,12 @@ if (
     strtolower($staffUser['status']) !== 'active' ||
     strtolower($staffUser['role_name']) !== 'staff'
 ) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
 $staffFirstName = $staffUser['first_name'];
+$staffPasswordWarning = pureViaStaffNeedsPasswordChange($staffUser);
 
 
 /* =========================================================
@@ -271,7 +276,7 @@ $pageTitle = 'Staff Dashboard';
 
     <link
         rel="stylesheet"
-        href="<?= BASE_URL ?>/assets/css/staff_dashboard.css"
+        href="<?= BASE_URL ?>/assets/css/staff_dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/staff_dashboard.css') ?>"
     >
 
     <!-- Responsive adjustments -->
@@ -337,6 +342,8 @@ $pageTitle = 'Staff Dashboard';
             <!-- =================================================
                  STAT CARDS
             ================================================== -->
+
+            <?php require __DIR__ . '/../includes/staff-password-warning.php'; ?>
 
             <section class="staff-stats">
 

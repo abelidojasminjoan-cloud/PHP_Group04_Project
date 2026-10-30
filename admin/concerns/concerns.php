@@ -22,7 +22,7 @@ $concernAdminAllowed = $stmt->get_result()->num_rows === 1;
 $stmt->close();
 
 if (!$concernAdminAllowed) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 

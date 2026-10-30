@@ -14,8 +14,7 @@ PAYPAL_CLIENT_SECRET="your-sandbox-client-secret"
 ```
 
 PHP requires cURL and a working CA certificate bundle. TLS verification stays on.
-Import `database/migrations/20261029_paypal_checkout.sql` once if the tracking table
-is not installed. PayPal uses the existing `online` payment method in the database.
+The tracking table is included in `database/purevia_db.sql`. PayPal uses the existing `online` payment method in the database.
 
 From the project root run `php -S localhost:8000 -t public` and open
 http://localhost:8000/. The built-in server automatically uses that origin for
@@ -64,3 +63,35 @@ PayPal. No buyer credentials were used and no actual capture was performed durin
 automated checks. This does not enable live payments, automated refunds, or refund
 and dispute webhooks. Historical card-payment recovery code remains for existing
 orders; new checkout orders accept only COD or PayPal.
+
+## Render payment webhook
+
+In the same PayPal business app used by `PAYPAL_CLIENT_ID`, add a webhook with:
+
+- URL: `https://YOUR-RENDER-DOMAIN/paypal-webhook.php`
+- Event: `PAYMENT.CAPTURE.COMPLETED`
+
+Copy the registered **Webhook ID** into Render's Environment:
+
+```dotenv
+PAYPAL_WEBHOOK_ID="your-registered-webhook-id"
+```
+
+Keep `PAYPAL_MODE`, Client ID, Secret, and Webhook ID in the same Sandbox or Live
+environment. The buyer account does not supply these values. The webhook ID is
+different from the Client ID and payment/order IDs. For local testing, a public
+HTTPS forwarding URL is required; PayPal cannot deliver to `localhost`.
+
+The endpoint verifies the signature through PayPal before accessing orders, then
+fetches the remote order to verify its identity, capture ID, PHP currency, and
+exact amount. Repeated notifications do not charge again or deduct stock again.
+It only reconciles completed captures; it does not initiate captures or change
+checkout redirects. A payment for an already cancelled order needs manual review.
+No database migration is needed for this webhook.
+
+Test with a real Sandbox checkout, then inspect delivery in PayPal's Webhook
+Events dashboard. The Webhooks Simulator's mock signatures do not verify against
+your registered ID with this verification API. Existing unpaid checkouts still
+need the normal approval/capture flow.
+
+Reference: [PayPal webhook integration](https://developer.paypal.com/api/rest/webhooks/rest/).

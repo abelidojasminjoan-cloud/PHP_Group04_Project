@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/../config/db.php';
 header('Cache-Control: no-store, private');
-if(!empty($_SESSION['user_id'])){header('Location: '.BASE_URL.'/public/login.php');exit;}
+if(!empty($_SESSION['user_id'])){header('Location: '.BASE_URL.'/login.php');exit;}
 $_SESSION['csrf_token']??=bin2hex(random_bytes(32));
 if(isset($_SESSION['password_reset_grant'])&&(int)$_SESSION['password_reset_grant']['verified_at']<time()-600){
     unset($_SESSION['password_reset_grant'],$_SESSION['password_reset_challenge']);
@@ -23,7 +23,7 @@ $wait=$challenge?max(0,60-(time()-(int)$challenge['requested_at'])):0;
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/auth.css"><link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/password-reset.css">
 </head><body class="auth-page"><main class="auth-shell">
-<section class="auth-visual" aria-label="PureVia skincare"><a class="auth-brand" href="<?= BASE_URL ?>/public/index.php"><img src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png" alt="PureVia" width="168" height="168"></a><h2 class="auth-visual-title">Skincare,<br>made simple.</h2></section>
+<section class="auth-visual" aria-label="PureVia skincare"><a class="auth-brand" href="<?= BASE_URL ?>/index.php"><img src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png" alt="PureVia" width="168" height="168"></a><h2 class="auth-visual-title">Skincare,<br>made simple.</h2></section>
 <section class="auth-content"><div class="auth-form-area">
 <div class="auth-heading"><p class="auth-eyebrow">ACCOUNT RECOVERY · STEP <?= ['email'=>1,'verify'=>2,'reset'=>3][$step] ?> OF 3</p><h1><?= pvHtml($heading) ?></h1><p class="auth-subtitle"><?= pvHtml($subtitle) ?></p></div>
 <?php if($error): ?><div class="auth-alert auth-alert-error" role="alert"><?= pvHtml($error) ?></div><?php endif; ?>
@@ -82,6 +82,6 @@ $wait=$challenge?max(0,60-(time()-(int)$challenge['requested_at'])):0;
 <form class="reset-secondary-form" method="post" action="<?= BASE_URL ?>/actions/auth/password-reset.php" data-reset-form><input type="hidden" name="csrf_token" value="<?= pvHtml($_SESSION['csrf_token']) ?>"><input type="hidden" name="action" value="resend"><button class="reset-text-button" type="submit" data-wait="<?= $wait ?>" data-busy="Sending code...">Resend OTP</button></form>
 <?php endif; ?>
 <?php if($step!=='email'): ?><form class="reset-secondary-form" method="post" action="<?= BASE_URL ?>/actions/auth/password-reset.php"><input type="hidden" name="csrf_token" value="<?= pvHtml($_SESSION['csrf_token']) ?>"><input type="hidden" name="action" value="restart"><button class="reset-text-button" type="submit">Use another email</button></form><?php endif; ?>
-<p class="auth-bottom-link">Remember your password? <a href="<?= BASE_URL ?>/public/login.php">Sign in</a></p>
-</div><footer class="auth-footer"><div class="auth-footer-links"><a href="<?= BASE_URL ?>/public/privacy_policy.php">Privacy</a><a href="<?= BASE_URL ?>/public/terms.php">Terms</a><span>&copy; <?= date('Y') ?> PureVia</span></div></footer></section></main>
+<p class="auth-bottom-link">Remember your password? <a href="<?= BASE_URL ?>/login.php">Sign in</a></p>
+</div><footer class="auth-footer"><div class="auth-footer-links"><a href="<?= BASE_URL ?>/privacy_policy.php">Privacy</a><a href="<?= BASE_URL ?>/terms.php">Terms</a><span>&copy; <?= date('Y') ?> PureVia</span></div></footer></section></main>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/password-reset.js?v=<?= filemtime(__DIR__ . '/../assets/js/password-reset.js') ?>"></script></body></html>

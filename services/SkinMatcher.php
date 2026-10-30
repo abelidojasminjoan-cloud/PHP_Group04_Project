@@ -30,7 +30,7 @@ final class SkinMatcher
             if(!$score&&($profile['skin_type_id']||$profile['concerns']))continue;
             $path=(string)($r['primary_image']?:$r['image']);$image=BASE_URL.'/assets/images/products/default-product.svg';
             if(filter_var($path,FILTER_VALIDATE_URL)&&in_array(strtolower((string)parse_url($path,PHP_URL_SCHEME)),['http','https'],true))$image=$path;
-            elseif($path&&is_file(__DIR__.'/../uploads/products/'.basename(str_replace('\\','/',$path))))$image=BASE_URL.'/uploads/products/'.rawurlencode(basename(str_replace('\\','/',$path)));
+            elseif($path&&is_file(__DIR__ . '/../uploads/products/'.basename(str_replace('\\','/',$path))))$image=BASE_URL.'/uploads/products/'.rawurlencode(basename(str_replace('\\','/',$path)));
             $products[]=['id'=>$id,'name'=>$r['product_name'],'image'=>$image,'price'=>(float)$r['price'],'category'=>$r['category_name'],'score'=>$score,'reasons'=>$reasons,'ingredient_status'=>$check['status'],
                 'role'=>$r['routine_role']??'none','period'=>$r['usage_period']??'both','instructions'=>$r['routine_instructions']??'','gentle'=>(bool)$r['gentle'],'targeted_approved'=>(bool)$r['targeted_approved'],'sunscreen_verified'=>(bool)$r['sunscreen_verified'],'concerns'=>$concerns];
         }

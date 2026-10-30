@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../includes/skin_api.php';
-require_once __DIR__.'/../../services/SkinProfile.php';
-require_once __DIR__.'/../../services/SkinMatcher.php';
-require_once __DIR__.'/../../services/SkinQuestionBank.php';
+require_once __DIR__ . '/../../includes/skin_api.php';
+require_once __DIR__ . '/../../services/SkinProfile.php';
+require_once __DIR__ . '/../../services/SkinMatcher.php';
+require_once __DIR__ . '/../../services/SkinQuestionBank.php';
 try{
     $data=skinApiData();$action=$data['action']??null;
     if($action==='rate'){

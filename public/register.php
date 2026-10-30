@@ -7,7 +7,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 if (!empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/public/index.php');
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
@@ -49,7 +49,7 @@ function escapeHtml(string $value): string {
 <main class="auth-shell">
 
     <section class="auth-visual" aria-label="PureVia skincare">
-        <a class="auth-brand" href="<?= BASE_URL ?>/public/index.php" aria-label="PureVia home">
+        <a class="auth-brand" href="<?= BASE_URL ?>/index.php" aria-label="PureVia home">
             <img src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png" alt="PureVia" width="168" height="168">
         </a>
         <h2 class="auth-visual-title">
@@ -259,13 +259,13 @@ function escapeHtml(string $value): string {
 <div class="auth-terms-field">
     <p class="auth-terms">
         By creating an account, you agree to our
-        <a href="<?= BASE_URL ?>/public/terms.php"
+        <a href="<?= BASE_URL ?>/terms.php"
            target="_blank"
            rel="noopener noreferrer">
             Terms of Use
         </a>
         and acknowledge that you have read our
-        <a href="<?= BASE_URL ?>/public/privacy_policy.php"
+        <a href="<?= BASE_URL ?>/privacy_policy.php"
            target="_blank"
            rel="noopener noreferrer">
             Privacy Policy
@@ -307,7 +307,7 @@ function escapeHtml(string $value): string {
 
             <p class="auth-bottom-link">
                 Already have an account?
-                <a href="<?= BASE_URL ?>/public/login.php">
+                <a href="<?= BASE_URL ?>/login.php">
                     Sign in
                 </a>
             </p>
@@ -324,11 +324,11 @@ function escapeHtml(string $value): string {
            
 
 <div class="auth-footer-links">
-    <a href="<?= BASE_URL ?>/public/privacy_policy.php">
+    <a href="<?= BASE_URL ?>/privacy_policy.php">
         Privacy
     </a>
 
-    <a href="<?= BASE_URL ?>/public/terms.php">
+    <a href="<?= BASE_URL ?>/terms.php">
         Terms
     </a>
 

@@ -26,7 +26,7 @@ if ($userId > 0 && $paypalReturnId) {
         }
     } catch (Throwable $error) {
         error_log('PureVia PayPal return: ' . $error->getMessage());
-        header('Location: ' . BASE_URL . '/public/my-orders.php');
+        header('Location: ' . BASE_URL . '/my-orders.php');
         exit;
     }
 }
@@ -34,7 +34,7 @@ $pendingPayPal = $paypalOrder !== null && $paypalOrder['state'] === 'pending' &&
 if ($pendingPayPal && empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
 if ($userId <= 0 || $orderId <= 0) {
-    header('Location: ' . BASE_URL . '/public/cart.php');
+    header('Location: ' . BASE_URL . '/cart.php');
     exit;
 }
 
@@ -57,7 +57,7 @@ $order = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$order) {
-    header('Location: ' . BASE_URL . '/public/cart.php');
+    header('Location: ' . BASE_URL . '/cart.php');
     exit;
 }
 
@@ -164,7 +164,7 @@ function orderEsc(mixed $value): string
         <?php if ($pendingPayPal): ?>
             <p id="pvPayPalError" role="alert" <?= $paypalNotice === '' ? 'hidden' : '' ?>><?= orderEsc($paypalNotice) ?></p>
             <p id="pvPayPalStatus" role="status" aria-live="polite"><?= $paypalAutoAction === 'confirm' ? 'Verifying your PayPal payment…' : 'You can continue or check payment for this saved order.' ?></p>
-            <form method="post" action="<?= BASE_URL ?>/public/paypal-payment.php?order_id=<?= (int) $orderId ?>" class="pv-paypal-actions" id="pvPayPalPaymentForm" <?= $paypalAutoAction !== '' ? 'hidden' : '' ?> data-auto-action="<?= orderEsc($paypalAutoAction) ?>" data-paypal-host="<?= PayPalClient::mode() === 'live' ? 'www.paypal.com' : 'www.sandbox.paypal.com' ?>">
+            <form method="post" action="<?= BASE_URL ?>/paypal-payment.php?order_id=<?= (int) $orderId ?>" class="pv-paypal-actions" id="pvPayPalPaymentForm" <?= $paypalAutoAction !== '' ? 'hidden' : '' ?> data-auto-action="<?= orderEsc($paypalAutoAction) ?>" data-paypal-host="<?= PayPalClient::mode() === 'live' ? 'www.paypal.com' : 'www.sandbox.paypal.com' ?>">
                 <input type="hidden" name="csrf_token" value="<?= orderEsc($_SESSION['csrf_token']) ?>">
                 <button type="submit" class="pv-success-button pv-success-primary" name="action" value="start">Continue to PayPal</button>
                 <button type="submit" class="pv-success-button pv-success-secondary" name="action" value="confirm">Check payment</button>
@@ -176,14 +176,14 @@ function orderEsc(mixed $value): string
         <div class="pv-success-actions">
 
             <a
-                href="<?= BASE_URL ?>/public/my-orders.php"
+                href="<?= BASE_URL ?>/my-orders.php"
                 class="pv-success-button pv-success-primary"
             >
                 View My Orders
             </a>
 
             <a
-                href="<?= BASE_URL ?>/public/shop.php"
+                href="<?= BASE_URL ?>/shop.php"
                 class="pv-success-button pv-success-secondary"
             >
                 Continue Shopping

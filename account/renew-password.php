@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/csrf.php';
+require_once __DIR__ . '/../services/StaffPassword.php';
 
 $user = requireLogin($conn);
 $userId = (int) $user['id'];
@@ -10,7 +11,7 @@ $policy = securityPolicy($conn);
 $destination = BASE_URL . match ((int) $user['role_id']) {
     1 => '/admin/dashboard.php',
     2 => '/staff/dashboard.php',
-    default => '/public/index.php',
+    default => '/index.php',
 };
 
 $stmt = $conn->prepare('SELECT password, password_changed_at, created_at FROM users WHERE id = ?');
@@ -19,7 +20,8 @@ $stmt->execute();
 $passwordRecord = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$passwordRecord || !securityPasswordIsExpired($passwordRecord, $policy)) {
+$initialStaffPassword = $passwordRecord && pureViaStaffNeedsPasswordChange($passwordRecord + ['role_id' => $user['role_id']]);
+if (!$passwordRecord || (!securityPasswordIsExpired($passwordRecord, $policy) && !$initialStaffPassword)) {
     header('Location: ' . $destination, true, 303);
     exit;
 }
@@ -36,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = $errors[0];
     } elseif (password_verify($password, $passwordRecord['password'])) {
         $error = 'New password must be different from your current password.';
+    } elseif ((int) $user['role_id'] === 2 && (string) ($_ENV['STAFF_DEFAULT_PASSWORD'] ?? '') !== '' && hash_equals((string) $_ENV['STAFF_DEFAULT_PASSWORD'], $password)) {
+        $error = 'Choose a personal password instead of the shared initial password.';
     } elseif ($password !== $confirmation) {
         $error = 'Passwords do not match.';
     } else {
@@ -76,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="auth-page">
 <main class="auth-shell">
     <section class="auth-visual" aria-label="PureVia skincare">
-        <a class="auth-brand" href="<?= BASE_URL ?>/public/index.php" aria-label="PureVia home">
+        <a class="auth-brand" href="<?= BASE_URL ?>/index.php" aria-label="PureVia home">
             <img src="<?= BASE_URL ?>/assets/images/logo/purevia_logo_1.png" alt="PureVia" width="168" height="168">
         </a>
         <h2 class="auth-visual-title">Skincare,<br>made simple.</h2>
@@ -85,8 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="auth-form-area">
             <div class="auth-heading">
                 <p class="auth-eyebrow">ACCOUNT SECURITY</p>
-                <h1>Renew your password</h1>
-                <p class="auth-subtitle">Your password has expired. Choose a new password to continue.</p>
+                <h1><?= $initialStaffPassword ? 'Change your initial password' : 'Renew your password' ?></h1>
+                <p class="auth-subtitle"><?= $initialStaffPassword ? 'Enter your current staff password, then create a unique password that only you know.' : 'Your password has expired. Choose a new password to continue.' ?></p>
             </div>
             <p class="auth-form-error" role="alert" <?= $error === '' ? 'hidden' : '' ?>><?= pvHtml($error) ?></p>
             <form method="POST" action="<?= BASE_URL ?>/account/renew-password.php" class="auth-form">

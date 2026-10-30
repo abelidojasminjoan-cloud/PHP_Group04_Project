@@ -3,7 +3,14 @@ declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit;}
 require __DIR__.'/../config/db.php';
 require __DIR__.'/../services/SkinQuestionBank.php';
-$conn->query(file_get_contents(__DIR__.'/../database/migrations/20261027_skin_questions.sql'));
+$managed=$conn->query("SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='skin_questions' AND column_name='question_kind' LIMIT 1")->num_rows>0;
+if($managed&&!in_array('--seed-defaults',$argv,true)){echo "Question bank is configurable. Existing/deleted questions are left unchanged. Use --seed-defaults only to intentionally restore the original seed questions.\n";exit;}
+// Keep the main SQL file as the single schema source.
+$schema = file_get_contents(__DIR__.'/../database/purevia_db.sql');
+if ($schema === false || !preg_match('/CREATE TABLE `skin_questions`\s*\(.*?\) ENGINE[^;]+;/s', $schema, $match)) {
+    throw new RuntimeException('The skin_questions schema is missing from database/purevia_db.sql.');
+}
+$conn->query(str_replace('CREATE TABLE `skin_questions`', 'CREATE TABLE IF NOT EXISTS `skin_questions`', $match[0]));
 $s=$conn->prepare('INSERT IGNORE INTO skin_questions(question_key,prompt,options_json,source_key,rationale,is_core) VALUES(?,?,?,?,?,1)');
 foreach(skinQuestions() as $key=>$definition){
     [$prompt,$options]=$definition;$json=json_encode($options,JSON_THROW_ON_ERROR);

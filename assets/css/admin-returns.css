@@ -1,0 +1,20 @@
+/* Inventory supplies the page shell, typography, toolbar, table and responsive layout.
+   Only return-specific column proportions, badges and actions are defined here. */
+.returns-main .returns-table { min-width: 1120px; }
+.returns-main .returns-table th:nth-child(n) { width: auto; }
+.returns-main .returns-table th:nth-child(4) { width: 21%; }
+.returns-main .returns-table th:nth-child(5) { width: 17%; }
+.returns-main .returns-table td { overflow-wrap: anywhere; }
+.returns-main .returns-table td:nth-child(7) { white-space: nowrap; }
+.returns-main .returns-table small { display: block; color: var(--inventory-muted); font-size: 11px; margin-top: 4px; }
+.returns-main .return-tag { display: inline-block; padding: 5px 11px; border-radius: 20px; background: #e6eeea; color: #3f6b50; font-size: 11px; font-weight: 600; }
+.returns-main .return-tag-pending { background: #fff0df; color: #b66919; }
+.returns-main .return-tag-approved { background: #e4f0f8; color: #2676ad; }
+.returns-main .return-tag-rejected { background: #fff0ed; color: #c44b40; }
+.returns-main .return-manage { border: 1px solid var(--purevia-green); border-radius: 8px; background: #fff; color: var(--purevia-green); padding: 10px 17px; font: 500 12px 'Poppins',sans-serif; cursor: pointer; }
+.returns-main .return-manage:hover { background: #31382c; color: #fff; }
+.returns-main .returns-table [hidden] { display: none; }
+.returns-main #returnsEmpty td { padding: 60px 20px; border-bottom: none; text-align: center; }
+.returns-main .returns-empty-message { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #968b81; }
+.returns-main .returns-empty-message i { font-size: 25px; }
+.returns-main .returns-empty-message p { margin: 0; font-size: 14px; }

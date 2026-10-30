@@ -21,12 +21,16 @@ backups
 *.swp
 
 # Runtime uploads live on the Render disk, not inside the image.
+
 /uploads
 
-# Local Windows directory junctions; Docker creates its own Linux links.
-/public/assets
-/public/actions
+# Never copy local Windows directory junctions into the image.
 /public/account
+/public/actions
 /public/admin
+/public/assets
 /public/staff
 /public/uploads
+
+# Private return evidence
+/storage/

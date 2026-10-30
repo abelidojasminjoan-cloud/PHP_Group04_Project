@@ -9,7 +9,7 @@ function activationLogin(string $message = '', bool $success = false): never
     if ($message !== '') {
         $_SESSION[$success ? 'login_success' : 'login_error'] = $message;
     }
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
     exit;
 }
 

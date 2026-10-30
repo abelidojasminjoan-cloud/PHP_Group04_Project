@@ -21,8 +21,8 @@ export APP_URL
 
 # A persistent disk mounts over these directories, so set permissions at startup.
 mkdir -p /var/www/storage/uploads/products /var/www/storage/uploads/profiles \
-    /var/www/storage/uploads/reviews /var/www/storage/sessions
-chown -R www-data:www-data /var/www/storage/uploads /var/www/storage/sessions
-chmod 700 /var/www/storage/sessions
+    /var/www/storage/uploads/reviews /var/www/storage/sessions /var/www/storage/returns
+chown -R www-data:www-data /var/www/storage/uploads /var/www/storage/sessions /var/www/storage/returns
+chmod 700 /var/www/storage/sessions /var/www/storage/returns
 
 exec apache2-foreground

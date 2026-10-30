@@ -41,13 +41,13 @@ function checkoutPayPalReply(mysqli $conn, int $userId, int $orderId, ?PayPalCli
         $row = PayPalCheckout::find($conn, $userId, $orderId);
         if ($row['state'] === 'paid') {
             $_SESSION['confirmed_order_id'] = $orderId;
-            checkoutReply(200, true, 'Payment already verified.', ['order_id' => $orderId, 'redirect_url' => BASE_URL . '/public/order-success.php']);
+            checkoutReply(200, true, 'Payment already verified.', ['order_id' => $orderId, 'redirect_url' => BASE_URL . '/order-success.php']);
         }
         $approvalUrl = PayPalCheckout::start($conn, $userId, $orderId, $client);
         checkoutReply(200, true, 'Continue to PayPal.', ['order_id' => $orderId, 'payment_provider' => 'paypal', 'redirect_url' => $approvalUrl]);
     } catch (Throwable $error) {
         error_log('PureVia PayPal handoff: ' . $error->getMessage());
-        checkoutReply(409, false, 'Your order is saved, but PayPal could not be opened. Resume payment for this order.', ['order_id' => $orderId, 'redirect_url' => BASE_URL . '/public/order-success.php?paypal_order_id=' . $orderId]);
+        checkoutReply(409, false, 'Your order is saved, but PayPal could not be opened. Resume payment for this order.', ['order_id' => $orderId, 'redirect_url' => BASE_URL . '/order-success.php?paypal_order_id=' . $orderId]);
     }
 }
 try {
@@ -99,7 +99,7 @@ try {
         $pendingId = (int) $_SESSION['paypal_pending_order_id'];
         $s = $conn->prepare("SELECT pc.order_id FROM paypal_checkouts pc JOIN orders o ON o.id=pc.order_id WHERE pc.order_id=? AND o.user_id=? AND pc.state='pending'");
         $s->bind_param('ii', $pendingId, $userId); $s->execute();
-        if ($s->get_result()->fetch_assoc()) checkoutReply(409, false, 'Finish or cancel your existing PayPal checkout first.', ['redirect_url'=>BASE_URL.'/public/order-success.php?paypal_order_id='.$pendingId]);
+        if ($s->get_result()->fetch_assoc()) checkoutReply(409, false, 'Finish or cancel your existing PayPal checkout first.', ['redirect_url'=>BASE_URL.'/order-success.php?paypal_order_id='.$pendingId]);
         unset($_SESSION['paypal_pending_order_id'], $_SESSION['paypal_pending_token']);
     }
 
@@ -116,7 +116,7 @@ try {
             200,
             true,
             'Order already placed.',
-            ['redirect_url' => BASE_URL . '/public/order-success.php']
+            ['redirect_url' => BASE_URL . '/order-success.php']
         );
     }
 
@@ -691,7 +691,7 @@ try {
             'Your Cash on Delivery order has been placed.',
             [
                 'order_number' => $orderNumber,
-                'redirect_url' => BASE_URL . '/public/order-success.php'
+                'redirect_url' => BASE_URL . '/order-success.php'
             ]
         );
 

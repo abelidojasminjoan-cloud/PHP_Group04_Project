@@ -148,7 +148,7 @@ try {
 
     /* PRODUCT INFORMATION */
 
-    foreach (['product_name', 'product_code', 'status', 'description', 'key_benefits', 'product_id', 'product_revision'] as $field) {
+    foreach (['product_name', 'status', 'description', 'key_benefits', 'product_id', 'product_revision'] as $field) {
         if (isset($_POST[$field]) && !is_string($_POST[$field])) {
             throw new RuntimeException('Invalid product details.');
         }
@@ -166,9 +166,8 @@ try {
         (string) ($_POST['product_name'] ?? '')
     );
 
-    $productCode = strtoupper(trim(
-        (string) ($_POST['product_code'] ?? '')
-    ));
+    // A temporary unique value is replaced with the database-assigned product ID before commit.
+    $productCode = 'PENDING-' . bin2hex(random_bytes(16));
 
     $categoryId = filter_var(
         $_POST['category_id'] ?? null,
@@ -188,8 +187,6 @@ try {
     if (
         $productName === '' ||
         mb_strlen($productName) > 200 ||
-        $productCode === '' ||
-        strlen($productCode) > 100 ||
         !$categoryId || $categoryId < 1 ||
         !in_array($status, ['active', 'inactive', 'out_of_stock'], true) ||
         mb_strlen($description) > 10000 ||
@@ -240,25 +237,9 @@ try {
         throw new RuntimeException('Invalid category.');
     }
 
-    /* CHECK DUPLICATE SKU */
-
-    $stmt = $conn->prepare("
-        SELECT id
-        FROM products
-        WHERE product_code = ?
-        AND id <> ?
-        LIMIT 1
-    ");
-
-    $stmt->bind_param('si', $productCode, $productId);
-    $stmt->execute();
-
-    $skuExists = $stmt->get_result()->num_rows > 0;
-
-    $stmt->close();
-
-    if ($skuExists) {
-        throw new RuntimeException('Product SKU already exists.');
+    // Editing preserves the existing SKU; submitted SKU values are never accepted.
+    if ($isEditing) {
+        $productCode = $existingProduct['product_code'];
     }
 
     /* VARIANTS */
@@ -560,6 +541,9 @@ try {
         $productId = (int) $conn->insert_id;
 
         $stmt->close();
+
+        require_once __DIR__ . '/../../services/ProductCode.php';
+        $productCode = ProductCode::assign($conn, $productId);
     }
 
     if ($routineSettings !== null) ProductSuitability::save($conn, $productId, $routineSettings);

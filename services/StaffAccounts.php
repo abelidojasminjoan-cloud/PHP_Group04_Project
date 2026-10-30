@@ -13,7 +13,7 @@ function pureViaStaffDisplayName(string $email): string
 
 function sendPureViaStaffInvitation(string $email, string $name, string $password): bool
 {
-    $loginUrl = APP_URL . '/public/login.php';
+    $loginUrl = APP_URL . '/login.php';
     $html = '<div style="font-family:Arial,sans-serif;max-width:540px;margin:auto;padding:30px"><h2 style="color:#426b58">Your PureVia staff account</h2><p>Hello ' . pvHtml($name) . ',</p><p>An administrator has created your staff account.</p><p>Email: <strong>' . pvHtml($email) . '</strong><br>Initial password: <strong>' . pvHtml($password) . '</strong></p><p>Sign in with these details to receive your email verification code. After you verify the code, use the activation button in the next email to activate your account.</p><p><a href="' . pvHtml($loginUrl) . '" style="display:inline-block;padding:12px 20px;background:#3f6b50;color:white;border-radius:8px;text-decoration:none">Sign in to PureVia</a></p><p>Keep these details private. Update your initial password after account setup.</p><p>PureVia Team</p></div>';
     $plain = "Hello {$name},\n\nYour PureVia staff account has been created.\nEmail: {$email}\nInitial password: {$password}\n\nSign in: {$loginUrl}\nVerify the emailed OTP, then use the activation link in the next email.\nKeep these details private and update your initial password after setup.";
     return sendPureViaMail($email, $name, 'Your PureVia Staff Account', $html, $plain, 15);

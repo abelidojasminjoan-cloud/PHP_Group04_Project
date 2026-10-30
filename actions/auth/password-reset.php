@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__.'/../../config/db.php';
-require_once __DIR__.'/../../services/PasswordReset.php';
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../services/PasswordReset.php';
 header('Cache-Control: no-store');
-function resetRedirect(): never{header('Location: '.BASE_URL.'/public/forgot-password.php',true,303);exit;}
+function resetRedirect(): never{header('Location: '.BASE_URL.'/forgot-password.php',true,303);exit;}
 if($_SERVER['REQUEST_METHOD']!=='POST'){header('Allow: POST');http_response_code(405);exit('POST required.');}
 $csrf=$_POST['csrf_token']??null;
 if(!is_string($csrf)||empty($_SESSION['csrf_token'])||!hash_equals($_SESSION['csrf_token'],$csrf)){http_response_code(403);exit('Invalid request. Refresh the password reset page and try again.');}
@@ -35,8 +35,8 @@ try{
         $result=PasswordReset::complete($conn,$_SESSION['password_reset_grant']??[],$password,$confirmation,securityPolicy($conn));
         $_SESSION=[];session_regenerate_id(true);$_SESSION['csrf_token']=bin2hex(random_bytes(32));
         $_SESSION['login_success']=$result['locked']?'Your password was updated. Your account is still locked; contact support to unlock it.':'Your password was updated. Sign in using your new password.';
-        try{require_once __DIR__.'/../../services/PasswordResetMail.php';if(!sendPureViaPasswordResetNotice($result['email'],$result['name']))error_log('PureVia password-change notice could not be sent.');}catch(Throwable $mailError){error_log('PureVia password-change notice failed.');}
-        header('Location: '.BASE_URL.'/public/login.php',true,303);exit;
+        try{require_once __DIR__ . '/../../services/PasswordResetMail.php';if(!sendPureViaPasswordResetNotice($result['email'],$result['name']))error_log('PureVia password-change notice could not be sent.');}catch(Throwable $mailError){error_log('PureVia password-change notice failed.');}
+        header('Location: '.BASE_URL.'/login.php',true,303);exit;
     }
     throw new DomainException('Invalid password reset action.');
 }catch(Throwable $error){

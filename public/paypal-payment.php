@@ -23,7 +23,7 @@ if (!$userId) {
         http_response_code(401); header('Content-Type: application/json; charset=utf-8');
         echo pvJson(['success' => false, 'message' => 'Please sign in again, then resume payment from My orders.']); exit;
     }
-    header('Location: ' . BASE_URL . '/public/login.php'); exit;
+    header('Location: ' . BASE_URL . '/login.php'); exit;
 }
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 $orderId = filter_var($_GET['order_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
@@ -37,7 +37,7 @@ try {
         foreach (['token', 'cancelled', 'start'] as $key) {
             if (isset($_GET[$key]) && is_string($_GET[$key])) $query[$key] = $_GET[$key];
         }
-        header('Location: ' . BASE_URL . '/public/order-success.php?' . http_build_query($query), true, 303);
+        header('Location: ' . BASE_URL . '/order-success.php?' . http_build_query($query), true, 303);
         exit;
     }
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -59,10 +59,10 @@ try {
                 try { require_once __DIR__ . '/../services/OrderReceipt.php'; OrderReceipt::send($conn, $orderId, $userId); }
                 catch (Throwable $mailError) { error_log('PureVia PayPal receipt failed for order ' . $orderId); }
             }
-            pureViaPaymentRedirect(BASE_URL . '/public/order-success.php');
+            pureViaPaymentRedirect(BASE_URL . '/order-success.php');
         }
         unset($_SESSION['paypal_pending_order_id'], $_SESSION['paypal_pending_token']);
-        pureViaPaymentRedirect(BASE_URL . '/public/order-success.php?paypal_order_id=' . $orderId);
+        pureViaPaymentRedirect(BASE_URL . '/order-success.php?paypal_order_id=' . $orderId);
     }
     $autoAction = pureViaPayPalReturnAction($_GET, $row);
 } catch (Throwable $error) {
@@ -86,7 +86,7 @@ try {
 <?php if ($row['state'] === 'pending'): ?>
 <p id="pvPayPalStatus" role="status" aria-live="polite"><?= isset($_GET['cancelled']) ? 'PayPal checkout was closed. You can continue payment or cancel this order.' : ($autoAction === 'confirm' ? 'Verifying your PayPal payment…' : ($autoAction === 'start' ? 'Connecting to PayPal…' : 'Continue to PayPal to approve payment, or check an existing payment.')) ?></p>
 <p>Your items are reserved while this order awaits payment.</p>
-<form method="post" action="<?= BASE_URL ?>/public/paypal-payment.php?order_id=<?= (int) $orderId ?>" class="pv-paypal-actions" id="pvPayPalPaymentForm" data-auto-action="<?= pvHtml($autoAction) ?>" data-paypal-host="<?= PayPalClient::mode() === 'live' ? 'www.paypal.com' : 'www.sandbox.paypal.com' ?>">
+<form method="post" action="<?= BASE_URL ?>/paypal-payment.php?order_id=<?= (int) $orderId ?>" class="pv-paypal-actions" id="pvPayPalPaymentForm" data-auto-action="<?= pvHtml($autoAction) ?>" data-paypal-host="<?= PayPalClient::mode() === 'live' ? 'www.paypal.com' : 'www.sandbox.paypal.com' ?>">
 <input type="hidden" name="csrf_token" value="<?= pvHtml($_SESSION['csrf_token']) ?>">
 <button class="pv-success-button pv-success-primary" name="action" value="start">Continue to PayPal</button>
 <button class="pv-success-button pv-success-primary" name="action" value="confirm">Check payment</button>
@@ -94,5 +94,5 @@ try {
 </form>
 <?php else: ?><p><?= $row['state'] === 'paid' ? 'Your payment has been verified.' : 'This order was cancelled. No payment is recorded.' ?></p><?php endif; ?>
 <?php endif; ?>
-<p><a href="<?= BASE_URL ?>/public/my-orders.php">My orders</a> · <a href="<?= BASE_URL ?>/public/cart.php">Shopping bag</a></p>
+<p><a href="<?= BASE_URL ?>/my-orders.php">My orders</a> · <a href="<?= BASE_URL ?>/cart.php">Shopping bag</a></p>
 </div></main><script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/paypal-payment.js?v=<?= filemtime(__DIR__ . '/../assets/js/paypal-payment.js') ?>"></script></body></html>

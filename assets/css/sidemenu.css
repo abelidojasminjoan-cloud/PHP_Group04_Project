@@ -517,15 +517,15 @@
 
     justify-content: center;
 
-    min-height: 18px;
+    min-height: 23px;
 
     padding:
-        2px
-        8px;
+        4px
+        10px;
 
     border-radius: 20px;
 
-    font-size: 8px;
+    font-size: 10px;
 
     font-weight: 600;
 
@@ -851,4 +851,26 @@
 
 .staff-sidebar-section .sidebar-link {
     margin-bottom: 3px;
+}
+
+/* Edit the signed-in administrator from the right edge of the account row. */
+.sidebar-profile > .sidebar-profile-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 32px;
+    margin-left: auto;
+    border-radius: 6px;
+    color: var(--sidebar-muted);
+    text-decoration: none;
+}
+.sidebar-profile > .sidebar-profile-edit:hover {
+    background: var(--sidebar-border);
+    color: var(--sidebar-text);
+}
+.sidebar-profile > .sidebar-profile-edit:focus-visible {
+    outline: 2px solid var(--sidebar-text);
+    outline-offset: 2px;
 }

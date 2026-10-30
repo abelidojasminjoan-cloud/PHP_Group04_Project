@@ -37,13 +37,13 @@ $baseUrl = htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8');
 
 <header class="pv-privacy-header">
     <a class="pv-privacy-brand"
-       href="<?= $baseUrl ?>/public/index.php"
+       href="<?= $baseUrl ?>/index.php"
        aria-label="PureVia homepage">
         PureVia<span>.</span>
     </a>
 
     <a class="pv-privacy-back"
-       href="<?= $baseUrl ?>/public/register.php">
+       href="<?= $baseUrl ?>/register.php">
         ← Back to Registration
     </a>
 </header>
@@ -317,7 +317,7 @@ $baseUrl = htmlspecialchars(BASE_URL, ENT_QUOTES, 'UTF-8');
 
 
     <div class="pv-privacy-footer-action">
-        <a href="<?= $baseUrl ?>/public/register.php">
+        <a href="<?= $baseUrl ?>/register.php">
             ← Return to Registration
         </a>
     </div>

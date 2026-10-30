@@ -59,13 +59,14 @@ $rows = pdRows($conn, "
         p.product_name,
         p.product_code,
         p.description,
-        p.usage_instructions,
+        COALESCE(NULLIF(TRIM(ps.routine_instructions), ''), p.usage_instructions) AS usage_instructions,
         p.price,
         p.image,
         p.stock_quantity,
         c.category_name
     FROM products p
     INNER JOIN categories c ON c.id = p.category_id
+    LEFT JOIN product_suitability ps ON ps.product_id = p.id
     WHERE p.id = ?
       AND p.status = 'active'
       AND c.status = 'active'
@@ -340,10 +341,10 @@ $csrfToken = $_SESSION['csrf_token'];
     <!-- BREADCRUMB -->
 
     <nav class="pd-breadcrumb">
-        <a href="<?= BASE_URL ?>/public/index.php">Home</a>
+        <a href="<?= BASE_URL ?>/index.php">Home</a>
         <span>/</span>
 
-        <a href="<?= BASE_URL ?>/public/shop.php">Products</a>
+        <a href="<?= BASE_URL ?>/shop.php">Products</a>
         <span>/</span>
 
         <strong><?= pdEsc($product['product_name']) ?></strong>
@@ -1107,7 +1108,7 @@ window.PUREVIA_PRODUCT = <?= pvJson([
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/product_details.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
 <script nonce="<?= pvScriptNonce() ?>">
 window.PUREVIA_BASE_URL = <?= pvJson(BASE_URL) ?>;
 </script>

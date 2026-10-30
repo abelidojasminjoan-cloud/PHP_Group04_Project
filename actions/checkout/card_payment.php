@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 ini_set('display_errors','0');
-require_once __DIR__.'/../../config/db.php';
-require_once __DIR__.'/../../services/PayPalCheckout.php';
+require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../services/PayPalCheckout.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, private');
 try {
@@ -35,10 +35,10 @@ try {
     $_SESSION['confirmed_order_id']=$orderId;
     if ((int)($_SESSION['paypal_pending_order_id']??0)===$orderId) unset($_SESSION['paypal_pending_order_id'],$_SESSION['paypal_pending_token'],$_SESSION['checkout_selected_items'],$_SESSION['checkout_token']);
     if (!$wasPaid) {
-        try { require_once __DIR__.'/../../services/OrderReceipt.php';OrderReceipt::send($conn,$orderId,$userId); }
+        try { require_once __DIR__ . '/../../services/OrderReceipt.php';OrderReceipt::send($conn,$orderId,$userId); }
         catch (Throwable $mailError) { error_log('PureVia card receipt failed for order '.$orderId); }
     }
-    echo pvJson(['success'=>true,'redirect_url'=>BASE_URL.'/public/order-success.php']);
+    echo pvJson(['success'=>true,'redirect_url'=>BASE_URL.'/order-success.php']);
 } catch (Throwable $error) {
     error_log('PureVia embedded card payment: '.$error->getMessage());
     if (http_response_code()<400) http_response_code($error instanceof DomainException?409:502);

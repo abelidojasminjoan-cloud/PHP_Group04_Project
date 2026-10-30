@@ -176,7 +176,7 @@ ksort($modules);
 <body>
 
 
-<?php include __DIR__ . "/../../includes/sidemenu.php"; ?>
+<?php include __DIR__ . '/../../includes/sidemenu.php'; ?>
 
 
 <div class="admin-layout">

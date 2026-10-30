@@ -17,7 +17,7 @@ $passwordPolicy = securityPolicy($conn);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
 
     exit;
 }
@@ -78,7 +78,7 @@ if ($fieldErrors) {
         $email;
 
     header(
-        'Location: ' . BASE_URL . '/public/login.php'
+        'Location: ' . BASE_URL . '/login.php'
     );
 
     exit;
@@ -128,7 +128,7 @@ function rejectLogin(string $email, string $message): never
 {
     $_SESSION['login_email'] = $email;
     $_SESSION['login_errors'] = ['password' => $message];
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
     exit;
 }
 
@@ -206,7 +206,7 @@ try {
             'otp_notice' => $notice,
             'login_email' => $email,
         ];
-        header('Location: ' . BASE_URL . '/public/verify-email.php', true, 303);
+        header('Location: ' . BASE_URL . '/verify-email.php', true, 303);
         exit;
     }
     if ($user['status'] !== 'active') {

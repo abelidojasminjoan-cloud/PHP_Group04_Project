@@ -33,6 +33,10 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('input[name="concern"]')
     );
 
+    const ingredientCheckboxes = Array.from(
+        document.querySelectorAll('input[name="ingredient"]')
+    );
+
     const stockCheckboxes = Array.from(
         document.querySelectorAll('input[name="stock_status"]')
     );
@@ -452,6 +456,8 @@ document.addEventListener('DOMContentLoaded', function () {
             concernCheckboxes
         );
 
+        const selectedIngredients = getCheckedValues(ingredientCheckboxes);
+
         const selectedStock = getCheckedValues(
             stockCheckboxes
         );
@@ -536,6 +542,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 categoryMatch &&
                 skinMatch &&
                 concernMatch &&
+                matchesAny(parseValues(card.dataset.ingredients), selectedIngredients) &&
                 priceMatch &&
                 profileMatch &&
                 stockMatch;
@@ -615,6 +622,10 @@ document.addEventListener('DOMContentLoaded', function () {
     /* =========================================
        SKIN TYPE FILTER
     ========================================= */
+
+    ingredientCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', filterProducts);
+    });
 
     skinCheckboxes.forEach(checkbox => {
 
@@ -788,6 +799,8 @@ document.addEventListener('DOMContentLoaded', function () {
         concernCheckboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
+
+        ingredientCheckboxes.forEach(checkbox => { checkbox.checked = false; });
 
         /* STOCK STATUS */
 

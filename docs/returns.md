@@ -1,0 +1,11 @@
+# Order returns
+
+Customer return forms on My Orders and Order Details share `assets/css/form2.css` with product forms. All new selectors and variables are scoped under `.return-dialog`; the admin listing uses `admin-returns.css`.
+
+Upgrade an existing database once with `php tools/migrate-returns.php`. This CLI-only command checks existing columns and preserves requests. New installations include the columns in `database/purevia_db.sql`.
+
+Customers may request returns for their own delivered/completed orders, selecting whole purchased line quantities. The existing one-request-per-order rule remains. Evidence accepts up to five scanned JPG/PNG/WebP images, 5 MB each. Evidence is stored outside the public document root and served only through the administrator-authorized endpoint. Local storage defaults to `storage/returns`; Docker uses `/var/www/storage/returns`. Set `RETURN_EVIDENCE_PATH` to override it and back up the private storage alongside the database. Use a persistent disk for deployment storage.
+
+Admins access Operations > Returns. Pending requests can be approved or rejected. Approved requests can be completed after the refund/replacement has already been fulfilled and a transaction/shipment reference recorded. This workflow records fulfillment; it does not issue payment refunds, create shipments, or book couriers. Completion/rejection is terminal. Revision checking rejects stale forms; transitions and stock changes are transactional and audited.
+
+Completion can restore inspected sellable stock to explicitly chosen product variants. Older order rows do not store variant IDs, so the admin must identify the exact returned size instead of guessing from a product name. Default is **Do not restock**. Do not add opened/damaged items to sellable stock. An inspection confirmation is required for any restock, and completion can restock only once. Product stock totals and inventory adjustment logs update together. Order/payment statuses are not changed by this administrative record, especially for partial returns.

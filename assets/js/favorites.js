@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function card(product) {
         const article = node("article", "fv-card");
         article.dataset.productId = String(product.id);
-        const url = `${config.baseUrl}/public/product.php?id=${product.id}`;
+        const url = `${config.baseUrl}/product.php?id=${product.id}`;
         const imageLink = node("a", "fv-image");
         imageLink.href = url;
         const image = node("img");
@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (config.canAddToBag) return;
         event.preventDefault();
         event.stopPropagation();
-        window.location.assign(`${config.baseUrl}/public/login.php`);
+        window.location.assign(`${config.baseUrl}/login.php`);
     });
     window.addEventListener("purevia:favorites-updated", load);
     load();

@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 
 if (!TWO_FACTOR_ENABLED) {
-    header('Location: ' . BASE_URL . '/public/login.php', true, 303);
+    header('Location: ' . BASE_URL . '/login.php', true, 303);
     exit;
 }
 require_once __DIR__ . '/../services/two_factor_auth.php';
@@ -21,7 +21,7 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 header('X-Content-Type-Options: nosniff');
 
-$loginUrl = BASE_URL . '/public/login.php';
+$loginUrl = BASE_URL . '/login.php';
 
 $pendingUserId = (int) (
     $_SESSION['pending_2fa_user_id'] ?? 0

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../config/app.php';
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
     exit;
 }
 
@@ -33,13 +33,13 @@ try {
 if (!$adminUser || strtolower($adminUser['status']) !== 'active') {
     $_SESSION = [];
     session_destroy();
-    header('Location: ' . BASE_URL . '/public/login.php');
+    header('Location: ' . BASE_URL . '/login.php');
     exit;
 }
 
 $role = strtolower(trim($adminUser['role_name']));
 if ($role !== 'admin') {
-    header('Location: ' . BASE_URL . ($role === 'staff' ? '/staff/dashboard.php' : '/public/index.php'));
+    header('Location: ' . BASE_URL . ($role === 'staff' ? '/staff/dashboard.php' : '/index.php'));
     exit;
 }
 

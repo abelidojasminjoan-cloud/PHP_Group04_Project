@@ -1,27 +1,37 @@
 # Local PHP server
 
-From the project root, run:
+From the project root, run exactly:
 
 ```powershell
 php -S localhost:8000 -t public
 ```
 
-Open http://localhost:8000/ and keep the terminal running.
+Open http://localhost:8000/. No router argument is required. Keep the terminal
+running and press Ctrl+C to stop it.
 
-The local document root contains directory junctions to the existing assets,
-uploads, actions, account, admin, and staff directories. These are references to
-the original files, not duplicate source folders. The public/public PHP entry
-points preserve existing /public/page.php links. They load the original page.
-Private config, services, vendor, database, and .env remain outside the document root.
+## Files and shortcuts
 
-If moving this Windows checkout, recreate the junctions from the project root:
+The actual account, actions, admin, staff, assets, and uploads folders live outside
+public/. Their six entries under public/ are Windows directory junctions pointing
+to those same original folders. They are not backups or second copies. Uploaded
+product images are original files in uploads/products/; viewing them through
+public/uploads shows the same files.
+
+PHP's built-in server only serves files under its document root. These shortcuts
+are therefore required to keep both the original folders outside public/ and the
+exact startup command above. Do not delete them unless changing the server setup.
+There is no routes/ folder and no public/public compatibility folder.
+
+If moving this checkout, recreate the shortcuts from the project root:
 
 ```powershell
-foreach ($name in @('assets', 'uploads', 'actions', 'account', 'admin', 'staff')) {
+foreach ($name in @('account', 'actions', 'admin', 'staff', 'assets', 'uploads')) {
     New-Item -ItemType Junction -Path "public/$name" -Target (Resolve-Path $name).Path
 }
 ```
 
-Under PHP's built-in server, URL configuration uses the current local origin.
-Apache/XAMPP keeps the existing /purevia_website base path and .env APP_URL.
-No CSS, markup layout, database records, or payment logic is changed.
+Private .env, configuration, services, includes, database, vendor, tools, and backups
+remain outside public/. Use clean URLs such as /login.php and /shop.php.
+Apache/XAMPP uses the root .htaccess for those URLs under /purevia_website.
+Docker creates equivalent Linux links. The application's URLs and design stay the
+same, and uploaded files are not moved into a routing folder.

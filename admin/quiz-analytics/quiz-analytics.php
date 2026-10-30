@@ -1,12 +1,12 @@
 <?php
 require __DIR__.'/../skin/_boot.php';
-require __DIR__.'/../../services/QuizAnalytics.php';
+require __DIR__ . '/../../services/QuizAnalytics.php';
 $pageTitle='Quiz Analytics';$rangeError='';
 try{[$from,$to,$until]=QuizAnalytics::dates($_GET);}catch(InvalidArgumentException $e){$rangeError=$e->getMessage();[$from,$to,$until]=QuizAnalytics::dates([]);}
 $all=($_GET['view']??'')==='all';$report=QuizAnalytics::report($conn,$from,$until,max(1,(int)($_GET['page']??1)),$all?25:10);$t=$report['totals'];
 $guidedPercent=$t['total']?round($t['guided']/$t['total']*100):0;$clearPercent=$t['guided']?round($t['clear_count']/$t['guided']*100):0;
 $clarityClear=$t['guided']?$t['clear_count']/$t['guided']*100:0;$clarityAmbiguous=$t['guided']?$t['ambiguous']/$t['guided']*100:0;
-require_once __DIR__.'/../../services/skin-questions.php';
+require_once __DIR__ . '/../../services/skin-questions.php';
 $saConfig=['questions'=>skinQuestions(),'concerns'=>$conn->query('SELECT id,concern_name AS label FROM skin_concerns')->fetch_all(MYSQLI_ASSOC),'ingredients'=>$conn->query('SELECT id,ingredient_name AS label FROM ingredients')->fetch_all(MYSQLI_ASSOC)];
 require __DIR__.'/../skin/_header.php';
 ?>

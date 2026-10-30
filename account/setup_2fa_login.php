@@ -5,15 +5,15 @@ require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/db.php';
 
 if (!TWO_FACTOR_ENABLED) {
-    header('Location: ' . BASE_URL . '/public/login.php', true, 303);
+    header('Location: ' . BASE_URL . '/login.php', true, 303);
     exit;
 }
 
 header('Cache-Control: no-store, private');
 header('Referrer-Policy: no-referrer');
 
-$loginUrl = BASE_URL . '/public/login.php';
-$continueUrl = BASE_URL . '/public/index.php';
+$loginUrl = BASE_URL . '/login.php';
+$continueUrl = BASE_URL . '/index.php';
 $setupSecret = '';
 $setupUri = '';
 
@@ -33,7 +33,7 @@ if ($showRecovery) {
     $continueUrl = match ($role) {
         'admin' => BASE_URL . '/admin/dashboard.php',
         'staff' => BASE_URL . '/staff/dashboard.php',
-        default => BASE_URL . '/public/index.php'
+        default => BASE_URL . '/index.php'
     };
 
 } else {

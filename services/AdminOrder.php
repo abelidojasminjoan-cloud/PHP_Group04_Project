@@ -35,7 +35,7 @@ final class AdminOrder
         $fallback=BASE_URL.'/assets/images/products/default-product.svg';$path=trim($path??'');
         if(filter_var($path,FILTER_VALIDATE_URL))return in_array(strtolower((string)parse_url($path,PHP_URL_SCHEME)),['http','https'],true)?$path:$fallback;
         $name=basename(str_replace('\\','/',$path));
-        return $name!==''&&$name!=='.'&&$name!=='..'&&is_file(__DIR__.'/../uploads/products/'.$name)?BASE_URL.'/uploads/products/'.rawurlencode($name):$fallback;
+        return $name!==''&&$name!=='.'&&$name!=='..'&&is_file(__DIR__ . '/../uploads/products/'.$name)?BASE_URL.'/uploads/products/'.rawurlencode($name):$fallback;
     }
 
     public static function save(mysqli $conn,int $adminId,int $id,array $data): array

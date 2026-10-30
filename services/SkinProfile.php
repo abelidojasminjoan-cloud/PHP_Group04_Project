@@ -17,22 +17,18 @@ final class SkinProfile
         $raw=$data['answers']??[];if(!is_array($raw)||count($raw)>200)throw new InvalidArgumentException('Invalid assessment answers.');
         $bank??=SkinQuestionBank::rows($conn);$definitions=SkinQuestionBank::definitions($bank);
         foreach($raw as $key=>$value)if(!isset($definitions[$key]))throw new InvalidArgumentException('Unknown assessment question. Refresh and try again.');
-        $answers=[];
-        foreach(array_merge(array_map(fn($q)=>'q'.$q,range(2,11)),['f1','f2']) as $key){
-            if($method==='manual'&&!in_array($key,['q9','q10','q11'],true))continue;
-            $value=$raw[$key]??'';$allowed=preg_match('/^q[2-8]$/',$key)?['A','B','C','D','E','']:['A','B','C','D',''];
-            if(!is_string($value)||!in_array($value,$allowed,true))throw new InvalidArgumentException('Choose a valid answer for each question.');
+        $answers=[];$observed=[];
+        foreach($bank as $rawQuestion){
+            $question=QuestionScoring::normalize($rawQuestion);$key=$question['question_key'];$kind=$question['question_kind'];
+            if($method==='manual'&&in_array($kind,['skin_type','clarification'],true))continue;
+            $value=$raw[$key]??'';$options=json_decode($question['options_json'],true,16,JSON_THROW_ON_ERROR);
+            $allowed=array_map(static fn($index)=>chr(65+$index),array_keys($options));
+            if(!is_string($value)||($value!==''&&!in_array($value,$allowed,true)))throw new InvalidArgumentException('Choose a valid answer for each question.');
+            if($kind==='sensitivity'&&$value==='')throw new InvalidArgumentException('Answer all available sensitivity questions.');
             $answers[$key]=$value;
+            if($value===$question['concern_answer'])foreach($question['concern_ids'] as $concernId)$observed[]=['concern_id'=>(int)$concernId,'question'=>$question['prompt'],'source'=>$question['source_key'],'source_details'=>SkinQuestionBank::source($question)];
         }
-        foreach(['q9','q10','q11'] as $key)if($answers[$key]==='')throw new InvalidArgumentException('Answer all sensitivity questions. You may choose Not sure.');
-        $observed=[];
-        foreach($bank as $question)if(!$question['is_core']){
-            $key=$question['question_key'];$value=$raw[$key]??'C';
-            if(!is_string($value)||!in_array($value,['A','B','C'],true))throw new InvalidArgumentException('Choose a valid observation answer.');
-            $answers[$key]=$value;
-            if($value==='A'&&$question['concern_id'])$observed[]=['concern_id'=>(int)$question['concern_id'],'question'=>$question['prompt'],'source'=>$question['source_key']];
-        }
-        $assessment=$method==='guided'?SkinTypeFinder::assess($answers):null;
+        $assessment=$method==='guided'?SkinTypeFinder::assess($answers,$bank):null;
         $type=$method==='manual'?($data['skin_type']??null):$assessment['skin_type'];
         if($method==='manual'&&(!is_string($type)||!in_array($type,SkinTypeFinder::TYPES,true)))throw new InvalidArgumentException('Select Normal, Dry, Oily, or Combination.');
         $choices=self::choices($conn);$typeId=null;$typeLabel=null;
@@ -59,9 +55,9 @@ final class SkinProfile
         $routine=$data['routine_preference']??null;
         if(!is_string($routine)||!in_array($routine,['basic','targeted','unsure'],true))throw new InvalidArgumentException('Choose a routine preference.');
         return ['assessment_method'=>$method,'skin_type'=>$type,'skin_type_id'=>$typeId,'skin_type_label'=>$typeLabel,'assessment'=>$assessment,'answers'=>$answers,
-            'sensitivity'=>SkinTypeFinder::sensitivity($answers),'concerns'=>$concerns,'main_concern_id'=>$main,'ingredient_preference'=>$preference,
+            'sensitivity'=>SkinTypeFinder::sensitivity($answers,$bank),'concerns'=>$concerns,'main_concern_id'=>$main,'ingredient_preference'=>$preference,
             'avoided_ingredients'=>$avoided,'avoidance_reason'=>$avoided?$reason:'','routine_preference'=>$routine,
-            'questionnaire_version'=>SkinQuestionBank::fingerprint($bank),'rule_version'=>SkinEvidence::VERSION,'questionnaire_snapshot'=>$definitions,'question_evidence'=>$bank,'observed_concerns'=>$observed];
+            'questionnaire_version'=>SkinQuestionBank::fingerprint($bank),'rule_version'=>'configured-question-bank-v1','questionnaire_snapshot'=>$definitions,'question_evidence'=>$bank,'observed_concerns'=>$observed];
     }
     public static function load(mysqli $conn,int $userId): ?array
     {
@@ -71,7 +67,7 @@ final class SkinProfile
         $stored=json_decode($r['assessment_answers']??'{}',true);$stored=is_array($stored)?$stored:[];
         $answers=$stored['answers']??$stored;$method=$r['assessment_method']??($r['skin_type_source']==='finder'?'guided':'manual');
         return ['assessment_method'=>$method,'skin_type'=>$r['assessment_key'],'skin_type_id'=>$r['assessment_key']?(int)$r['skin_type_id']:null,'skin_type_label'=>$r['assessment_key']?$r['skin_type_name']:null,
-            'assessment'=>$stored['assessment']??null,'answers'=>$answers,'sensitivity'=>['level'=>$r['sensitivity_level']??'unknown','score'=>$r['sensitivity_score']===null?null:(float)$r['sensitivity_score'],'frequent_reaction'=>SkinTypeFinder::sensitivity($answers)['frequent_reaction']],
+            'assessment'=>$stored['assessment']??null,'answers'=>$answers,'sensitivity'=>['level'=>$r['sensitivity_level']??'unknown','score'=>$r['sensitivity_score']===null?null:(float)$r['sensitivity_score'],'frequent_reaction'=>$stored['sensitivity']['frequent_reaction']??SkinTypeFinder::sensitivity($answers)['frequent_reaction']],
             'concerns'=>$concerns,'main_concern_id'=>$r['main_concern_id']?(int)$r['main_concern_id']:null,'ingredient_preference'=>$avoided?'selected':$r['ingredient_preference'],
             'avoided_ingredients'=>$avoided,'avoidance_reason'=>$r['avoidance_reason']??'','routine_preference'=>$r['routine_preference'],
             'questionnaire_version'=>$stored['questionnaire_version']??'legacy','rule_version'=>$stored['rule_version']??'legacy','questionnaire_snapshot'=>$stored['questionnaire_snapshot']??[],
