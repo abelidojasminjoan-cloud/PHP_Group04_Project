@@ -59,3 +59,7 @@ For the research-informed skin assessment and admin question bank, run
 `php tools/migrate-skin-questions.php` after the existing skin-profile schema is installed.
 See [assessment evidence, limitations and verification](docs/skin-assessment-evidence.md).
 
+
+## Deploy to Render
+
+Use the [Render deployment guide](docs/render-deployment.md) for Docker setup, hosted MySQL, environment variables, persistent uploads, email, and PayPal testing. The local PHP server command above remains supported.
