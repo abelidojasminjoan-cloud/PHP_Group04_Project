@@ -1356,3 +1356,317 @@ a {
         transition: none;
     }
 }
+
+
+/* PUREVIA COMPLETE CSV EXPORT CONTROLS */
+
+.sales-page-header {
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.sales-csv-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.sales-csv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.sales-csv-field label {
+    color: #53634b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sales-csv-field select {
+    min-height: 46px;
+    padding: 0 12px;
+    background: #f8f6f1;
+    border: 1px solid #ddd5ca;
+    border-radius: 9px;
+    color: #293126;
+    font: inherit;
+    font-size: 12px;
+}
+
+.sales-csv-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 46px;
+    font-size: 12px;
+    color: #40513c;
+    cursor: pointer;
+}
+
+.sales-csv-check input {
+    width: 17px;
+    height: 17px;
+    accent-color: #53634b;
+}
+
+@media (max-width: 700px) {
+    .sales-csv-options {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sales-csv-options .sales-add-btn,
+    .sales-csv-field select {
+        width: 100%;
+    }
+}
+
+
+/* ==========================================
+   PUREVIA — SALES CSV EXPORT PANEL
+   Forest Green / Sage / Cream
+========================================== */
+
+.sales-main > .sales-page-header {
+    margin-bottom: 22px;
+}
+
+.sales-main > .sales-csv-panel {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 24px;
+    padding: 0;
+    background: #ffffff;
+    border: 1px solid #ddd5ca;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* PANEL HEADING */
+
+.sales-main .sales-csv-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 22px 26px;
+    border-bottom: 1px solid #ece7df;
+}
+
+.sales-main .sales-csv-panel-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 220px;
+}
+
+.sales-main .sales-csv-panel-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 11px;
+    background: #e5efe3;
+    color: #53634b;
+    font-size: 21px;
+}
+
+.sales-main .sales-csv-panel-heading h2 {
+    margin: 0 0 5px;
+    color: #293126;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.sales-main .sales-csv-panel-heading p {
+    margin: 0;
+    color: #8a786d;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* CURRENT DATE RANGE */
+
+.sales-main .sales-csv-period {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 14px;
+    background: #e9eee6;
+    border: 1px solid #d7e0d1;
+    border-radius: 10px;
+    color: #40563c;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* FORM GRID */
+
+
+.sales-main .sales-csv-panel .sales-csv-options {
+    display: grid;
+    grid-template-columns: minmax(190px, 280px) auto;
+    align-items: end;
+    justify-content: space-between;
+    gap: 22px;
+    width: 100%;
+    margin: 0;
+    padding: 24px 26px 26px;
+}
+
+/* ORDER STATUS */
+
+.sales-main .sales-csv-panel .sales-csv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+}
+
+.sales-main .sales-csv-panel .sales-csv-field label {
+    color: #53634b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sales-main .sales-csv-panel .sales-csv-field select {
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #ddd5ca;
+    border-radius: 9px;
+    background: #f8f6f1;
+    color: #293126;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* SKIN ASSESSMENT CHECKBOX */
+
+.sales-main .sales-csv-panel .sales-csv-check {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 46px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.sales-main .sales-csv-panel .sales-csv-check input {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #53634b;
+}
+
+.sales-main .sales-csv-panel .sales-csv-check-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.sales-main .sales-csv-panel .sales-csv-check strong {
+    color: #40513c;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.sales-main .sales-csv-panel .sales-csv-check small {
+    color: #8a786d;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* EXPORT BUTTON */
+
+.sales-main .sales-csv-panel .sales-csv-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: auto;
+    min-height: 46px;
+    padding: 0 20px;
+    align-self: end;
+    border: none;
+    border-radius: 9px;
+    background: #53634b;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.sales-main .sales-csv-panel .sales-csv-download:hover {
+    background: #43523d;
+}
+
+/* TABLET */
+
+
+@media (max-width: 1150px) {
+
+    .sales-main .sales-csv-panel .sales-csv-options {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+    }
+
+    .sales-main .sales-csv-panel .sales-csv-download {
+        grid-column: auto;
+        justify-self: end;
+    }
+}
+
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+
+    .sales-main .sales-csv-panel-header {
+        padding: 20px 17px;
+    }
+
+    .sales-main .sales-csv-panel-heading {
+        align-items: flex-start;
+        min-width: 0;
+    }
+
+    .sales-main .sales-csv-panel-heading h2 {
+        font-size: 16px;
+    }
+
+    .sales-main .sales-csv-period {
+        white-space: normal;
+    }
+
+    .sales-main .sales-csv-panel .sales-csv-options {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+        padding: 20px 17px;
+    }
+
+    .sales-main .sales-csv-panel .sales-csv-download {
+        grid-column: 1;
+        width: 100%;
+        justify-self: stretch;
+    }
+}

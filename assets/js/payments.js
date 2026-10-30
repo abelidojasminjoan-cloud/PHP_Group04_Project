@@ -1,13 +1,15 @@
+
 /* =========================================================
-   PUREVIA ADMIN PAYMENTS
+   PUREVIA PAYMENTS
+   SEARCH + FILTER + PAGINATION
+   STAFF AND ADMIN COMPATIBLE
 ========================================================= */
 
 document.addEventListener('DOMContentLoaded', function () {
 
-
     /* =====================================================
        ELEMENTS
-    ====================================================== */
+    ===================================================== */
 
     const searchInput =
         document.getElementById('paymentSearch');
@@ -18,8 +20,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusFilter =
         document.getElementById('paymentStatusFilter');
 
-    const paymentRows =
-        document.querySelectorAll('.payment-row');
+    const paymentRows = Array.from(
+        document.querySelectorAll('.payment-row')
+    );
 
     const noPaymentsRow =
         document.getElementById('noPaymentsRow');
@@ -30,240 +33,444 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentRecordLabel =
         document.getElementById('paymentRecordLabel');
 
+    const tableWrapper =
+        document.querySelector('.payments-table-wrapper');
+
+    if (!tableWrapper) {
+        return;
+    }
 
     /* =====================================================
-       FILTER PAYMENTS
-    ====================================================== */
+       PAGINATION SETTINGS
+    ===================================================== */
+
+    const PAYMENTS_PER_PAGE = 10;
+
+    let currentPage = 1;
+
+    /* =====================================================
+       CREATE PAGINATION CONTAINER
+    ===================================================== */
+
+    const pagination = document.createElement('nav');
+
+    pagination.className = 'pv-payments-pagination';
+
+    pagination.setAttribute(
+        'aria-label',
+        'Payments pagination'
+    );
+
+    Object.assign(pagination.style, {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '8px',
+        padding: '18px 12px',
+        fontFamily: 'Poppins, Arial, sans-serif'
+    });
+
+    tableWrapper.insertAdjacentElement(
+        'afterend',
+        pagination
+    );
+
+    /* =====================================================
+       CREATE PAGINATION BUTTON
+    ===================================================== */
+
+    function createPageButton(
+        label,
+        page,
+        disabled = false,
+        active = false
+    ) {
+
+        const button = document.createElement('button');
+
+        button.type = 'button';
+        button.textContent = label;
+        button.disabled = disabled;
+        button.className = 'pv-page-button';
+
+        button.setAttribute(
+            'aria-label',
+            /^[0-9]+$/.test(label)
+                ? 'Go to page ' + label
+                : label + ' page'
+        );
+
+        if (active) {
+            button.setAttribute('aria-current', 'page');
+        }
+
+        Object.assign(button.style, {
+            minWidth: '38px',
+            minHeight: '38px',
+            padding: '8px 12px',
+            border: '1px solid #bdc8b8',
+            borderRadius: '8px',
+            backgroundColor: active
+                ? '#53634b'
+                : '#fffdf9',
+            color: active
+                ? '#ffffff'
+                : '#40523b',
+            fontSize: '12px',
+            fontWeight: '600',
+            cursor: disabled
+                ? 'not-allowed'
+                : 'pointer',
+            opacity: disabled ? '0.45' : '1'
+        });
+
+        button.addEventListener('click', function () {
+
+            if (disabled || page === currentPage) {
+                return;
+            }
+
+            currentPage = page;
+
+            filterPayments();
+        });
+
+        return button;
+    }
+
+    /* =====================================================
+       SEARCH + FILTER PAYMENTS
+    ===================================================== */
 
     function filterPayments() {
 
-        const searchValue =
-            searchInput
-                ? searchInput.value
-                    .trim()
-                    .toLowerCase()
-                : '';
+        const searchValue = searchInput
+            ? searchInput.value.trim().toLowerCase()
+            : '';
 
-        const selectedMethod =
-            methodFilter
-                ? methodFilter.value.toLowerCase()
-                : 'all';
+        const selectedMethod = methodFilter
+            ? methodFilter.value.toLowerCase()
+            : 'all';
 
-        const selectedStatus =
-            statusFilter
-                ? statusFilter.value.toLowerCase()
-                : 'all';
+        const selectedStatus = statusFilter
+            ? statusFilter.value.toLowerCase()
+            : 'all';
 
+        const matchingPayments = paymentRows.filter(
+            function (row) {
 
-        let visibleCount = 0;
-
-
-        paymentRows.forEach(function (row) {
-
-            const searchableText =
-                (
+                const searchableText = (
                     row.dataset.search || ''
                 ).toLowerCase();
 
-            const paymentMethod =
-                (
+                const paymentMethod = (
                     row.dataset.method || ''
                 ).toLowerCase();
 
-            const paymentStatus =
-                (
+                const paymentStatus = (
                     row.dataset.status || ''
                 ).toLowerCase();
 
+                const matchesSearch =
+                    searchValue === '' ||
+                    searchableText.includes(searchValue);
 
-            /* SEARCH MATCH */
+                const matchesMethod =
+                    selectedMethod === 'all' ||
+                    paymentMethod === selectedMethod;
 
-            const matchesSearch =
-                searchValue === '' ||
-                searchableText.includes(searchValue);
+                const matchesStatus =
+                    selectedStatus === 'all' ||
+                    paymentStatus === selectedStatus;
 
-
-            /* METHOD MATCH */
-
-            const matchesMethod =
-                selectedMethod === 'all' ||
-                paymentMethod === selectedMethod;
-
-
-            /* STATUS MATCH */
-
-            const matchesStatus =
-                selectedStatus === 'all' ||
-                paymentStatus === selectedStatus;
-
-
-            /* SHOW / HIDE */
-
-            const shouldShow =
-                matchesSearch &&
-                matchesMethod &&
-                matchesStatus;
-
-
-            row.hidden = !shouldShow;
-
-
-            if (shouldShow) {
-                visibleCount++;
+                return (
+                    matchesSearch &&
+                    matchesMethod &&
+                    matchesStatus
+                );
             }
+        );
 
+        /* ===============================================
+           COUNT MATCHING PAYMENTS
+        ================================================ */
+
+        const totalMatches = matchingPayments.length;
+
+        const totalPages = Math.max(
+            1,
+            Math.ceil(
+                totalMatches / PAYMENTS_PER_PAGE
+            )
+        );
+
+        currentPage = Math.max(
+            1,
+            Math.min(currentPage, totalPages)
+        );
+
+        /* ===============================================
+           GET RECORDS FOR CURRENT PAGE
+        ================================================ */
+
+        const startIndex =
+            (currentPage - 1) * PAYMENTS_PER_PAGE;
+
+        const endIndex =
+            startIndex + PAYMENTS_PER_PAGE;
+
+        const visibleRows = new Set(
+            matchingPayments.slice(
+                startIndex,
+                endIndex
+            )
+        );
+
+        /* ===============================================
+           SHOW ONLY CURRENT PAGE
+        ================================================ */
+
+        paymentRows.forEach(function (row) {
+
+            const visible = visibleRows.has(row);
+
+            row.hidden = !visible;
+            row.style.display = visible ? '' : 'none';
         });
 
-
-        /* =================================================
+        /* ===============================================
            UPDATE RECORD COUNT
-        ================================================== */
+        ================================================ */
 
         if (paymentCount) {
+
             paymentCount.textContent =
-                visibleCount.toLocaleString();
+                totalMatches.toLocaleString();
         }
 
         if (paymentRecordLabel) {
 
             paymentRecordLabel.textContent =
-                visibleCount === 1
+                totalMatches === 1
                     ? 'record'
                     : 'records';
-
         }
 
-
-        /* =================================================
-           NO RESULTS
-        ================================================== */
+        /* ===============================================
+           NO PAYMENTS FOUND
+        ================================================ */
 
         if (noPaymentsRow) {
 
-            noPaymentsRow.hidden =
-                visibleCount !== 0;
+            const isEmpty = totalMatches === 0;
 
+            noPaymentsRow.hidden = !isEmpty;
+
+            noPaymentsRow.style.display =
+                isEmpty ? 'table-row' : 'none';
         }
 
+        /* ===============================================
+           UPDATE PAGINATION BUTTONS
+        ================================================ */
+
+        renderPagination(totalPages);
     }
 
+    /* =====================================================
+       RENDER PAGINATION
+    ===================================================== */
+
+    function renderPagination(totalPages) {
+
+        pagination.replaceChildren();
+
+        if (totalPages <= 1) {
+
+            pagination.hidden = true;
+            pagination.style.display = 'none';
+
+            return;
+        }
+
+        pagination.hidden = false;
+        pagination.style.display = 'flex';
+
+        /* ===============================================
+           PREVIOUS BUTTON
+        ================================================ */
+
+        pagination.appendChild(
+            createPageButton(
+                'Previous',
+                currentPage - 1,
+                currentPage === 1
+            )
+        );
+
+        /* ===============================================
+           PAGE NUMBER BUTTONS
+        ================================================ */
+
+        const firstPage = Math.max(
+            1,
+            Math.min(
+                currentPage - 2,
+                totalPages - 4
+            )
+        );
+
+        const lastPage = Math.min(
+            totalPages,
+            firstPage + 4
+        );
+
+        for (
+            let page = firstPage;
+            page <= lastPage;
+            page++
+        ) {
+
+            pagination.appendChild(
+                createPageButton(
+                    String(page),
+                    page,
+                    false,
+                    page === currentPage
+                )
+            );
+        }
+
+        /* ===============================================
+           NEXT BUTTON
+        ================================================ */
+
+        pagination.appendChild(
+            createPageButton(
+                'Next',
+                currentPage + 1,
+                currentPage === totalPages
+            )
+        );
+
+        /* ===============================================
+           PAGE INFORMATION
+        ================================================ */
+
+        const pageInfo = document.createElement('span');
+
+        pageInfo.textContent =
+            'Page ' + currentPage +
+            ' of ' + totalPages;
+
+        Object.assign(pageInfo.style, {
+            marginLeft: '8px',
+            fontSize: '12px',
+            color: '#66735f'
+        });
+
+        pagination.appendChild(pageInfo);
+    }
 
     /* =====================================================
-       SEARCH EVENT
-    ====================================================== */
+       RESET PAGE WHEN SEARCH OR FILTER CHANGES
+    ===================================================== */
+
+    function resetAndFilter() {
+
+        currentPage = 1;
+
+        filterPayments();
+    }
 
     if (searchInput) {
 
         searchInput.addEventListener(
             'input',
-            filterPayments
+            resetAndFilter
         );
-
     }
-
-
-    /* =====================================================
-       METHOD FILTER
-    ====================================================== */
 
     if (methodFilter) {
 
         methodFilter.addEventListener(
             'change',
-            filterPayments
+            resetAndFilter
         );
-
     }
-
-
-    /* =====================================================
-       STATUS FILTER
-    ====================================================== */
 
     if (statusFilter) {
 
         statusFilter.addEventListener(
             'change',
-            filterPayments
+            resetAndFilter
         );
-
     }
 
-
     /* =====================================================
-       VERIFY / REJECT BUTTONS
-    ====================================================== */
+       VERIFY / REJECT PAYMENT BUTTONS
+    ===================================================== */
 
     const actionButtons =
         document.querySelectorAll(
             '.payment-action-button'
         );
 
-
     actionButtons.forEach(function (button) {
 
-        button.addEventListener(
-            'click',
-            function () {
+        button.addEventListener('click', function () {
 
-                const paymentId =
-                    button.dataset.paymentId;
+            const paymentId =
+                button.dataset.paymentId;
 
-                const action =
-                    button.dataset.action;
+            const action =
+                button.dataset.action;
 
-
-                if (!paymentId || !action) {
-                    return;
-                }
-
-
-                /* =========================================
-                   CONFIRMATION
-                ========================================== */
-
-                let message = '';
-
-                if (action === 'verified') {
-
-                    message =
-                        'Verify this payment?';
-
-                } else if (action === 'rejected') {
-
-                    message =
-                        'Reject this payment?';
-
-                }
-
-
-                if (
-                    message !== '' &&
-                    !window.confirm(message)
-                ) {
-                    return;
-                }
-
-
-                /* =========================================
-                   SEND UPDATE
-                ========================================== */
-
-                updatePaymentStatus(
-                    paymentId,
-                    action,
-                    button
-                );
-
+            if (!paymentId || !action) {
+                return;
             }
-        );
 
+            /* ===========================================
+               CONFIRM ACTION
+               Matches PHP values: paid / failed
+            ============================================ */
+
+            let message = '';
+
+            if (
+                action === 'paid' ||
+                action === 'verified'
+            ) {
+
+                message = 'Verify this payment?';
+
+            } else if (
+                action === 'failed' ||
+                action === 'rejected'
+            ) {
+
+                message = 'Reject this payment?';
+            }
+
+            if (
+                message !== '' &&
+                !window.confirm(message)
+            ) {
+                return;
+            }
+
+            updatePaymentStatus(
+                paymentId,
+                action,
+                button
+            );
+        });
     });
 
-
     /* =====================================================
-       UPDATE PAYMENT STATUS
-    ====================================================== */
+       UPDATE PAYMENT STATUS IN DATABASE
+    ===================================================== */
 
     async function updatePaymentStatus(
         paymentId,
@@ -278,24 +485,18 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-
         const rowButtons =
             row.querySelectorAll(
                 '.payment-action-button'
             );
 
-
-        /* DISABLE BUTTONS */
-
         rowButtons.forEach(function (button) {
             button.disabled = true;
         });
 
-
         try {
 
-            const formData =
-                new FormData();
+            const formData = new FormData();
 
             formData.append(
                 'payment_id',
@@ -307,20 +508,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 status
             );
 
+            /* ===========================================
+               EXISTING PHP UPDATE ENDPOINT
+            ============================================ */
 
-            const response =
-                await fetch(
-                    'update_payment_status.php',
-                    {
-                        method: 'POST',
-                        body: formData
-                    }
-                );
+            const response = await fetch(
+                'update_payment_status.php',
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
 
-
-            const data =
-                await response.json();
-
+            const data = await response.json();
 
             if (!response.ok || !data.success) {
 
@@ -328,19 +528,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     data.message ||
                     'Unable to update payment.'
                 );
-
             }
 
-
-            /* =============================================
-               UPDATE STATUS BADGE
-            ============================================== */
+            /* ===========================================
+               UPDATE PAYMENT STATUS BADGE
+            ============================================ */
 
             const statusBadge =
                 row.querySelector(
                     '.payment-status-badge'
                 );
-
 
             if (statusBadge) {
 
@@ -350,44 +547,40 @@ document.addEventListener('DOMContentLoaded', function () {
                     status;
 
                 statusBadge.textContent =
-                    status.toUpperCase();
-
+                    status === 'paid'
+                        ? 'VERIFIED'
+                        : status.toUpperCase();
             }
 
-
-            /* =============================================
-               UPDATE DATA ATTRIBUTE
-            ============================================== */
+            /* ===========================================
+               UPDATE ROW DATA
+            ============================================ */
 
             row.dataset.status = status;
 
-
-            /* =============================================
+            /* ===========================================
                REMOVE ACTION BUTTONS
-            ============================================== */
+            ============================================ */
 
             const actionContainer =
-                row.querySelector(
-                    '.payment-actions'
-                );
-
+                row.querySelector('.payment-actions');
 
             if (actionContainer) {
 
-                const noAction = document.createElement('span');
+                const noAction =
+                    document.createElement('span');
+
                 noAction.className = 'payment-no-action';
                 noAction.textContent = '—';
-                actionContainer.replaceChildren(noAction);
 
+                actionContainer.replaceChildren(noAction);
             }
 
-
-            /* =============================================
-               APPLY CURRENT FILTER AGAIN
-            ============================================== */
+            /* ===========================================
+               REAPPLY SEARCH + PAGINATION
+            ============================================ */
 
             filterPayments();
-
 
         } catch (error) {
 
@@ -396,21 +589,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Something went wrong.'
             );
 
-
-            /* RE-ENABLE BUTTONS */
-
             rowButtons.forEach(function (button) {
                 button.disabled = false;
             });
-
         }
-
     }
 
-
     /* =====================================================
-       INITIAL FILTER
-    ====================================================== */
+       INITIAL DISPLAY
+    ===================================================== */
 
     filterPayments();
 
