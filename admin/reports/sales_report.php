@@ -113,73 +113,204 @@ function srCsvValue(mixed $value): string
         : $text;
 }
 
-/* ==========================================
-   DATE FILTER
-========================================== */
-
-$from = $_GET['from'] ?? date('Y-m-01');
-$to = $_GET['to'] ?? date('Y-m-t');
-
 
 /* ==========================================
-   MONTHLY SALES REPORT FILTER
+   PUREVIA SALES REPORT
+   WEEKLY / MONTHLY / YEARLY / CUSTOM FILTER
 ========================================== */
 
-if (isset($_GET['month'])) {
+date_default_timezone_set('Asia/Manila');
 
-    $month = $_GET['month'];
+$today = new DateTimeImmutable('today');
 
-    if (
-        !is_string($month) ||
-        !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)
-    ) {
-        http_response_code(422);
-        exit('Invalid report month.');
-    }
+/*
+ * Support the old ?month= and ?from=&to=
+ * links as well as the new filter.
+ */
+$range = $_GET['range'] ?? (
+    isset($_GET['month'])
+        ? 'monthly'
+        : (
+            isset($_GET['from'], $_GET['to'])
+                ? 'custom'
+                : 'monthly'
+        )
+);
 
-    $monthStart = DateTimeImmutable::createFromFormat(
-        '!Y-m-d',
-        $month . '-01'
-    );
+$allowedRanges = [
+    'weekly',
+    'monthly',
+    'yearly',
+    'custom'
+];
 
-    if (!$monthStart) {
-        http_response_code(422);
-        exit('Invalid report month.');
-    }
-
-    $from = $monthStart->format('Y-m-01');
-    $to = $monthStart->format('Y-m-t');
-}
-
-
-if (!is_string($from) || !is_string($to)) {
+if (
+    !is_string($range) ||
+    !in_array($range, $allowedRanges, true)
+) {
     http_response_code(422);
-    exit('Invalid dates.');
+    exit('Invalid report period.');
 }
 
-foreach ([$from, $to] as $date) {
-    $parsed = DateTimeImmutable::createFromFormat(
+/* ==========================================
+   DATE VALIDATION HELPER
+========================================== */
+
+$readDate = static function (
+    mixed $value
+): DateTimeImmutable {
+
+    if (!is_string($value)) {
+        http_response_code(422);
+        exit('Invalid report date.');
+    }
+
+    $date = DateTimeImmutable::createFromFormat(
         '!Y-m-d',
-        $date
+        $value
     );
 
     if (
-        !$parsed ||
-        $parsed->format('Y-m-d') !== $date
+        !$date ||
+        $date->format('Y-m-d') !== $value
     ) {
         http_response_code(422);
         exit('Use dates in YYYY-MM-DD format.');
     }
+
+    return $date;
+};
+
+/* ==========================================
+   FILTER INPUT VALUES
+========================================== */
+
+$weekDate = $_GET['week_date']
+    ?? $today->format('Y-m-d');
+
+$month = $_GET['month']
+    ?? $today->format('Y-m');
+
+$year = $_GET['year']
+    ?? $today->format('Y');
+
+$customFrom = $_GET['from']
+    ?? $today->format('Y-m-01');
+
+$customTo = $_GET['to']
+    ?? $today->format('Y-m-t');
+
+/* ==========================================
+   RESOLVE REPORT DATES
+========================================== */
+
+switch ($range) {
+
+    case 'weekly':
+
+        $anchor = $readDate($weekDate);
+
+        // Monday through Sunday.
+        $startDate = $anchor->modify(
+            'monday this week'
+        );
+
+        $endDate = $startDate->modify(
+            '+6 days'
+        );
+
+        break;
+
+    case 'monthly':
+
+        if (
+            !is_string($month) ||
+            !preg_match(
+                '/^\d{4}-(0[1-9]|1[0-2])$/D',
+                $month
+            )
+        ) {
+            http_response_code(422);
+            exit('Invalid report month.');
+        }
+
+        $startDate = $readDate(
+            $month . '-01'
+        );
+
+        $endDate = $startDate->modify(
+            'last day of this month'
+        );
+
+        break;
+
+    case 'yearly':
+
+        if (
+            !is_string($year) ||
+            !preg_match('/^\d{4}$/D', $year) ||
+            (int) $year < 1
+        ) {
+            http_response_code(422);
+            exit('Invalid report year.');
+        }
+
+        $startDate = $readDate(
+            $year . '-01-01'
+        );
+
+        $endDate = $readDate(
+            $year . '-12-31'
+        );
+
+        break;
+
+    case 'custom':
+
+        $startDate = $readDate(
+            $customFrom
+        );
+
+        $endDate = $readDate(
+            $customTo
+        );
+
+        break;
 }
+
+/* ==========================================
+   FINAL DATES USED IN SQL
+========================================== */
+
+$from = $startDate->format('Y-m-d');
+
+$to = $endDate->format('Y-m-d');
 
 if ($from > $to) {
     http_response_code(422);
     exit('Start date must not exceed end date.');
 }
 
-$end = (new DateTimeImmutable($to))
+/*
+ * Exclusive end date ensures the entire
+ * last selected day is included.
+ */
+$end = $endDate
     ->modify('+1 day')
     ->format('Y-m-d');
+
+/* ==========================================
+   LABELS FOR THE FILTER UI
+========================================== */
+
+$rangeLabels = [
+    'weekly'  => 'Weekly',
+    'monthly' => 'Monthly',
+    'yearly'  => 'Yearly',
+    'custom'  => 'Custom Date Range'
+];
+
+
 
 /* ==========================================
    CHECK AVAILABLE RETURN TABLES
@@ -672,13 +803,15 @@ if (($_GET['export'] ?? '') === 'csv') {
     exit;
 }
 
+
 /* ==========================================
-   EXPORT LINK
+   CSV EXPORT: CURRENT APPLIED DATE RANGE
 ========================================== */
 
 $csvUrl = '?' . http_build_query([
-    'from' => $from,
-    'to' => $to,
+    'range'  => 'custom',
+    'from'   => $from,
+    'to'     => $to,
     'export' => 'csv'
 ]);
 
@@ -718,12 +851,14 @@ $csvUrl = '?' . http_build_query([
         href="<?= srEsc(BASE_URL) ?>/assets/css/sidemenu.css"
     >
 
-    <!-- SALES REPORT CSS -->
+    
+<!-- SALES REPORT CSS -->
 
-    <link
-        rel="stylesheet"
-        href="<?= srEsc(BASE_URL) ?>/assets/css/sales_report.css"
-    >
+<link
+    rel="stylesheet"
+    href="<?= srEsc(BASE_URL) ?>/assets/css/sales_report.css?v=2"
+>
+
 
     <!-- RESPONSIVE CSS -->
 
@@ -773,11 +908,10 @@ $csvUrl = '?' . http_build_query([
                     <h1>Sales Reports</h1>
 
                     <p>
-                        Order-cohort financial report
-                        &middot;
-                        <?= srEsc($from) ?>
+                        Sales Report &middot;
+                        <?= date('F j, Y', strtotime($from)) ?>
                         to
-                        <?= srEsc($to) ?>
+                        <?= date('F j, Y', strtotime($to)) ?>
                     </p>
 
                 </div>
@@ -798,102 +932,209 @@ $csvUrl = '?' . http_build_query([
 
             </section>
 
-            <!-- ==================================
-                 DATE FILTER
-            =================================== -->
+            
+<!-- ==========================================
+     SALES REPORT DATE FILTER
+========================================== -->
 
-            <section class="sales-panel">
-
-                <form
-                    method="GET"
-                    class="sales-filter-bar"
-                >
-
-                
-<!-- MONTHLY REPORT FILTER -->
-
-<form
-    method="GET"
-    class="sales-filter-bar"
-    aria-label="Filter sales by month"
+<section
+    class="sales-panel sales-period-panel"
+    aria-labelledby="salesPeriodTitle"
 >
 
-    <div class="sales-filter-group">
+    <div class="sales-period-heading">
 
-        <label for="reportMonth">
-            Select Month
-        </label>
+        <div class="sales-period-heading-text">
 
-        <input
-            type="month"
-            id="reportMonth"
-            name="month"
-            value="<?= srEsc(substr($from, 0, 7)) ?>"
-            required
-        >
+            <span class="sales-period-eyebrow">
+                REPORT PERIOD
+            </span>
+
+            <h2 id="salesPeriodTitle">
+                Choose Your Reporting Dates
+            </h2>
+
+            <p>
+                Generate sales reports by week, month,
+                year, or custom date range.
+            </p>
+
+        </div>
+
+        <span class="sales-current-period">
+
+            <i class="fa-regular fa-calendar-check"></i>
+
+            <?= srEsc($from) ?>
+            &mdash;
+            <?= srEsc($to) ?>
+
+        </span>
 
     </div>
 
-    <div class="sales-filter-actions">
+    <form
+        method="GET"
+        id="salesPeriodForm"
+        class="sales-period-form"
+    >
 
-        <button
-            type="submit"
-            class="sales-filter-btn"
-        >
-            Generate Monthly Report
-        </button>
+        <fieldset class="sales-period-types">
 
-    </div>
+            <legend>
+                Select Report Type
+            </legend>
 
-</form>
+            <?php foreach ($rangeLabels as $value => $label): ?>
 
+                <label class="sales-period-choice">
 
-                    <div class="sales-filter-group">
+                    <input
+                        type="radio"
+                        name="range"
+                        value="<?= srEsc($value) ?>"
+                        <?= $range === $value ? 'checked' : '' ?>
+                    >
 
-                        <label for="from">
-                            From
-                        </label>
+                    <span><?= srEsc($label) ?></span>
 
-                        <input
-                            type="date"
-                            id="from"
-                            name="from"
-                            value="<?= srEsc($from) ?>"
-                            required
-                        >
+                </label>
 
-                    </div>
+            <?php endforeach; ?>
 
-                    <div class="sales-filter-group">
+        </fieldset>
 
-                        <label for="to">
-                            To
-                        </label>
+        <div class="sales-period-controls">
 
-                        <input
-                            type="date"
-                            id="to"
-                            name="to"
-                            value="<?= srEsc($to) ?>"
-                            required
-                        >
+            <!-- WEEKLY -->
 
-                    </div>
+            <div
+                class="sales-period-input"
+                data-period="weekly"
+                <?= $range !== 'weekly' ? 'hidden' : '' ?>
+            >
 
-                    <div class="sales-filter-actions">
+                <label for="weekDate">
+                    Select Date Within the Week
+                </label>
 
-                        <button
-                            type="submit"
-                            class="sales-filter-btn"
-                        >
-                            Apply Filter
-                        </button>
+                <input
+                    type="date"
+                    id="weekDate"
+                    name="week_date"
+                    value="<?= srEsc($weekDate) ?>"
+                    <?= $range === 'weekly' ? 'required' : 'disabled' ?>
+                >
 
-                    </div>
+                <small>
+                    Monday to Sunday
+                </small>
 
-                </form>
+            </div>
 
-            </section>
+            <!-- MONTHLY -->
+
+            <div
+                class="sales-period-input"
+                data-period="monthly"
+                <?= $range !== 'monthly' ? 'hidden' : '' ?>
+            >
+
+                <label for="reportMonth">
+                    Select Month
+                </label>
+
+                <input
+                    type="month"
+                    id="reportMonth"
+                    name="month"
+                    value="<?= srEsc($month) ?>"
+                    <?= $range === 'monthly' ? 'required' : 'disabled' ?>
+                >
+
+            </div>
+
+            <!-- YEARLY -->
+
+            <div
+                class="sales-period-input"
+                data-period="yearly"
+                <?= $range !== 'yearly' ? 'hidden' : '' ?>
+            >
+
+                <label for="reportYear">
+                    Select Year
+                </label>
+
+                <input
+                    type="number"
+                    id="reportYear"
+                    name="year"
+                    min="1"
+                    max="9999"
+                    step="1"
+                    value="<?= srEsc($year) ?>"
+                    <?= $range === 'yearly' ? 'required' : 'disabled' ?>
+                >
+
+            </div>
+
+            <!-- CUSTOM DATE RANGE -->
+
+            <div
+                class="sales-period-custom"
+                data-period="custom"
+                <?= $range !== 'custom' ? 'hidden' : '' ?>
+            >
+
+                <div class="sales-period-input">
+
+                    <label for="from">
+                        From Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="from"
+                        name="from"
+                        value="<?= srEsc($customFrom) ?>"
+                        <?= $range === 'custom' ? 'required' : 'disabled' ?>
+                    >
+
+                </div>
+
+                <div class="sales-period-input">
+
+                    <label for="to">
+                        To Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="to"
+                        name="to"
+                        value="<?= srEsc($customTo) ?>"
+                        <?= $range === 'custom' ? 'required' : 'disabled' ?>
+                    >
+
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="sales-filter-btn sales-period-apply"
+            >
+                <i class="fa-solid fa-filter"></i>
+                Apply Filter
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
 
             <!-- ==================================
                  MAIN SALES SUMMARY
@@ -949,9 +1190,7 @@ $csvUrl = '?' . http_build_query([
                         <?= srPeso($averageNetOrder) ?>
                     </strong>
 
-                    <span>
-                        Net Collected
-                    </span>
+                    <span>Average Net per Paid Order</span>
 
                 </article>
 
