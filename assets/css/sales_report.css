@@ -999,3 +999,360 @@ a {
     }
 
 }
+
+
+/* ==========================================
+   PUREVIA - NEW SALES REPORT DATE FILTER
+   Forest Green / Sage / Cream
+========================================== */
+
+.sales-period-panel {
+    width: 100%;
+    margin-bottom: 24px;
+    overflow: visible;
+    background: #ffffff;
+    border: 1px solid #ddd5ca;
+    border-radius: 15px;
+}
+
+.sales-period-panel *,
+.sales-period-panel *::before,
+.sales-period-panel *::after {
+    box-sizing: border-box;
+}
+
+.sales-period-panel [hidden] {
+    display: none !important;
+}
+
+/* HEADER */
+
+.sales-period-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 24px 26px;
+    border-bottom: 1px solid #ece7df;
+}
+
+.sales-period-heading-text {
+    flex: 1;
+    min-width: 220px;
+}
+
+.sales-period-eyebrow {
+    display: block;
+    margin-bottom: 7px;
+    color: #53634b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.sales-period-heading h2 {
+    margin: 0 0 7px;
+    color: #293126;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.sales-period-heading p {
+    margin: 0;
+    color: #8a786d;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* CURRENT APPLIED RANGE */
+
+.sales-current-period {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+
+    padding: 11px 15px;
+    background: #e9eee6;
+    border: 1px solid #d7e0d1;
+    border-radius: 10px;
+
+    color: #40563c;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sales-current-period i {
+    font-size: 15px;
+}
+
+/* FORM */
+
+.sales-period-form {
+    padding: 22px 26px 26px;
+}
+
+/* REPORT TYPE TABS */
+
+.sales-period-types {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+
+    min-width: 0;
+    margin: 0 0 22px;
+    padding: 0;
+    border: 0;
+}
+
+.sales-period-types legend {
+    display: block;
+    float: none;
+    width: 100%;
+    margin-bottom: 11px;
+    padding: 0;
+
+    color: #53634b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sales-period-choice {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.sales-period-choice input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.sales-period-choice span {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 42px;
+    padding: 10px 20px;
+
+    background: #f7f6f2;
+    border: 1px solid #dadfd4;
+    border-radius: 9px;
+
+    color: #53634b;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.sales-period-choice:hover span {
+    background: #edf1e9;
+    border-color: #aebca7;
+}
+
+.sales-period-choice input:checked + span {
+    background: #53634b;
+    border-color: #53634b;
+    color: #ffffff;
+}
+
+.sales-period-choice input:focus-visible + span {
+    outline: 3px solid #96ad90;
+    outline-offset: 3px;
+}
+
+/* DATE INPUTS */
+
+.sales-period-controls {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 14px;
+    width: 100%;
+}
+
+.sales-period-input {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 260px;
+    gap: 8px;
+    min-width: 180px;
+}
+
+.sales-period-input label {
+    color: #53634b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sales-period-input input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+    margin: 0;
+    padding: 0 14px;
+
+    background: #f8f6f1;
+    border: 1px solid #ddd5ca;
+    border-radius: 9px;
+
+    color: #293126;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+}
+
+.sales-period-input input:focus {
+    background: #ffffff;
+    border-color: #53634b;
+    outline: 2px solid #b5c6ad;
+    outline-offset: 1px;
+}
+
+.sales-period-input small {
+    color: #8a786d;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* CUSTOM DATE RANGE */
+
+.sales-period-custom {
+    display: flex;
+    flex: 1 1 450px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.sales-period-custom .sales-period-input {
+    flex: 1 1 190px;
+}
+
+/* APPLY FILTER BUTTON */
+
+.sales-period-apply {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    height: 46px;
+    min-height: 46px;
+    margin-left: auto;
+    padding: 0 23px;
+
+    background: #53634b;
+    border: 0;
+    border-radius: 9px;
+
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.sales-period-apply:hover {
+    background: #43523d;
+}
+
+.sales-period-apply:focus-visible {
+    outline: 3px solid #96ad90;
+    outline-offset: 3px;
+}
+
+/* TABLET */
+
+@media (max-width: 900px) {
+    .sales-period-heading {
+        align-items: flex-start;
+    }
+
+    .sales-current-period {
+        white-space: normal;
+    }
+
+    .sales-period-apply {
+        margin-left: 0;
+    }
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+    .sales-period-heading {
+        padding: 20px 17px;
+    }
+
+    .sales-period-heading h2 {
+        font-size: 17px;
+    }
+
+    .sales-period-form {
+        padding: 18px 17px 22px;
+    }
+
+    .sales-period-types {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .sales-period-types legend {
+        grid-column: 1 / -1;
+    }
+
+    .sales-period-choice {
+        width: 100%;
+    }
+
+    .sales-period-choice span {
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 8px;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .sales-period-controls,
+    .sales-period-custom {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sales-period-input,
+    .sales-period-custom,
+    .sales-period-custom .sales-period-input {
+        flex: initial;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .sales-period-apply {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sales-period-choice span,
+    .sales-period-apply {
+        transition: none;
+    }
+}
