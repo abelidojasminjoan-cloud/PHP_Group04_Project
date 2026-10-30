@@ -137,6 +137,7 @@ application table. Keep the Dockerfile path, build context, and command unchange
 Pushing this SQL file to Git does not execute it. The image intentionally does not
 run schema imports automatically. Do not enable public PHP error display or bypass
 security policy checks to hide missing tables.
+
 ## MySQL Error 3750 during SQL import
 
 Aiven requires a primary key in each CREATE TABLE statement. Older phpMyAdmin dumps
