@@ -116,3 +116,27 @@ The Docker image cannot include your ignored upload files. Transfer existing ima
 to the persistent disk before expecting existing catalog images to display. Render
 single-disk services use one instance; do not horizontally scale file-based sessions
 without first changing session and upload storage.
+## HTTP 500: security_settings does not exist
+
+If Render logs report `Table 'defaultdb.security_settings' doesn't exist`, Docker
+and the MySQL connection are working, but the selected database is missing an
+application table. Keep the Dockerfile path, build context, and command unchanged.
+
+1. Check Render Environment `DB_NAME` points to the database where you imported
+   PureVia. Hosted providers may name it `defaultdb`; that name is valid.
+2. In the hosted MySQL provider's SQL console or a connected MySQL client, select
+   that same database and run `SHOW TABLES;`.
+3. If this is a new, empty database, import a reviewed/sanitized copy of
+   `database/purevia_db.sql` into it. Importing via LOCAL XAMPP phpMyAdmin only
+   changes your computer's database, unless explicitly connected to the hosted DB.
+4. If the other application tables already exist and only security_settings is
+   missing, execute `database/migrations/20261030_security_settings.sql` on the
+   hosted database. It creates the missing table and seeds defaults only when
+   there are no settings, preserving existing policy values. This migration is
+   not a replacement for importing the rest of the schema.
+5. Reload the site and inspect Render logs for any remaining missing schema.
+   If you changed Render DB_NAME, save the environment settings and redeploy.
+
+Pushing this SQL file to Git does not execute it. The image intentionally does not
+run schema imports automatically. Do not enable public PHP error display or bypass
+security policy checks to hide missing tables.
