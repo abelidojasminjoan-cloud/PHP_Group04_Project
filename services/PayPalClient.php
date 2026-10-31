@@ -57,7 +57,13 @@ class PayPalClient
         if ($raw === false || $error) throw new RuntimeException('Unable to reach PayPal. Retry payment status before starting another order.');
         $result = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
         if ($status < 200 || $status >= 300 || !is_array($result)) {
-            error_log('PureVia PayPal API HTTP ' . $status . '; debug ID: ' . ($result['debug_id'] ?? 'unavailable'));
+            // Log only machine-readable error codes, never the payment payload or credentials.
+            $safeCode = static fn($value): string => preg_replace('/[^A-Za-z0-9_.-]/', '', substr(is_string($value) ? $value : '', 0, 100));
+            $issues = [];
+            foreach (($result['details'] ?? []) as $detail) {
+                if (is_array($detail)) $issues[] = $safeCode($detail['issue'] ?? '');
+            }
+            error_log('PureVia PayPal API HTTP ' . $status . '; name: ' . $safeCode($result['name'] ?? '') . '; issues: ' . implode(',', $issues) . '; debug ID: ' . $safeCode($result['debug_id'] ?? 'unavailable'));
             throw new RuntimeException('PayPal could not complete this request. You can retry from your payment page.');
         }
         return $result;
