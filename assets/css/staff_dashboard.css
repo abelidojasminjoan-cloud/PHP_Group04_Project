@@ -280,6 +280,13 @@ body {
 
 }
 
+.staff-stat-icon svg {
+    display: block;
+    width: 34px;
+    height: 34px;
+    color: #c39a73;
+}
+
 
 .staff-stat-arrow {
 

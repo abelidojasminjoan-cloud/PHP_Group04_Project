@@ -350,7 +350,8 @@
 
 .sidebar-menu-icon {
 
-    width: 21px;
+    width: 18px;
+    height: 18px;
 
     display: inline-flex;
 
@@ -364,6 +365,183 @@
 
     line-height: 1;
 
+}
+
+.sidebar-menu-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    color: inherit;
+}
+
+.sidebar-product-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-product-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-svg-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-svg-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    color: inherit;
+}
+
+.sidebar-category-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-category-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-ingredient-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-ingredient-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-concern-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-concern-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-payment-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-payment-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-report-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-report-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-login-attempts-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-login-attempts-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-audit-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-audit-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-security-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-security-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-skin-type-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-skin-type-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-suitability-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-suitability-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-quiz-analytics-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-quiz-analytics-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-assessment-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-assessment-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-user-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-user-icon svg {
+    width: 18px;
+    height: 18px;
 }
 
 
