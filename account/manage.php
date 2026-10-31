@@ -92,7 +92,86 @@ function maValue(string $key): string { global $old, $user; return maEsc(is_stri
 <?php if (pureViaStaffNeedsPasswordChange($user)): ?><p class="ma-message ma-notice">You are using an initial staff password. Create a unique personal password to protect your account.</p><?php endif; ?>
 <form method="post" action="<?= maEsc($url) ?>?tab=password" class="ma-form"><input type="hidden" name="csrf_token" value="<?= maEsc($csrf) ?>"><input type="hidden" name="account_action" value="password">
 <div class="ma-field"><label for="maCurrent">Current Password</label><input id="maCurrent" name="current_password" type="password" autocomplete="current-password" required></div>
-<div class="ma-field"><label for="maNew">New Password</label><input id="maNew" name="new_password" type="password" autocomplete="new-password" minlength="<?= (int)$policy['password_min_length'] ?>" aria-describedby="maRequirements" required><ul id="maRequirements"><?php foreach(securityPasswordRequirements($policy) as $requirement): ?><li><?= maEsc($requirement) ?></li><?php endforeach; ?></ul></div>
+
+<!-- ==========================================
+     NEW PASSWORD WITH LIVE REQUIREMENTS
+     Uses the existing Admin password policy
+========================================== -->
+
+<div class="ma-field">
+
+    <label for="maNew">
+        New Password
+    </label>
+
+    <input
+        id="maNew"
+        name="new_password"
+        type="password"
+        autocomplete="new-password"
+        minlength="<?= (int) $policy['password_min_length'] ?>"
+        aria-describedby="maRequirements"
+        required
+    >
+
+    <ul
+        id="maRequirements"
+        aria-label="New password requirements"
+        aria-live="off"
+    >
+
+        <?php foreach (
+            securityPasswordRequirements($policy)
+            as $key => $requirement
+        ): ?>
+
+            <li
+                class="ma-rule ma-rule-unmet"
+                data-rule="<?= maEsc($key) ?>"
+                data-minimum="<?=
+                    (int) securityPasswordRuleMinimum(
+                        $policy,
+                        $key
+                    )
+                ?>"
+            >
+
+                <span
+                    class="ma-rule-icon"
+                    aria-hidden="true"
+                >
+                    &times;
+                </span>
+
+                <span class="ma-rule-text">
+                    <?= maEsc($requirement) ?>
+                </span>
+
+            </li>
+
+        <?php endforeach; ?>
+
+        <li
+            class="ma-rule ma-rule-unmet"
+            data-rule="byte_limit"
+            data-minimum="72"
+        >
+            <span
+                class="ma-rule-icon"
+                aria-hidden="true"
+            >
+                &times;
+            </span>
+
+            <span class="ma-rule-text">
+                Maximum 72 bytes, with no null characters
+            </span>
+        </li>
+
+    </ul>
+
+</div>
+
 <div class="ma-field"><label for="maConfirm">Confirm Password</label><input id="maConfirm" name="confirm_password" type="password" autocomplete="new-password" required></div>
 <p class="ma-password-note">Changing your password signs out your other sessions. Your authenticator settings stay enabled.</p><div class="ma-actions"><button type="submit" class="ma-button ma-primary">Change Password</button><a class="ma-cancel" href="<?= maEsc($url) ?>">Cancel</a></div>
 </form></section>

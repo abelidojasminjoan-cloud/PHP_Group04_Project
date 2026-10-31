@@ -645,23 +645,23 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                 </div>
 
-                <!-- DESCRIPTION -->
+               
+<!-- DESCRIPTION -->
+<div class="form-group">
+    <label for="productDescription">
+        Description
+    </label>
 
-                <div class="form-group">
+    <textarea
+        id="productDescription"
+        name="description"
+        class="form-control form-textarea"
+        placeholder="Product description..."
+        rows="3"
+        style="height: 115px; max-height: 115px; overflow-y: auto; resize: none;"
+    ></textarea>
+</div>
 
-                    <label for="productDescription">
-                        Description
-                    </label>
-
-                    <textarea
-                        id="productDescription"
-                        name="description"
-                        class="form-control form-textarea"
-                        placeholder="Product description..."
-                        rows="3"
-                    ></textarea>
-
-                </div>
 
                 <!-- PRODUCT IMAGES -->
                 <section class="product-form-section">
@@ -742,46 +742,85 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
                     <!-- SKIN TYPES -->
 
-                    <div class="form-group product-match-group">
+                   
+<div class="form-group product-match-group">
 
-                        <label class="product-match-label">Skin Types</label>
+    <label class="product-match-label">
+        Skin Types
+    </label>
 
-                        <label class="product-checkbox product-select-all"><input type="checkbox" id="selectAllSkinTypes" aria-controls="skinTypeOptions"><span>Select all skin types</span></label>
-                        <div id="skinTypeOptions" class="skin-type-options product-match-options" role="group" aria-label="Skin Types">
+    <div
+        id="skinTypeOptions"
+        class="skin-type-options product-match-options"
+        role="group"
+        aria-label="Skin Types"
+    >
+        <?php foreach ($skinTypes as $item): ?>
+            <label class="product-checkbox">
+                <input
+                    type="checkbox"
+                    name="skin_type_ids[]"
+                    value="<?= (int) $item['id'] ?>"
+                >
+                <span>
+                    <?= productEscape($item['label']) ?>
+                </span>
+            </label>
+        <?php endforeach; ?>
+    </div>
 
-                            <?php foreach ($skinTypes as $item): ?>
+    <!-- SELECT ALL BELOW THE CHOICES -->
+    <label class="product-checkbox product-select-all">
+        <input
+            type="checkbox"
+            id="selectAllSkinTypes"
+            aria-controls="skinTypeOptions"
+        >
+        <span>Select all skin types</span>
+    </label>
 
-                                <label class="product-checkbox">
+</div>
 
-                                    <input
-                                        type="checkbox"
-                                        name="skin_type_ids[]"
-                                        value="<?= (int)$item['id'] ?>"
-                                    >
 
-                                    <span>
-                                        <?= productEscape($item['label']) ?>
-                                    </span>
+                    
+<div class="form-group product-match-group">
 
-                                </label>
+    <label class="product-match-label">
+        Skin Types
+    </label>
 
-                            <?php endforeach; ?>
+    <div
+        id="skinTypeOptions"
+        class="skin-type-options product-match-options"
+        role="group"
+        aria-label="Skin Types"
+    >
+        <?php foreach ($skinTypes as $item): ?>
+            <label class="product-checkbox">
+                <input
+                    type="checkbox"
+                    name="skin_type_ids[]"
+                    value="<?= (int) $item['id'] ?>"
+                >
+                <span>
+                    <?= productEscape($item['label']) ?>
+                </span>
+            </label>
+        <?php endforeach; ?>
+    </div>
 
-                        </div>
+    <!-- SELECT ALL BELOW THE CHOICES -->
+    <label class="product-checkbox product-select-all">
+        <input
+            type="checkbox"
+            id="selectAllSkinTypes"
+            aria-controls="skinTypeOptions"
+        >
+        <span>Select all skin types</span>
+    </label>
 
-                    </div>
+</div>
 
-                    <!-- SUITABILITY -->
-
-                    <div class="form-group product-match-group">
-                        <label class="product-match-label">Suitability</label>
-                        <input type="hidden" name="suitability_tags_present" value="1">
-                        <div class="skin-type-options product-match-options" id="suitabilityOptions" role="group" aria-label="Suitability">
-                            <?php foreach ($suitabilityTags as $item): ?>
-                                <label class="product-checkbox"><input type="checkbox" name="suitability_tag_ids[]" value="<?= (int)$item['id'] ?>"><span><?= productEscape($item['label']) ?></span></label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
 
                     <!-- SKIN CONCERNS -->
 

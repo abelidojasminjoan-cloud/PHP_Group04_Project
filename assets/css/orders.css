@@ -934,3 +934,230 @@ body {
         padding-right: 15px;
     }
 }
+
+
+/* ==========================================
+   PUREVIA ORDERS - DATE FILTER DESIGN
+========================================== */
+
+/* Allow the toolbar to fit date filters */
+
+.orders-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* Make the search bar flexible */
+
+.orders-toolbar .orders-search {
+    flex: 1 1 270px;
+    width: auto;
+    min-width: 200px;
+}
+
+/* Date filter container */
+
+.orders-toolbar .orders-date-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    min-height: 47px;
+    padding: 0 12px;
+
+    background: #f4f1eb;
+    border: 1px solid #ded9d0;
+    border-radius: 10px;
+
+    box-sizing: border-box;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+/* From and To labels */
+
+.orders-toolbar .orders-date-filter label {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #53634b;
+}
+
+/* Date input */
+
+.orders-toolbar .orders-date-filter input[type="date"] {
+    width: 130px;
+    min-width: 0;
+    height: 43px;
+
+    padding: 0;
+    margin: 0;
+
+    border: none;
+    outline: none;
+    box-shadow: none;
+
+    background: transparent;
+    color: #293126;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+/* Calendar icon */
+
+.orders-toolbar
+.orders-date-filter
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+/* Hover and focus */
+
+.orders-toolbar .orders-date-filter:hover {
+    background: #ecefe9;
+    border-color: #cdd4c8;
+}
+
+.orders-toolbar .orders-date-filter:focus-within {
+    background: #ffffff;
+    border-color: #38634f;
+}
+
+/* ==========================================
+   CLEAR DATES BUTTON
+========================================== */
+
+.orders-toolbar .orders-clear-dates {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 47px;
+    padding: 0 16px;
+
+    background: #ffffff;
+    border: 1px solid #ded9d0;
+    border-radius: 10px;
+
+    color: #38634f;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.orders-toolbar .orders-clear-dates:hover {
+    background: #e8eee8;
+    border-color: #38634f;
+}
+
+.orders-toolbar .orders-clear-dates:focus-visible {
+    outline: 2px solid #38634f;
+    outline-offset: 2px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 1100px) {
+
+    .orders-toolbar .orders-date-filter {
+        flex: 1 1 190px;
+    }
+
+    .orders-toolbar .orders-date-filter input[type="date"] {
+        flex: 1;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .orders-toolbar .orders-date-filter {
+        width: 100%;
+        flex: 1 1 100%;
+        justify-content: space-between;
+    }
+
+    .orders-toolbar .orders-clear-dates {
+        width: 100%;
+    }
+
+    .orders-toolbar .orders-search {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+
+/* ==========================================
+   ORDERS DATE FILTER - FINAL ADJUSTMENT
+========================================== */
+
+.orders-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.orders-toolbar .orders-date-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    min-height: 47px;
+    padding: 0 12px;
+
+    background-color: #f4f1eb;
+    border: 1px solid #ded9d0;
+    border-radius: 10px;
+}
+
+.orders-toolbar .orders-date-filter label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #53634b;
+    white-space: nowrap;
+}
+
+.orders-toolbar .orders-date-filter input[type="date"] {
+    width: 130px;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    color: #293126;
+}
+
+.orders-toolbar .orders-clear-dates {
+    min-height: 47px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1px solid #ded9d0;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #38634f;
+    cursor: pointer;
+}
+
+.orders-toolbar .orders-clear-dates:hover {
+    background: #e8eee8;
+    border-color: #38634f;
+}
