@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return false;
         }
 
-        for (const field of addressEditor.querySelectorAll('input, textarea')) {
+        for (const field of addressEditor.querySelectorAll('input, select, textarea')) {
             if (!field.checkValidity()) {
                 addressEditor.hidden = false;
                 field.reportValidity();
@@ -114,115 +114,49 @@ document.addEventListener("DOMContentLoaded", () => {
     const city = document.getElementById("pvDelivery_city");
     const barangay = document.getElementById("pvDelivery_barangay");
     const secondLine = document.getElementById("pvDelivery_address_line2");
-    const locationButton = document.getElementById("pvCheckoutLocation");
-    const pinLink = document.getElementById("pvCheckoutPinLink");
-    const locationError = document.getElementById("pvCheckoutLocationError");
+
+
+
     const useSavedAddress = document.getElementById("pvUseSavedAddress");
-    let originalSecondLine = secondLine.value;
-    let locationRequest = 0;
+
+
 
     function updateAddressPreview() {
         nameInput.value = [firstName.value.trim(), lastName.value.trim()].filter(Boolean).join(" ");
     }
 
     function deliveryComplete() {
-        return [firstName, lastName, phoneInput, addressInput, province, city,
+        return locationPicker.isComplete() && [firstName, lastName, phoneInput, addressInput,
             document.getElementById("pvDelivery_postal_code"), document.getElementById("pvDelivery_country")]
             .every(input => input.value.trim() !== "") && /^[0-9+\s()-]{7,30}$/.test(phoneInput.value.trim());
     }
 
-    function updateLocationFields() {
-        province.disabled = !region.value.trim() && !province.value.trim();
-        city.disabled = !province.value.trim();
-        barangay.disabled = !city.value.trim();
-    }
-
-    function clearPin() {
-        locationRequest++;
-        secondLine.value = originalSecondLine;
-        pinLink.hidden = true;
-        pinLink.removeAttribute("href");
-        locationButton.disabled = false;
-        locationButton.textContent = "Use Current Location";
-        locationError.hidden = true;
-    }
-
-    if (province.value.trim() === "Metro Manila") region.value = "Metro Manila";
-    updateLocationFields();
+    const locationPicker = window.PureViaPhAddress.create({region,province,city,barangay,onChange:()=>updatePaymentSelection()});
+    locationPicker.setAddress({});
     updateAddressPreview();
-    useSavedAddress?.addEventListener("change", () => {
+    useSavedAddress?.addEventListener("change", async () => {
         const saved = useSavedAddress.checked ? config.savedAddress : null;
         firstName.value = saved?.recipient_first_name || "";
         lastName.value = saved?.recipient_last_name || "";
         phoneInput.value = saved?.phone || "";
         addressInput.value = saved?.address_line1 || "";
-        originalSecondLine = saved?.address_line2 || "";
-        for (const name of ["province", "city", "barangay", "postal_code", "country"]) {
+        secondLine.value = saved?.address_line2 || "";
+        for (const name of ["postal_code", "country"]) {
             const input = document.getElementById(`pvDelivery_${name}`);
             input.value = saved?.[name] || (name === "country" ? "Philippines" : "");
-            const list = document.getElementById(`pvCheckoutList_${name}`);
-            if (list) list.replaceChildren(...(saved?.[name] ? [new Option(saved[name], saved[name])] : []));
         }
-        region.value = saved?.province === "Metro Manila" ? "Metro Manila" : "";
-        clearPin();
+        await locationPicker.setAddress(saved || {});
+        form.dispatchEvent(new CustomEvent("pv:address-restored"));
         clearError();
         updateAddressPreview();
-        updateLocationFields();
+
         updatePaymentSelection();
     });
     addressEditor.addEventListener("input", event => {
         if (event.target !== useSavedAddress && useSavedAddress) useSavedAddress.checked = false;
         updateAddressPreview();
-        if ([region, province, city, barangay, addressInput].includes(event.target)) clearPin();
-        if (event.target === region) {
-            province.value = ""; city.value = ""; barangay.value = "";
-            document.getElementById("pvCheckoutList_city").replaceChildren();
-            document.getElementById("pvCheckoutList_barangay").replaceChildren();
-        } else if (event.target === province) {
-            city.value = ""; barangay.value = "";
-            document.getElementById("pvCheckoutList_city").replaceChildren();
-            document.getElementById("pvCheckoutList_barangay").replaceChildren();
-        } else if (event.target === city) {
-            barangay.value = "";
-            document.getElementById("pvCheckoutList_barangay").replaceChildren();
-        }
-        updateLocationFields();
-        updatePaymentSelection();
-    });
 
-    locationButton.addEventListener("click", () => {
-        locationError.hidden = true;
-        if (!navigator.geolocation) {
-            locationError.textContent = "Current location is unavailable. Please enter your address.";
-            locationError.hidden = false;
-            return;
-        }
-        const request = ++locationRequest;
-        locationButton.disabled = true;
-        locationButton.textContent = "Finding location...";
-        navigator.geolocation.getCurrentPosition(position => {
-            if (request !== locationRequest) return;
-            const { latitude, longitude } = position.coords;
-            if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
-                clearPin(); locationError.textContent = "Unable to find your location. Please enter your address."; locationError.hidden = false; return;
-            }
-            const url = `https://www.google.com/maps/search/?api=1&query=${latitude.toFixed(6)},${longitude.toFixed(6)}`;
-            const notes = [originalSecondLine, `Google Maps: ${url}`].filter(Boolean).join("\n");
-            if (notes.length > 255) {
-                clearPin(); locationError.textContent = "Your delivery notes are too long to add a map pin."; locationError.hidden = false; return;
-            }
-            secondLine.value = notes;
-            pinLink.href = url;
-            pinLink.hidden = false;
-            locationButton.textContent = "Update Location";
-            locationButton.disabled = false;
-        }, () => {
-            if (request !== locationRequest) return;
-            locationButton.disabled = false;
-            locationButton.textContent = "Use Current Location";
-            locationError.textContent = "Unable to access your location. You can enter your delivery address manually.";
-            locationError.hidden = false;
-        }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+        updatePaymentSelection();
     });
 
     // =========================================

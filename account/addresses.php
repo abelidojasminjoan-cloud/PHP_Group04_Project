@@ -199,6 +199,7 @@ $jsonFlags = JSON_HEX_TAG |
     >
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/delivery-map.css?v=<?= filemtime(__DIR__.'/../assets/css/delivery-map.css') ?>">
 </head>
 
 <body>
@@ -766,34 +767,6 @@ $jsonFlags = JSON_HEX_TAG |
                         >
                     </div>
 
-                    <!-- LOCATION -->
-                    <div class="pv-field pv-field-full">
-
-                        <div class="pv-location-box">
-
-                            <div class="pv-location-icon">
-                                ⌖
-                            </div>
-
-                            <div class="pv-location-copy">
-                                <strong>Add a location pin</strong>
-
-                                <span>
-                                    Help your rider find the address more easily.
-                                </span>
-                            </div>
-
-                            <button
-                                type="button"
-                                id="addressLocationButton"
-                                class="pv-location-button"
-                            >
-                                Add Location
-                            </button>
-
-                        </div>
-                    </div>
-
                     <!-- HOME / OFFICE / DEFAULT -->
                     <div class="pv-field pv-field-full pv-label-section">
 
@@ -893,6 +866,7 @@ window.PUREVIA_ADDRESS_CONFIG = <?= pvJson([
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/account.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/ph-address.js?v=<?= filemtime(__DIR__.'/../assets/js/ph-address.js') ?>"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/addresses-modal.js"></script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

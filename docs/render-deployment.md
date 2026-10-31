@@ -158,3 +158,35 @@ Public-page links now use /login.php, /shop.php and /order-success.php at the de
 
 
 The original account, actions, admin, staff, assets and uploads folders remain outside public/. Windows uses local junctions and Docker creates Linux links so the application keeps the same URLs without a routes folder. Local startup is php -S localhost:8000 -t public.
+
+## Upload error: virus scanning is unavailable
+
+The Linux container installs ClamAV and FreshClam. The build downloads the official
+signatures and checks that Apache's www-data user can scan a harmless file. Startup
+runs the signature updater; the existing PHP upload validator invokes clamscan.
+Missing, failed, timed-out, or infected scans continue to block uploads.
+
+After pushing these files, redeploy the updated Docker image. In Render Environment,
+remove any Windows Defender scanner/path overrides, or set:
+
+```text
+UPLOAD_SCANNER=clamav
+UPLOAD_SCANNER_PATH=/usr/bin/clamscan
+UPLOAD_SCAN_TIMEOUT=60
+```
+
+These are already Docker defaults; existing Render environment values override them.
+Leave Docker Command empty to use docker/start.sh. No product form or database
+change is needed. Local XAMPP continues to use Windows Defender by default.
+
+ClamAV recommends at least 3 GiB of RAM for its standard signature database; budget
+additional memory for PHP and concurrent uploads. Render's free instance is not
+suitable for this local scanner. Increasing the timeout does not fix insufficient
+memory. Use a sufficiently provisioned host or implement a separate scanning service
+before expecting uploads to work on a smaller instance. This change does not buy or
+upgrade hosting. See https://docs.clamav.net/manual/Installing/Docker.html.
+
+If FreshClam cannot download signatures, inspect build/runtime logs for network,
+CDN rate-limit, or database errors; retry after the stated cooldown rather than
+repeatedly rebuilding. Signature downloads and the scanner need outbound network
+access and sufficient disk space. Do not disable scanning to hide this error.

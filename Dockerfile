@@ -3,16 +3,28 @@ FROM composer:2 AS composer-bin
 FROM php:8.3-apache-bookworm
 
 ENV APP_ENV=production \
-    PORT=10000
+    PORT=10000 \
+    UPLOAD_SCANNER=clamav \
+    UPLOAD_SCANNER_PATH=/usr/bin/clamscan \
+    UPLOAD_SCAN_TIMEOUT=60
 WORKDIR /var/www/app
 
 # Install the extensions used by the store and payment integration.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends unzip libonig-dev libcurl4-openssl-dev \
+    && apt-get install -y --no-install-recommends unzip libonig-dev libcurl4-openssl-dev clamav clamav-freshclam \
     && docker-php-ext-install -j"$(nproc)" mysqli pdo_mysql opcache mbstring curl \
     && a2enmod headers rewrite \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && rm -rf /var/lib/apt/lists/*
+
+# Uploads fail closed unless a working scanner and signature database are present.
+COPY docker/freshclam.conf /etc/clamav/freshclam.conf
+RUN mkdir -p /var/lib/clamav /var/log/clamav /var/run/clamav \
+    && chown -R clamav:clamav /var/lib/clamav /var/log/clamav /var/run/clamav \
+    && freshclam --stdout \
+    && printf 'PureVia upload scanner readiness check\n' > /tmp/purevia-scan-check.txt \
+    && su -s /bin/sh www-data -c 'clamscan --no-summary /tmp/purevia-scan-check.txt' \
+    && rm /tmp/purevia-scan-check.txt
 
 COPY --from=composer-bin /usr/bin/composer /usr/local/bin/composer
 COPY composer.json composer.lock ./
