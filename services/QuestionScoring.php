@@ -39,15 +39,12 @@ final class QuestionScoring
             else{$followups++;if($uniqueWinner)$followupWinners[]=$winner;}
         }
         arsort($scores);$values=array_values($scores);$margin=$values[0]-$values[1];$minimum=min(5,count($primary));
-        $requiredMargin=count($primary)<3?1:2;
-        $conflict=in_array('dry',$observations,true)&&in_array('oily',$observations,true);
-        $followupConflict=count(array_unique($followupWinners))>1;
-        $followupDisagrees=$followups===count($clarifications)&&$followups>0&&count($followupWinners)===$followups&&in_array(false,array_map(fn($winner)=>$winner===array_key_first($scores),$followupWinners),true);
-        $reason=(!$primary||$answered<$minimum)?'insufficient':($followupConflict||$followupDisagrees?'conflicting':($margin<$requiredMargin?'close':($values[0]<=array_sum($scores)/2?'inconclusive':($conflict&&$followups<count($clarifications)?'conflicting':null))));
+        $reason=(!$primary||$answered<$minimum||array_sum($scores)<=0)?'insufficient':($margin===0?'tied':null);
+        $tentative=$reason===null&&($margin<2||$values[0]<=array_sum($scores)/2);
         return ['status'=>$reason?'unclear':'suggested','reason'=>$reason,'skin_type'=>$reason?null:array_key_first($scores),'scores'=>$scores,'answered'=>$answered,'margin'=>$margin,'followups_answered'=>$followups,
-            'needs_followup'=>$reason!==null&&$reason!=='insufficient'&&$followups<count($clarifications),'rule_version'=>'configured-question-bank-v1',
+            'needs_followup'=>$reason==='tied'&&$followups<count($clarifications),'tentative'=>$tentative,'rule_version'=>'configured-question-bank-v2',
             'validation_status'=>'Research-informed custom rules; not clinically validated',
-            'explanation'=>!$primary?'No active skin-type scoring questions are configured. Choose your skin type manually.':'Answers use the administrator-configured weights. At least '.$minimum.' non-skipped scoring observations, a majority of awarded points and a lead of '.$requiredMargin.' points are required. Scores are not probabilities.'];
+            'explanation'=>!$primary?'No active skin-type scoring questions are configured. Choose your skin type manually.':($reason==='insufficient'?'More usable skin-type observations are needed. Choose your skin type manually if observations are unavailable.':($reason==='tied'?'Two or more skin types have the same highest score. Answer the clarification questions or choose your skin type manually.':($tentative?'Tentative estimate: answers overlap, but this skin type has the highest configured score.':'This skin type has the highest configured score.'))).' At least '.$minimum.' non-skipped scoring observations are required, adjusted to the active question count. Sensitivity and concerns do not contribute to skin-type scores. These are custom shopping-guide rules, not study-derived cutoffs or probabilities.'];
     }
     public static function sensitivity(array $answers,array $bank): array
     {

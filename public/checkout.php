@@ -232,6 +232,7 @@ function peso(float $amount): string {
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/delivery-map.css?v=<?= filemtime(__DIR__.'/../assets/css/delivery-map.css') ?>">
 </head>
 
 <body>
@@ -381,19 +382,12 @@ function peso(float $amount): string {
                             <label>Phone Number<input type="tel" name="recipient_phone" id="pvRecipientPhone" value="" maxlength="30" placeholder="+63 9XX XXX XXXX" autocomplete="tel" required></label>
                             <label>Postal Code<input type="text" name="postal_code" id="pvDelivery_postal_code" value="" maxlength="20" autocomplete="postal-code" required></label>
                             <label class="pv-delivery-full">Country<select name="country" id="pvDelivery_country" autocomplete="country-name" required><option value="Philippines">Philippines</option><?php if (!empty($deliveryAddress['country']) && $deliveryAddress['country'] !== 'Philippines'): ?><option value="<?= checkoutEsc($deliveryAddress['country']) ?>"><?= checkoutEsc($deliveryAddress['country']) ?></option><?php endif; ?></select></label>
-                            <label>Region<input type="text" id="pvDelivery_region" placeholder="Select region" list="pvCheckoutRegions" autocomplete="off" maxlength="100"><datalist id="pvCheckoutRegions"><option value="Metro Manila"><option value="Mindanao"><option value="North Luzon"><option value="South Luzon"><option value="Visayas"></datalist></label>
-                            <?php foreach (['province' => ['Province', 'Select province'], 'city' => ['City / Municipality', 'Select city'], 'barangay' => ['Barangay', 'Select barangay']] as $field => [$label, $placeholder]): ?>
-                                <label><?= checkoutEsc($label) ?><input type="text" name="<?= $field ?>" id="pvDelivery_<?= $field ?>" value="" placeholder="<?= checkoutEsc($placeholder) ?>" maxlength="100" list="pvCheckoutList_<?= $field ?>" autocomplete="<?= $field === 'province' ? 'address-level1' : ($field === 'city' ? 'address-level2' : 'address-level3') ?>" <?= $field !== 'barangay' ? 'required' : '' ?>>
-                                <datalist id="pvCheckoutList_<?= $field ?>"><?php if (!empty($deliveryAddress[$field])): ?><option value="<?= checkoutEsc($deliveryAddress[$field]) ?>"><?php endif; ?></datalist></label>
+                            <label>Region<select id="pvDelivery_region" required disabled><option value="">Select region</option></select></label>
+                            <?php foreach (['province'=>'Province','city'=>'City / Municipality','barangay'=>'Barangay'] as $field=>$label): ?>
+                                <label><?= checkoutEsc($label) ?><select name="<?= $field ?>" id="pvDelivery_<?= $field ?>" required disabled><option value="">Select <?= checkoutEsc(strtolower($label)) ?></option></select></label>
                             <?php endforeach; ?>
                             <label class="pv-delivery-full pv-street-field">Street Address<textarea name="shipping_address" id="pvShippingAddress" rows="3" maxlength="255" placeholder="House or unit number, building, and street" autocomplete="address-line1" required></textarea></label>
                         </div>
-                        <div class="pv-checkout-pin">
-                            <span class="pv-checkout-pin-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
-                            <div><strong>Add a Google Maps pin</strong><p>Help the courier find your exact delivery location.</p><a id="pvCheckoutPinLink" target="_blank" rel="noopener noreferrer" hidden>View pin on Google Maps</a></div>
-                            <button type="button" id="pvCheckoutLocation">Use Current Location</button>
-                        </div>
-                        <p class="pv-checkout-location-error" id="pvCheckoutLocationError" role="alert" hidden></p>
                         <?php if ($deliveryAddress): ?>
                             <label class="pv-use-saved-address"><input type="checkbox" id="pvUseSavedAddress">Use my saved account address</label>
                         <?php endif; ?>
@@ -510,6 +504,7 @@ window.PUREVIA_CHECKOUT = <?= pvJson([
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/main.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/search.js?v=public-root-1"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/ph-address.js?v=<?= filemtime(__DIR__.'/../assets/js/ph-address.js') ?>"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/checkout.js?v=<?= filemtime(__DIR__ . '/../assets/js/checkout.js') ?>"></script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -25,4 +25,13 @@ mkdir -p /var/www/storage/uploads/products /var/www/storage/uploads/profiles \
 chown -R www-data:www-data /var/www/storage/uploads /var/www/storage/sessions /var/www/storage/returns
 chmod 700 /var/www/storage/sessions /var/www/storage/returns
 
+# Keep the bundled signatures current. clamscan itself runs only for uploads.
+if [ "${UPLOAD_SCANNER:-clamav}" = 'clamav' ]; then
+    if [ ! -x "${UPLOAD_SCANNER_PATH:-/usr/bin/clamscan}" ]; then
+        echo 'Upload scanner missing: use the updated PureVia Docker image.' >&2
+        exit 1
+    fi
+    /usr/bin/freshclam --daemon --stdout
+fi
+
 exec apache2-foreground

@@ -33,289 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const addresses = config.addresses || {};
     const defaultForm = config.defaultForm || {};
 
-    /*
-     * SAMPLE PHILIPPINE LOCATION DATA
-     *
-     * This preserves the dropdown options from your
-     * existing JS. It is not a complete PSGC directory.
-     */
-    const locations = {
-        "Metro Manila": {
-            "Metro Manila": {
-                "Makati": [
-                    "Poblacion",
-                    "Bel-Air",
-                    "San Lorenzo",
-                    "Bangkal"
-                ],
-                "Manila": [
-                    "Ermita",
-                    "Malate",
-                    "Sampaloc"
-                ],
-                "Quezon City": [
-                    "Bagumbayan",
-                    "Commonwealth",
-                    "Batasan Hills"
-                ],
-                "Taguig": [
-                    "Fort Bonifacio",
-                    "Western Bicutan",
-                    "Pinagsama",
-                    "Ususan"
-                ],
-                "Pasig": [
-                    "Kapitolyo",
-                    "Ortigas Center",
-                    "San Antonio"
-                ]
-            }
-        },
-
-        "North Luzon": {
-            "Pangasinan": {
-                "Dagupan": [
-                    "Bonuan Gueset",
-                    "Pantal",
-                    "Tapuac"
-                ],
-                "Urdaneta": [
-                    "Nancayasan",
-                    "San Vicente"
-                ]
-            },
-            "La Union": {
-                "San Fernando": [
-                    "Catbangen",
-                    "Pagdalagan"
-                ]
-            },
-            "Benguet": {
-                "Baguio": [
-                    "Burnham-Legarda",
-                    "Camp 7"
-                ]
-            }
-        },
-
-        "South Luzon": {
-            "Cavite": {
-                "Bacoor": [
-                    "Molino I",
-                    "Molino II"
-                ],
-                "Dasmariñas": [
-                    "Salitran I",
-                    "Paliparan I"
-                ]
-            },
-            "Laguna": {
-                "Calamba": [
-                    "Real",
-                    "Canlubang"
-                ],
-                "Santa Rosa": [
-                    "Balibago",
-                    "Tagapo"
-                ]
-            },
-            "Batangas": {
-                "Batangas City": [
-                    "Alangilan",
-                    "Pallocan West"
-                ]
-            }
-        },
-
-        "Visayas": {
-            "Cebu": {
-                "Cebu City": [
-                    "Lahug",
-                    "Mabolo",
-                    "Guadalupe"
-                ],
-                "Mandaue": [
-                    "Banilad",
-                    "Tipolo"
-                ]
-            },
-            "Iloilo": {
-                "Iloilo City": [
-                    "Jaro",
-                    "Mandurriao"
-                ]
-            }
-        },
-
-        "Mindanao": {
-            "Davao del Sur": {
-                "Davao City": [
-                    "Buhangin",
-                    "Matina Crossing",
-                    "Talomo"
-                ]
-            },
-            "Misamis Oriental": {
-                "Cagayan de Oro": [
-                    "Carmen",
-                    "Lapasan"
-                ]
-            },
-            "South Cotabato": {
-                "General Santos": [
-                    "Lagao",
-                    "Calumpang"
-                ]
-            }
-        }
-    };
-
-    const regionNames = [
-        "Metro Manila",
-        "Mindanao",
-        "North Luzon",
-        "South Luzon",
-        "Visayas"
-    ];
-
-    /* =====================================
-       LOCATION DROPDOWNS
-    ===================================== */
-
-    function resetSelect(select, placeholder) {
-        select.replaceChildren(
-            new Option(placeholder, "")
-        );
-
-        select.disabled = true;
-    }
-
-    function populateSelect(
-        select,
-        values,
-        placeholder,
-        selected = ""
-    ) {
-        resetSelect(select, placeholder);
-
-        const unique = [
-            ...new Set(values.filter(Boolean))
-        ];
-
-        // Preserve previously saved values when editing.
-        if (selected && !unique.includes(selected)) {
-            unique.push(selected);
-        }
-
-        unique.forEach(value => {
-            select.add(new Option(value, value));
-        });
-
-        select.disabled = unique.length === 0;
-
-        if (selected) {
-            select.value = selected;
-        }
-    }
-
-    function getProvinces(regionName) {
-        return Object.keys(
-            locations[regionName] || {}
-        );
-    }
-
-    function getCities(regionName, provinceName) {
-        return Object.keys(
-            locations[regionName]?.[provinceName] || {}
-        );
-    }
-
-    function getBarangays(
-        regionName,
-        provinceName,
-        cityName
-    ) {
-        return (
-            locations[regionName]?.[provinceName]?.[cityName]
-            || []
-        );
-    }
-
-    function inferRegion(provinceName) {
-        for (const [regionName, provinces] of
-            Object.entries(locations)) {
-
-            if (Object.prototype.hasOwnProperty.call(
-                provinces,
-                provinceName
-            )) {
-                return regionName;
-            }
-        }
-
-        return "";
-    }
-
-    function loadRegions(selected = "") {
-        populateSelect(
-            region,
-            regionNames,
-            "Select region",
-            selected
-        );
-    }
-
-    function loadProvinces(selected = "") {
-        populateSelect(
-            province,
-            getProvinces(region.value),
-            "Select province",
-            selected
-        );
-    }
-
-    function loadCities(selected = "") {
-        populateSelect(
-            city,
-            getCities(
-                region.value,
-                province.value
-            ),
-            "Select city",
-            selected
-        );
-    }
-
-    function loadBarangays(selected = "") {
-        populateSelect(
-            barangay,
-            getBarangays(
-                region.value,
-                province.value,
-                city.value
-            ),
-            "Select barangay",
-            selected
-        );
-    }
-
-    region.addEventListener("change", () => {
-        loadProvinces();
-
-        resetSelect(city, "Select city");
-        resetSelect(barangay, "Select barangay");
+    const locationPicker = window.PureViaPhAddress.create({region,province,city,barangay,
+        onChange:()=>{ saveButton.disabled = !locationPicker.isReady; }
     });
-
-    province.addEventListener("change", () => {
-        loadCities();
-
-        resetSelect(barangay, "Select barangay");
-    });
-
-    city.addEventListener("change", () => {
-        loadBarangays();
-    });
-
     /* =====================================
        FORM FIELDS
     ===================================== */
@@ -364,15 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
             setField(field, data[field] ?? "");
         });
 
-        /* RESTORE LOCATION */
-        const selectedRegion = inferRegion(
-            data.province || ""
-        );
-
-        loadRegions(selectedRegion);
-        loadProvinces(data.province || "");
-        loadCities(data.city || "");
-        loadBarangays(data.barangay || "");
+        const restoreLocation = locationPicker.setAddress(data);
 
         /* =====================================
            HOME / OFFICE ONLY
@@ -426,7 +138,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         /* RESET BUTTON */
-        saveButton.disabled = false;
+        saveButton.disabled = true;
+        restoreLocation.then(ready => {
+            saveButton.disabled = !ready;
+            form.dispatchEvent(new CustomEvent("pv:address-restored"));
+        });
     }
 
     /* =====================================
@@ -584,42 +300,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =====================================
-       LOCATION BUTTON
-    ===================================== */
-
-    document.getElementById(
-        "addressLocationButton"
-    )?.addEventListener("click", () => {
-
-        const parts = [
-            form.elements.namedItem(
-                "address_line1"
-            )?.value,
-            barangay.value,
-            city.value,
-            province.value,
-            "Philippines"
-        ].filter(Boolean);
-
-        if (parts.length < 3) {
-            const street = document.getElementById('addressLine1');
-            window.PureViaAccountValidation.setError(street, 'Please select your location and enter your street address first.');
-            street.focus();
-            return;
-        }
-
-        const url =
-            "https://www.google.com/maps/search/?api=1&query=" +
-            encodeURIComponent(parts.join(", "));
-
-        window.open(
-            url,
-            "_blank",
-            "noopener,noreferrer"
-        );
-    });
-
-    /* =====================================
        FORM SUBMISSION
     ===================================== */
 
@@ -647,66 +327,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        /* VALIDATE PROVINCE */
-        const knownProvinces = getProvinces(
-            region.value
-        );
-
-        if (
-            region.value &&
-            knownProvinces.length &&
-            !knownProvinces.includes(
-                province.value
-            )
-        ) {
+        if (!locationPicker.isComplete()) {
             event.preventDefault();
-
-            window.PureViaAccountValidation.setError(province, 'Please select a valid province.');
-
-            province.focus();
+            window.PureViaAccountValidation.setError(region, 'Select your region, province, city / municipality, and barangay.');
+            region.focus();
             return;
         }
-
-        /* VALIDATE CITY */
-        const knownCities = getCities(
-            region.value,
-            province.value
-        );
-
-        if (
-            knownCities.length &&
-            !knownCities.includes(city.value)
-        ) {
-            event.preventDefault();
-
-            window.PureViaAccountValidation.setError(city, 'Please select a valid city.');
-
-            city.focus();
-            return;
-        }
-
-        /* VALIDATE BARANGAY */
-        const knownBarangays = getBarangays(
-            region.value,
-            province.value,
-            city.value
-        );
-
-        if (
-            barangay.value &&
-            knownBarangays.length &&
-            !knownBarangays.includes(
-                barangay.value
-            )
-        ) {
-            event.preventDefault();
-
-            window.PureViaAccountValidation.setError(barangay, 'Please select a valid barangay.');
-
-            barangay.focus();
-            return;
-        }
-
         /* PREVENT DOUBLE SUBMISSION */
         saveButton.disabled = true;
         saveButton.textContent = "Saving...";

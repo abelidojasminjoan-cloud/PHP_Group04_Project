@@ -57,7 +57,7 @@ final class SkinProfile
         return ['assessment_method'=>$method,'skin_type'=>$type,'skin_type_id'=>$typeId,'skin_type_label'=>$typeLabel,'assessment'=>$assessment,'answers'=>$answers,
             'sensitivity'=>SkinTypeFinder::sensitivity($answers,$bank),'concerns'=>$concerns,'main_concern_id'=>$main,'ingredient_preference'=>$preference,
             'avoided_ingredients'=>$avoided,'avoidance_reason'=>$avoided?$reason:'','routine_preference'=>$routine,
-            'questionnaire_version'=>SkinQuestionBank::fingerprint($bank),'rule_version'=>'configured-question-bank-v1','questionnaire_snapshot'=>$definitions,'question_evidence'=>$bank,'observed_concerns'=>$observed];
+            'questionnaire_version'=>SkinQuestionBank::fingerprint($bank),'rule_version'=>'configured-question-bank-v2','questionnaire_snapshot'=>$definitions,'question_evidence'=>$bank,'observed_concerns'=>$observed];
     }
     public static function load(mysqli $conn,int $userId): ?array
     {

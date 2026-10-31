@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const p = result.profile; lastProfile = p; saved = !!result.saved; assessmentId = result.assessment_id || null;
         el("sqForm").hidden = true; el("sqReview").hidden = false; progress("review");
         el("sqReviewLabel").textContent = saved ? "Your saved skin profile" : "Review your skin profile";
-        el("sqResultTitle").textContent = p.skin_type_label ? `${p.skin_type_label} Skin` : "Skin type not determined";
+        el("sqResultTitle").textContent = p.skin_type_label ? `${p.skin_type_label} Skin` : "Choose your skin type";
         const skinTypeDescriptions = {
             normal: "Normal skin generally feels balanced and comfortable, without excessive oiliness or dryness.",
             dry: "Dry skin may feel tight, rough, or flaky and can lack moisture, especially after cleansing.",
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const skinTypeDescription = skinTypeDescriptions[p.skin_type] || "";
         el("sqSkinTypeDescription").textContent = skinTypeDescription;
         el("sqSkinTypeDescription").hidden = !skinTypeDescription;
-        el("sqResultDescription").textContent = p.assessment_method === "manual" ? "Self-reported skin type. Your selection skips the guided skin-type questions." : p.skin_type ? "Suggested from your questionnaire answers. You can confirm or manually change this result." : p.assessment?.needs_followup ? "Your answers overlap. Please try the clarification questions below." : "We couldn't confidently suggest a single skin type. You can update your answers, choose manually, or continue without skin-type filtering.";
+        el("sqResultDescription").textContent = p.assessment_method === "manual" ? "Self-reported skin type. Your selection skips the guided skin-type questions." : p.skin_type ? (p.assessment?.tentative ? "Tentative skin-type estimate: your answers overlap. Confirm whether this describes your skin, or choose manually." : "Suggested from your questionnaire answers. You can confirm or manually change this result.") : p.assessment?.needs_followup ? "Your answers overlap. Please try the clarification questions below." : "We couldn't confidently suggest a single skin type. You can update your answers, choose manually, or continue without skin-type filtering.";
         const summaries = [["Sensitivity", p.sensitivity.level === "unknown" ? "Insufficient information" : `${p.sensitivity.level[0].toUpperCase()}${p.sensitivity.level.slice(1)} reported sensitivity`], ["Main concern", p.main_concern_id ? label(c.choices.concerns, p.main_concern_id) : "No specific concern"], ["Other concerns", p.concerns.filter(id => id !== p.main_concern_id).map(id => label(c.choices.concerns, id)).join(", ") || "None selected"], ["Ingredients to avoid", p.avoided_ingredients.map(id => label(c.choices.ingredients, id)).join(", ") || (p.ingredient_preference === "unsure" ? "Not sure" : "None selected")], ["Routine preference", { basic: "Basic", targeted: "Targeted", unsure: "Simple routine" }[p.routine_preference]]];
         el("sqSummary").replaceChildren(...summaries.map(([key, value]) => { const d = node("div"); d.append(node("dt", key), node("dd", value)); return d; }));
         el("sqSensitivityNotice").hidden = !p.sensitivity.frequent_reaction && p.sensitivity.level !== "high";

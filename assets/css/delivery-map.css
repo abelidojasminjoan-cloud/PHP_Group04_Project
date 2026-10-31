@@ -1,0 +1,20 @@
+.pv-delivery-map { border:1px solid #ddd2c5; border-radius:12px; background:#fff; overflow:hidden; margin-top:18px; width:100%; min-width:0; }
+.pv-delivery-map .pv-delivery-map-toolbar,.pv-delivery-map .pv-delivery-map-footer { padding:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.pv-delivery-map .pv-delivery-map-toolbar strong { color:#284d3c; font-size:14px; font-weight:600; }
+.pv-delivery-map .pv-delivery-map-toolbar>div,.pv-delivery-map .pv-delivery-map-footer>div { display:flex; gap:8px; flex-wrap:wrap; }
+.pv-delivery-map .pv-map-button { width:auto; min-height:38px; padding:8px 13px; border:1px solid #38634f; border-radius:7px; background:#fff; color:#38634f; font:500 12px/1.4 'Poppins',sans-serif; cursor:pointer; }
+.pv-delivery-map .pv-map-button:hover:not(:disabled) { background:#edf3ee; }
+.pv-delivery-map .pv-map-button:focus-visible { outline:2px solid #38634f; outline-offset:3px; }
+.pv-delivery-map .pv-map-button:disabled { opacity:.5; cursor:not-allowed; }
+.pv-delivery-map .pv-map-confirm { background:#38634f; color:#fff; }
+.pv-delivery-map .pv-map-confirm:hover:not(:disabled) { background:#31382c; }
+.pv-delivery-map .pv-delivery-map-canvas { width:100%; height:310px; background:#eeefe8; position:relative; }
+.pv-delivery-map .pv-delivery-map-canvas>[data-map-placeholder] { display:grid; place-items:center; height:100%; margin:0; padding:24px; text-align:center; color:#706e63; font-size:13px; }
+.pv-delivery-map .pv-delivery-map-status { padding:12px 16px 0; margin:0; font-size:12px; line-height:1.7; color:#77766e; }
+.pv-delivery-map .pv-delivery-map-status.is-error { color:#b23e33; }
+.pv-delivery-map .pv-delivery-map-status.is-saved { color:#38634f; }
+.pv-delivery-map [data-map-coordinates] { font-size:11px; color:#77766e; overflow-wrap:anywhere; }
+.pv-delivery-map .pv-delivery-map-link { display:inline-block; margin:0 16px 16px; font-size:12px; color:#38634f; text-underline-offset:3px; }
+.pv-delivery-map [hidden] { display:none!important; }
+.pv-location-directory-status { grid-column:1/-1; margin:0; color:#77766e; font-size:12px; line-height:1.7; }
+@media(max-width:600px) { .pv-delivery-map .pv-delivery-map-canvas { height:260px; } .pv-delivery-map .pv-delivery-map-toolbar,.pv-delivery-map .pv-delivery-map-footer { padding:12px; } }
