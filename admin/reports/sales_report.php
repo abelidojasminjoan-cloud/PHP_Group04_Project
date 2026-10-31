@@ -668,20 +668,41 @@ $buyers = srRows($conn, "
       AND created_at < ?
 ", $from, $end)[0]['total'];
 
+
 /* ==========================================
-   CSV EXPORT
+   PUREVIA COMPLETE CSV REPORT
 ========================================== */
 
 if (($_GET['export'] ?? '') === 'csv') {
 
+    require_once __DIR__
+        . '/../../services/SalesDetailedCsv.php';
+
+    $exportStatus = $_GET['order_status'] ?? 'all';
+
+    $allowedStatuses = array_merge(
+        ['all'],
+        array_keys($statusLabels)
+    );
+
+    if (
+        !is_string($exportStatus) ||
+        !in_array($exportStatus, $allowedStatuses, true)
+    ) {
+        http_response_code(422);
+        exit('Invalid order status filter.');
+    }
+
     header('Content-Type: text/csv; charset=UTF-8');
 
     header(
-        'Content-Disposition: attachment; filename="purevia-sales-'
-        . $from . '-to-' . $to . '.csv"'
+        'Content-Disposition: attachment; filename="' .
+        'purevia-complete-sales-' .
+        $from . '-to-' . $to . '.csv"'
     );
 
-    header('Cache-Control: no-store');
+    header('Cache-Control: private, no-store');
+    header('X-Content-Type-Options: nosniff');
 
     $out = fopen('php://output', 'w');
 
@@ -698,46 +719,67 @@ if (($_GET['export'] ?? '') === 'csv') {
         );
     };
 
+    /* ======================================
+       1. GENERAL SALES SUMMARY
+    ====================================== */
+
     $writeCsv([
-        'PureVia Sales Report (by order date)',
+        'PUREVIA SALES REPORT',
+        'From',
         $from,
+        'To',
         $to
     ]);
 
     $writeCsv([]);
+    $writeCsv(['GENERAL SALES SUMMARY', 'VALUE']);
 
     $summaryRows = [
         ['Orders Placed', $totalOrders],
-        ['Gross Collected', $overview['gross_paid']],
-        ['Completed Refunds', $overview['refunds_paid']],
-        ['Net Collected', $overview['net_paid']],
-        ['Pending Payment Value', $overview['pending_value']],
+        ['Gross Collected (PHP)', $overview['gross_paid']],
+        ['Completed Refunds (PHP)', $overview['refunds_paid']],
+        ['Net Collected (PHP)', $overview['net_paid']],
+        ['Pending Payment Value (PHP)', $overview['pending_value']],
         ['Return Requests', $returnCount],
         ['Refund Requests', $refundRequests],
-        ['Replacement Requests', $replacementRequests]
+        ['Replacement Requests', $replacementRequests],
+        ['Registered Customers (All Time)', $customers['total']],
+        ['Active Customers (All Time)', $customers['active']],
+        ['Customers Who Ordered (Period)', $buyers]
     ];
 
     foreach ($summaryRows as $row) {
         $writeCsv($row);
     }
 
+    /* ======================================
+       2. ORDER STATUS SUMMARY
+    ====================================== */
+
     $writeCsv([]);
-    $writeCsv(['Order Status', 'Count', 'Percent']);
+    $writeCsv(['ORDER STATUS SUMMARY']);
+    $writeCsv(['Order Status', 'Count', 'Percentage']);
 
     foreach ($orderStatuses as $status => $count) {
+
         $percent = $totalOrders > 0
-            ? round(100 * $count / $totalOrders, 1)
+            ? (100 * $count / $totalOrders)
             : 0;
 
         $writeCsv([
             $statusLabels[$status],
             $count,
-            $percent . '%'
+            number_format($percent, 2, '.', '') . '%'
         ]);
     }
 
+    /* ======================================
+       3. RETURN AND REPLACEMENT SUMMARY
+    ====================================== */
+
     $writeCsv([]);
-    $writeCsv(['Return Resolution', 'Status', 'Count']);
+    $writeCsv(['RETURN AND REPLACEMENT SUMMARY']);
+    $writeCsv(['Resolution', 'Status', 'Count']);
 
     foreach ($returnRows as $row) {
         $writeCsv([
@@ -747,60 +789,249 @@ if (($_GET['export'] ?? '') === 'csv') {
         ]);
     }
 
-    $writeCsv([]);
-    $writeCsv([
-        'Order Number',
-        'Placed At',
-        'Order Status',
-        'Payment Status',
-        'Order Total',
-        'Gross Paid',
-        'Refunded',
-        'Net Paid'
-    ]);
+  
+/* ======================================
+   4. ORGANIZED CUSTOMER SALES TABLES
+====================================== */
 
-    $orders = srRows($conn, "
-        SELECT
-            o.order_number,
-            o.created_at,
-            o.order_status,
-            o.payment_status,
-            o.total_amount,
+/*
+ * Capture the detailed CSV rows from the
+ * existing service, then organize them
+ * into smaller tables.
+ *
+ * The database queries remain unchanged.
+ */
 
-            COALESCE(pay.gross_paid, 0)
-                AS gross_paid,
+$detailHeaders = [];
+$detailRows = [];
 
-            $refundAmount AS refunded,
+$captureCsv = static function (array $values) use (
+    &$detailHeaders,
+    &$detailRows
+): void {
 
-            COALESCE(pay.gross_paid, 0)
-                - $refundAmount AS net_paid
-
-        FROM orders o
-
-        LEFT JOIN (
-            SELECT
-                order_id,
-                SUM(amount) AS gross_paid
-            FROM payments
-            WHERE payment_status IN ('paid', 'refunded')
-            GROUP BY order_id
-        ) pay
-            ON pay.order_id = o.id
-
-        $refundJoin
-
-        WHERE o.created_at >= ?
-          AND o.created_at < ?
-
-        ORDER BY o.created_at DESC, o.id DESC
-    ", $from, $end);
-
-    foreach ($orders as $order) {
-        $writeCsv(array_values($order));
+    if ($detailHeaders === []) {
+        $detailHeaders = $values;
+        return;
     }
 
-    fclose($out);
-    exit;
+    $detailRows[] = $values;
+};
+
+
+pureviaWriteDetailedSalesRows(
+    $conn,
+    $from,
+    $end,
+    $exportStatus,
+    false,
+    $hasRefunds,
+    $captureCsv
+);
+
+
+/*
+ * Read fields using their header names,
+ * rather than relying on column numbers.
+ */
+
+$columnIndex = array_flip($detailHeaders);
+
+$get = static function (
+    array $row,
+    string $column
+) use ($columnIndex): string {
+
+    if (!isset($columnIndex[$column])) {
+        return '';
+    }
+
+    return (string) (
+        $row[$columnIndex[$column]] ?? ''
+    );
+};
+
+/*
+ * Verify that the service returned the
+ * expected detailed CSV structure.
+ */
+
+foreach ([
+    'Order Number',
+    'Order Date (Asia/Manila)',
+    'Customer Name',
+    'Product Purchased',
+    'Order Status (Current)'
+] as $requiredColumn) {
+
+    if (!isset($columnIndex[$requiredColumn])) {
+        throw new RuntimeException(
+            'Detailed CSV column missing: ' .
+            $requiredColumn
+        );
+    }
+}
+
+/*
+ * Collect unique orders.
+ *
+ * Purchased items remain separate rows,
+ * but customer/order information only
+ * appears once in the other sections.
+ */
+
+$uniqueOrders = [];
+
+foreach ($detailRows as $row) {
+
+    $orderNumber = $get($row, 'Order Number');
+
+    if (!isset($uniqueOrders[$orderNumber])) {
+        $uniqueOrders[$orderNumber] = $row;
+    }
+}
+
+/* ======================================
+   4. CUSTOMER ORDER INFORMATION
+====================================== */
+
+$writeCsv([]);
+$writeCsv(['CUSTOMER ORDER INFORMATION']);
+
+$writeCsv([
+    'Order Number',
+    'Order Date',
+    'Customer Name',
+    'Customer Email',
+    'Customer Phone',
+    'Order Status'
+]);
+
+foreach ($uniqueOrders as $row) {
+
+    $writeCsv([
+        $get($row, 'Order Number'),
+        $get($row, 'Order Date (Asia/Manila)'),
+        $get($row, 'Customer Name'),
+        $get($row, 'Customer Email'),
+        $get($row, 'Customer Phone'),
+        $get($row, 'Order Status (Current)')
+    ]);
+}
+
+/* ======================================
+   5. PURCHASED PRODUCTS
+====================================== */
+
+$writeCsv([]);
+$writeCsv(['PURCHASED PRODUCTS']);
+
+$writeCsv([
+    'Order Number',
+    'Product Purchased',
+    'Category',
+    'Variant / Size',
+    'Quantity',
+    'Unit Price (PHP)',
+    'Item Subtotal (PHP)'
+]);
+
+foreach ($detailRows as $row) {
+
+    $writeCsv([
+        $get($row, 'Order Number'),
+        $get($row, 'Product Purchased'),
+        $get($row, 'Product Category'),
+        $get($row, 'Variant / Size'),
+        $get($row, 'Quantity'),
+        $get($row, 'Unit Price (PHP)'),
+        $get($row, 'Item Subtotal (PHP)')
+    ]);
+}
+
+/* ======================================
+   6. PAYMENT DETAILS
+====================================== */
+
+$writeCsv([]);
+$writeCsv(['PAYMENT DETAILS']);
+
+$writeCsv([
+    'Order Number',
+    'Payment Method',
+    'Payment Status',
+    'Order Total (PHP)',
+    'Gross Paid (PHP)',
+    'Refunded (PHP)',
+    'Net Paid (PHP)'
+]);
+
+foreach ($uniqueOrders as $row) {
+
+    $writeCsv([
+        $get($row, 'Order Number'),
+        $get($row, 'Payment Method(s)'),
+        $get($row, 'Payment Status (Current)'),
+        $get($row, 'Order Total (PHP - repeated)'),
+        $get($row, 'Gross Paid (PHP - repeated)'),
+        $get($row, 'Refunded (PHP - repeated)'),
+        $get($row, 'Net Paid (PHP - repeated)')
+    ]);
+}
+
+/* ======================================
+   7. PAYMENT REFERENCES
+====================================== */
+
+$writeCsv([]);
+$writeCsv(['PAYMENT REFERENCES']);
+
+$writeCsv([
+    'Order Number',
+    'Payment Reference',
+    'Payment Verified At'
+]);
+
+foreach ($uniqueOrders as $row) {
+
+    $writeCsv([
+        $get($row, 'Order Number'),
+        $get($row, 'Payment Reference'),
+        $get($row, 'Payment Verified At')
+    ]);
+}
+
+/* ======================================
+   8. DELIVERY INFORMATION
+====================================== */
+
+$writeCsv([]);
+$writeCsv(['DELIVERY INFORMATION']);
+
+$writeCsv([
+    'Order Number',
+    'Recipient Name',
+    'Delivery Phone',
+    'Full Delivery Address'
+]);
+
+foreach ($uniqueOrders as $row) {
+
+    $writeCsv([
+        $get($row, 'Order Number'),
+        $get($row, 'Recipient Name'),
+        $get($row, 'Delivery Phone'),
+        $get($row, 'Full Delivery Address')
+    ]);
+}
+
+// ==========================================
+// FINISH CSV EXPORT
+// ==========================================
+
+fclose($out);
+exit;
+
 }
 
 
@@ -844,19 +1075,19 @@ $csvUrl = '?' . http_build_query([
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
-    <!-- SHARED SIDEBAR CSS -->
-
-    <link
-        rel="stylesheet"
-        href="<?= srEsc(BASE_URL) ?>/assets/css/sidemenu.css"
-    >
-
     
+<!-- SHARED SIDEBAR CSS -->
+
+<link
+    rel="stylesheet"
+    href="<?= srEsc(BASE_URL) ?>/assets/css/sidemenu.css"
+>
+
 <!-- SALES REPORT CSS -->
 
 <link
     rel="stylesheet"
-    href="<?= srEsc(BASE_URL) ?>/assets/css/sales_report.css?v=2"
+    href="<?= srEsc(BASE_URL) ?>/assets/css/sales_report.css?v=3"
 >
 
 
@@ -901,36 +1132,148 @@ $csvUrl = '?' . http_build_query([
                  PAGE HEADER
             =================================== -->
 
-            <section class="sales-page-header">
+           
+<!-- ==========================================
+     SALES REPORT HEADER
+========================================== -->
 
-                <div class="sales-heading">
+<section class="sales-page-header">
 
-                    <h1>Sales Reports</h1>
+    <div class="sales-heading">
 
-                    <p>
-                        Sales Report &middot;
-                        <?= date('F j, Y', strtotime($from)) ?>
-                        to
-                        <?= date('F j, Y', strtotime($to)) ?>
-                    </p>
+        <h1>Sales Reports</h1>
 
-                </div>
+        <p>
+            Sales Report &middot;
+            <?= date('F j, Y', strtotime($from)) ?>
+            to
+            <?= date('F j, Y', strtotime($to)) ?>
+        </p>
 
-                <!-- EXPORT CSV -->
+    </div>
 
-                <a
-                    href="<?= srEsc($csvUrl) ?>"
-                    class="sales-add-btn"
-                    id="exportCsv"
-                >
+</section>
 
-                    <i class="fa-solid fa-file-csv"></i>
 
-                    Export CSV
+<!-- ==========================================
+     EXPORT SALES REPORT PANEL
+========================================== -->
 
-                </a>
+<section
+    class="sales-csv-panel"
+    aria-labelledby="salesCsvTitle"
+>
 
-            </section>
+    <div class="sales-csv-panel-header">
+
+        <div class="sales-csv-panel-heading">
+
+            <div class="sales-csv-panel-icon">
+                <i class="fa-solid fa-file-csv"
+                   aria-hidden="true"></i>
+            </div>
+
+            <div>
+                <h2 id="salesCsvTitle">
+                    Export Sales Report
+                </h2>
+
+               <p>
+    Download detailed customer purchases,
+    payment records, order statuses,
+    and delivery information.
+</p>
+            </div>
+
+        </div>
+
+        <span class="sales-csv-period">
+            <i class="fa-regular fa-calendar"></i>
+
+            <?= srEsc($from) ?>
+            &mdash;
+            <?= srEsc($to) ?>
+        </span>
+
+    </div>
+
+    <form
+        method="GET"
+        class="sales-csv-options"
+        aria-label="Export complete sales report"
+    >
+
+        <!-- APPLIED REPORT DATES -->
+
+        <input
+            type="hidden"
+            name="range"
+            value="custom"
+        >
+
+        <input
+            type="hidden"
+            name="from"
+            value="<?= srEsc($from) ?>"
+        >
+
+        <input
+            type="hidden"
+            name="to"
+            value="<?= srEsc($to) ?>"
+        >
+
+        <input
+            type="hidden"
+            name="export"
+            value="csv"
+        >
+
+        <!-- ORDER STATUS -->
+
+        <div class="sales-csv-field">
+
+            <label for="csvOrderStatus">
+                Order Status
+            </label>
+
+            <select
+                id="csvOrderStatus"
+                name="order_status"
+            >
+                <option value="all">
+                    All Statuses
+                </option>
+
+                <?php foreach ($statusLabels as $value => $label): ?>
+
+                    <option value="<?= srEsc($value) ?>">
+                        <?= srEsc($label) ?>
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+
+        </div>
+
+        
+        <!-- EXPORT BUTTON -->
+
+        <button
+            type="submit"
+            class="sales-add-btn sales-csv-download"
+            id="exportCsv"
+        >
+            <i class="fa-solid fa-download"
+               aria-hidden="true"></i>
+
+            Export Complete CSV
+        </button>
+
+    </form>
+
+</section>
 
             
 <!-- ==========================================

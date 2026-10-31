@@ -1,0 +1,158 @@
+
+/* ==========================================
+   PUREVIA QUIZ ANALYTICS CSV EXPORT
+========================================== */
+
+.qa-export-panel {
+    margin: 22px 0 26px;
+    background: #ffffff;
+    border: 1px solid #ddd5ca;
+    border-radius: 15px;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+
+.qa-export-heading {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 24px 26px;
+    border-bottom: 1px solid #ece7df;
+}
+
+.qa-export-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e5efe3;
+    color: #53634b;
+    border-radius: 12px;
+    font-size: 22px;
+}
+
+.qa-export-heading h2 {
+    margin: 0 0 6px;
+    color: #293126;
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.qa-export-heading p {
+    margin: 0;
+    color: #8a786d;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.qa-export-form {
+    padding: 24px 26px 26px;
+}
+
+.qa-export-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.qa-export-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+    color: #53634b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.qa-export-grid input,
+.qa-export-grid select {
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+    padding: 0 13px;
+    color: #293126;
+    background: #f8f6f1;
+    border: 1px solid #ddd5ca;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 12px;
+}
+
+.qa-export-grid input:focus,
+.qa-export-grid select:focus {
+    outline: 2px solid #a9baa0;
+    outline-offset: 1px;
+}
+
+.qa-export-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #ece7df;
+}
+
+.qa-export-footer p {
+    margin: 0;
+    flex: 1;
+    color: #8a786d;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.qa-export-footer button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 9px;
+    color: #ffffff;
+    background: #53634b;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.qa-export-footer button:hover {
+    background: #43523d;
+}
+
+@media (max-width: 1000px) {
+    .qa-export-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .qa-export-heading {
+        padding: 20px 17px;
+        align-items: flex-start;
+    }
+
+    .qa-export-form {
+        padding: 20px 17px;
+    }
+
+    .qa-export-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .qa-export-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .qa-export-footer button {
+        width: 100%;
+    }
+}

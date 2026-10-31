@@ -212,8 +212,19 @@ try {
         href="../assets/css/admin_dashboard.css"
     >
 
-    <!-- Responsive adjustments -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
+    
+<!-- Responsive adjustments -->
+<link
+    rel="stylesheet"
+    href="<?= BASE_URL ?>/assets/css/responsive.css"
+>
+
+<!-- PUREVIA COOKIE CONSENT CSS -->
+<link
+    rel="stylesheet"
+    href="<?= BASE_URL ?>/assets/css/cookie-consent.css?v=2"
+>
+
 </head>
 
 
@@ -799,6 +810,346 @@ try {
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-</body>
 
+
+<!-- ==========================================
+     PUREVIA ADMIN COOKIE CONSENT
+========================================== -->
+
+<div
+    id="pvCookieBanner"
+    class="pv-cookie-banner"
+    role="region"
+    aria-label="PureVia Cookie Consent"
+    hidden
+>
+    <div class="pv-cookie-banner-inner">
+
+        <div class="pv-cookie-icon">
+            <i class="fa-solid fa-cookie-bite"></i>
+        </div>
+
+        <div class="pv-cookie-content">
+
+            <div class="pv-cookie-eyebrow">
+                PUREVIA PRIVACY
+            </div>
+
+            <h2>Your Privacy Matters</h2>
+
+            <p>
+                PureVia uses essential cookies for secure
+                login and session management. You can
+                choose whether to allow optional preferences
+                and analytics.
+            </p>
+
+        </div>
+
+        <div class="pv-cookie-actions">
+
+            <button
+                type="button"
+                id="pvCookieAccept"
+                class="pv-cookie-btn pv-cookie-accept"
+            >
+                Accept All
+            </button>
+
+            <button
+                type="button"
+                id="pvCookieReject"
+                class="pv-cookie-btn pv-cookie-reject"
+            >
+                Reject Optional
+            </button>
+
+            <button
+                type="button"
+                id="pvCookieCustomize"
+                class="pv-cookie-manage"
+            >
+                Manage Preferences
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ==========================================
+     COOKIE PREFERENCES MODAL
+========================================== -->
+
+<div
+    id="pvCookieOverlay"
+    class="pv-cookie-overlay"
+    hidden
+>
+    <div
+        class="pv-cookie-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pvCookieModalTitle"
+    >
+
+        <div class="pv-cookie-modal-header">
+
+            <h2 id="pvCookieModalTitle">
+                Cookie Preferences
+            </h2>
+
+            <button
+                type="button"
+                id="pvCookieClose"
+                class="pv-cookie-close"
+                aria-label="Close cookie preferences"
+            >
+                &times;
+            </button>
+
+        </div>
+
+        <p class="pv-cookie-modal-description">
+            Choose which optional cookies PureVia
+            may use. Essential cookies remain active
+            for authentication and account security.
+        </p>
+
+        <!-- ESSENTIAL COOKIES -->
+
+        <div class="pv-cookie-option">
+
+            <div class="pv-cookie-option-copy">
+                <h3>Essential Cookies</h3>
+                <p>
+                    Required for secure login,
+                    authentication, and sessions.
+                </p>
+            </div>
+
+            <span class="pv-cookie-required">
+                Always Active
+            </span>
+
+        </div>
+
+        <!-- PREFERENCES -->
+
+        <div class="pv-cookie-option">
+
+            <div class="pv-cookie-option-copy">
+                <h3>Preference Storage</h3>
+                <p>
+                    Remember optional dashboard
+                    preferences.
+                </p>
+            </div>
+
+            <label class="pv-cookie-switch">
+
+                <input
+                    type="checkbox"
+                    id="pvCookiePreferences"
+                    aria-label="Allow preference storage"
+                >
+
+                <span class="pv-cookie-slider"></span>
+
+            </label>
+
+        </div>
+
+        <!-- ANALYTICS -->
+
+        <div class="pv-cookie-option">
+
+            <div class="pv-cookie-option-copy">
+                <h3>Analytics Cookies</h3>
+                <p>
+                    Allow optional usage analytics,
+                    if enabled on this website.
+                </p>
+            </div>
+
+            <label class="pv-cookie-switch">
+
+                <input
+                    type="checkbox"
+                    id="pvCookieAnalytics"
+                    aria-label="Allow analytics cookies"
+                >
+
+                <span class="pv-cookie-slider"></span>
+
+            </label>
+
+        </div>
+
+        <p class="pv-cookie-modal-note">
+            Essential cookies cannot be disabled
+            because they protect your admin session.
+        </p>
+
+        <div class="pv-cookie-modal-actions">
+
+            <button
+                type="button"
+                id="pvCookieSave"
+                class="pv-cookie-btn pv-cookie-accept"
+            >
+                Save Preferences
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ==========================================
+     PUREVIA COOKIE CONSENT JAVASCRIPT
+========================================== -->
+
+<script nonce="<?= pvScriptNonce() ?>">
+document.addEventListener('DOMContentLoaded', function () {
+
+    const KEY = 'purevia_admin_cookie_consent_v1';
+
+    const banner = document.getElementById('pvCookieBanner');
+    const overlay = document.getElementById('pvCookieOverlay');
+
+    const accept = document.getElementById('pvCookieAccept');
+    const reject = document.getElementById('pvCookieReject');
+    const customize = document.getElementById('pvCookieCustomize');
+    const close = document.getElementById('pvCookieClose');
+    const save = document.getElementById('pvCookieSave');
+
+    const preferences =
+        document.getElementById('pvCookiePreferences');
+
+    const analytics =
+        document.getElementById('pvCookieAnalytics');
+
+    if (!banner || !overlay) return;
+
+    function readConsent() {
+        try {
+            const value = JSON.parse(
+                localStorage.getItem(KEY) || 'null'
+            );
+
+            if (
+                value &&
+                value.version === 1 &&
+                typeof value.preferences === 'boolean' &&
+                typeof value.analytics === 'boolean'
+            ) {
+                return value;
+            }
+        } catch (error) {
+            // No valid stored consent.
+        }
+
+        return null;
+    }
+
+    function storeConsent(allowPreferences, allowAnalytics) {
+
+        const consent = {
+            version: 1,
+            essential: true,
+            preferences: Boolean(allowPreferences),
+            analytics: Boolean(allowAnalytics),
+            savedAt: new Date().toISOString()
+        };
+
+        try {
+            localStorage.setItem(
+                KEY,
+                JSON.stringify(consent)
+            );
+        } catch (error) {
+            // Continue if browser storage is disabled.
+        }
+
+        window.pureviaAdminConsent = consent;
+
+        banner.hidden = true;
+        overlay.hidden = true;
+    }
+
+    function openPreferences() {
+        const current = readConsent();
+
+        preferences.checked = current?.preferences ?? false;
+        analytics.checked = current?.analytics ?? false;
+
+        overlay.hidden = false;
+        close.focus();
+    }
+
+    function closePreferences() {
+        overlay.hidden = true;
+
+        if (!banner.hidden) {
+            customize.focus();
+        }
+    }
+
+    const existing = readConsent();
+
+    if (existing) {
+        preferences.checked = existing.preferences;
+        analytics.checked = existing.analytics;
+        window.pureviaAdminConsent = existing;
+
+        banner.hidden = true;
+    } else {
+        window.pureviaAdminConsent = {
+            version: 1,
+            essential: true,
+            preferences: false,
+            analytics: false
+        };
+
+        banner.hidden = false;
+    }
+
+    accept.addEventListener('click', function () {
+        storeConsent(true, true);
+    });
+
+    reject.addEventListener('click', function () {
+        storeConsent(false, false);
+    });
+
+    customize.addEventListener('click', openPreferences);
+
+    close.addEventListener('click', closePreferences);
+
+    save.addEventListener('click', function () {
+        storeConsent(
+            preferences.checked,
+            analytics.checked
+        );
+    });
+
+    overlay.addEventListener('click', function (event) {
+        if (event.target === overlay) {
+            closePreferences();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !overlay.hidden) {
+            closePreferences();
+        }
+    });
+
+});
+</script>
+
+</body>
 </html>
