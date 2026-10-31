@@ -338,10 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
             // HANDLE FAILED ORDER
             // =================================
 
-            if (response.status === 409 && result.redirect_url) {
-                const retryUrl = new URL(result.redirect_url, location.href);
-                if (retryUrl.origin === location.origin) { location.assign(retryUrl.href); return; }
-            }
             if (!response.ok || !result.success) {
                 throw new Error(
                     result.message ||
