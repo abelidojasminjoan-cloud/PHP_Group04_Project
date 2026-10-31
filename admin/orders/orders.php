@@ -168,7 +168,12 @@ $adminInitial = strtoupper(
          ORDERS CSS
     ====================================================== -->
 
-    <link rel="stylesheet" href="../../assets/css/orders.css">
+  
+<link
+    rel="stylesheet"
+    href="<?= BASE_URL ?>/assets/css/orders.css?v=<?= filemtime(__DIR__ . '/../../assets/css/orders.css') ?>"
+>
+
 
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
@@ -322,6 +327,42 @@ $adminInitial = strtoupper(
 
                     </div>
 
+                    
+<!-- ==========================================
+     ORDERS DATE FILTER
+========================================== -->
+
+<!-- FROM DATE -->
+<div class="orders-date-filter">
+    <label for="orderDateFrom">From</label>
+
+    <input
+        type="date"
+        id="orderDateFrom"
+        aria-label="Filter orders from date"
+    >
+</div>
+
+<!-- TO DATE -->
+<div class="orders-date-filter">
+    <label for="orderDateTo">To</label>
+
+    <input
+        type="date"
+        id="orderDateTo"
+        aria-label="Filter orders to date"
+    >
+</div>
+
+<!-- CLEAR DATE FILTERS -->
+<button
+    type="button"
+    id="clearOrderDates"
+    class="orders-clear-dates"
+>
+    Clear Dates
+</button>
+
 
                 </div>
 
@@ -442,6 +483,7 @@ $adminInitial = strtoupper(
                                         data-search="<?= pvHtml(
                                             $searchData
                                         ) ?>"
+                                        data-date="<?= date('Y-m-d', strtotime($order['created_at'])) ?>"
 
                                         data-order-id="<?= pvHtml(
                                             strtolower(

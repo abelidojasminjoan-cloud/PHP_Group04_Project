@@ -189,6 +189,20 @@ $adminEmail = $admin['email'] ?? '';
         <?php endif; ?>
 
 
+        
+<!-- ONE FORM FOR ALL SECURITY SETTINGS -->
+<form
+    id="securityUnifiedForm"
+    action="../../actions/admin/security/update-password-policy.php"
+    method="POST"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="<?= pvHtml($csrfToken) ?>"
+    >
+
+    
         <!-- =================================================
              SETTINGS GRID
         ================================================== -->
@@ -200,13 +214,11 @@ $adminEmail = $admin['email'] ?? '';
                  PASSWORD POLICY
             ============================================== -->
 
-            <form
-                id="passwordPolicyForm"
-                action="../../actions/admin/security/update-password-policy.php"
-                method="POST"
-                class="security-settings-card password-policy-card"
-            >
-                <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
+           <div
+    id="passwordPolicyForm"
+    class="security-settings-card password-policy-card"
+>
+              
                 <h2>Password Policy</h2>
 
                 <div class="password-policy-row">
@@ -266,27 +278,17 @@ $adminEmail = $admin['email'] ?? '';
                     <strong>Current requirement</strong>
                     <p id="passwordPolicySummary"><?= pvHtml(securityPasswordPolicySummary($settings)) ?></p>
                 </div>
-                <button type="submit" class="security-save-button">Save Password Policy</button>
-            </form>
-
+             </div>
 
             <!-- =============================================
                  SESSION & LOCKOUT
             ============================================== -->
 
-            <form
-                action="../../actions/admin/security/update-session-policy.php"
-                method="POST"
-                class="security-settings-card"
-            >
-                <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
+        
+<div class="security-settings-card">
 
-                <h2>
-                    Session &amp; Lockout
-                </h2>
+    <h2>Session &amp; Lockout</h2>
 
-
-                <!-- SESSION TIMEOUT -->
 
                 <div class="security-setting-row">
 
@@ -374,14 +376,7 @@ $adminEmail = $admin['email'] ?? '';
                 </div>
 
 
-                <button
-                    type="submit"
-                    class="security-save-button"
-                >
-                    Save Changes
-                </button>
-
-            </form>
+        </div>
 
 
         </section>
@@ -666,36 +661,21 @@ $adminEmail = $admin['email'] ?? '';
                                     </td>
 
 
-                                    <!-- ACTION -->
+                                    
 
-                                    <td>
+<!-- ACTION: UNLOCK ON SAVE -->
+<td>
+    <label class="security-unlock-choice">
+        <input
+            type="checkbox"
+            name="unlock_user_ids[]"
+            value="<?= (int) $account['id'] ?>"
+            aria-label="Unlock <?= pvHtml($fullName) ?>"
+        >
 
-                                        <form
-                                            action="../../actions/admin/security/unlock-account.php"
-                                            method="POST"
-                                            class="unlock-form"
-                                        >
-                                            <input type="hidden" name="csrf_token" value="<?= pvHtml($csrfToken) ?>">
-
-                                            <input
-                                                type="hidden"
-                                                name="user_id"
-                                                value="<?= (int) $account['id'] ?>"
-                                            >
-
-                                            <button
-                                                type="submit"
-                                                class="unlock-account-button"
-                                                data-user-name="<?= pvHtml(
-                                                    $fullName
-                                                ) ?>"
-                                            >
-                                                Unlock Account
-                                            </button>
-
-                                        </form>
-
-                                    </td>
+        <span>Unlock on Save</span>
+    </label>
+</td>
 
 
                                 </tr>
@@ -739,8 +719,28 @@ $adminEmail = $admin['email'] ?? '';
 
             </div>
 
+            
+<!-- ==========================================
+     ONE SAVE BUTTON FOR ALL SECURITY SETTINGS
+========================================== -->
+
 
         </section>
+        <!-- END LOCKED ACCOUNTS SECTION -->
+
+        <!-- SINGLE SAVE BUTTON -->
+        <div class="security-unified-actions">
+
+            <button
+                type="submit"
+                class="security-save-button"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+    </form>
 
 
     </main>
