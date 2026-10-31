@@ -21,9 +21,10 @@ function productAdminAllowed(mysqli $conn): bool
 
 function productEditData(mysqli $conn, int $productId, bool $lock = false): ?array
 {
-    $read = function (string $sql) use ($conn, $productId): array {
+    $read = function (string $sql, int $parameterCount = 1) use ($conn, $productId): array {
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('i', $productId);
+        $parameters = array_fill(0, $parameterCount, $productId);
+        $stmt->bind_param(str_repeat('i', $parameterCount), ...$parameters);
         $stmt->execute();
         $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
@@ -53,26 +54,27 @@ function productEditData(mysqli $conn, int $productId, bool $lock = false): ?arr
         SELECT benefit_text FROM product_benefits
         WHERE product_id = ? ORDER BY sort_order, id
     "), 'benefit_text');
-    $product['skin_types'] = $read("
-        SELECT s.id, s.skin_type_name AS label, s.status
-        FROM product_skin_types p INNER JOIN skin_types s ON s.id = p.skin_type_id
-        WHERE p.product_id = ? ORDER BY s.id
-    ");
-    $product['concerns'] = $read("
-        SELECT s.id, s.concern_name AS label, s.status
-        FROM product_concerns p INNER JOIN skin_concerns s ON s.id = p.concern_id
-        WHERE p.product_id = ? ORDER BY s.id
-    ");
-    $product['ingredients'] = $read("
-        SELECT s.id, s.ingredient_name AS label, s.status
-        FROM product_ingredients p INNER JOIN ingredients s ON s.id = p.ingredient_id
-        WHERE p.product_id = ? ORDER BY s.id
-    ");
-    $product['suitability_tags'] = $read("
-        SELECT t.id, t.name AS label, t.status FROM product_suitability_tags pt
-        INNER JOIN suitability_tags t ON t.id=pt.suitability_tag_id
-        WHERE pt.product_id=? ORDER BY t.id
-    ");
+    // One prepared request for all selected taxonomy values, including inactive values.
+    $selections = $read("
+        SELECT 'skin_types' AS collection, s.id, s.skin_type_name AS label, s.status
+        FROM product_skin_types p INNER JOIN skin_types s ON s.id=p.skin_type_id WHERE p.product_id=?
+        UNION ALL
+        SELECT 'concerns', s.id, s.concern_name, s.status
+        FROM product_concerns p INNER JOIN skin_concerns s ON s.id=p.concern_id WHERE p.product_id=?
+        UNION ALL
+        SELECT 'ingredients', s.id, s.ingredient_name, s.status
+        FROM product_ingredients p INNER JOIN ingredients s ON s.id=p.ingredient_id WHERE p.product_id=?
+        UNION ALL
+        SELECT 'suitability_tags', t.id, t.name, t.status
+        FROM product_suitability_tags p INNER JOIN suitability_tags t ON t.id=p.suitability_tag_id WHERE p.product_id=?
+        ORDER BY collection, id
+    ", 4);
+    foreach (['skin_types','concerns','ingredients','suitability_tags'] as $collection) $product[$collection]=[];
+    foreach ($selections as $selection) {
+        $collection=$selection['collection'];
+        unset($selection['collection']);
+        $product[$collection][]=$selection;
+    }
     $product['suitability_settings'] = ProductSuitability::read($conn, $productId);
     $product['revision'] = hash('sha256', json_encode($product, JSON_THROW_ON_ERROR));
     return $product;

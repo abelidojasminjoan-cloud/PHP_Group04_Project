@@ -354,12 +354,14 @@ document.addEventListener("DOMContentLoaded", function () {
         for (const [id, key] of Object.entries({ productIngredientsComplete: 'ingredients_complete', productGentle: 'gentle', productTargetedApproved: 'targeted_approved', productSunscreenVerified: 'sunscreen_verified' })) document.getElementById(id).checked = Number(product.suitability_settings[key]) === 1;
         updateRoutineFields();
         const selections = [
-            ['skin_type_ids[]', '.skin-type-options', product.skin_types],
+            ['skin_type_ids[]', '#skinTypeOptions', product.skin_types],
             ['concern_ids[]', '#concernOptions', product.concerns],
             ['ingredient_ids[]', '#ingredientOptions', product.ingredients],
             ['suitability_tag_ids[]', '#suitabilityOptions', product.suitability_tags]
         ];
         selections.forEach(([name, selector, items]) => {
+            const container = form.querySelector(selector);
+            if (!container) throw new Error('The product form is outdated. Refresh the page to load the current form.');
             items.forEach(item => {
                 let input = [...form.querySelectorAll('input')].find(input => input.name === name && input.value === String(item.id));
                 if (!input) {
@@ -371,7 +373,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const text = document.createElement('span');
                     text.textContent = item.label + ' (inactive)';
                     label.append(input, text);
-                    form.querySelector(selector).appendChild(label);
+                    container.appendChild(label);
                 }
                 input.checked = true;
             });
