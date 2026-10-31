@@ -397,6 +397,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
     <!-- Responsive adjustments -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/responsive.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/product-favorites.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/home-reviews.css?v=<?= filemtime(__DIR__.'/../assets/css/home-reviews.css') ?>">
 </head>
 
 <body>
@@ -703,52 +704,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
         </section>
 
 
-        <section class="pv-home-reviews" aria-labelledby="homeReviewsTitle">
-            <div class="pv-reviews-container">
-                <div class="pv-reviews-heading">
-                    <div>
-                        <p class="pv-reviews-eyebrow">THE SKIN DIARIES</p>
-                        <h2 id="homeReviewsTitle">Rituals worth repeating.</h2>
-                    </div>
-                    <p class="pv-reviews-summary">4.9 average &middot; 2,400+ verified reviews</p>
-                </div>
-
-                <div class="pv-reviews-grid">
-                    <article class="pv-review-card">
-                        <div class="pv-review-stars" role="img" aria-label="5 out of 5 stars">★★★★★</div>
-                        <blockquote>&ldquo;Finally, a routine that makes sense.&rdquo;</blockquote>
-                        <p>
-                            I stopped overbuying because PureVia tells me exactly what I am getting,
-                            who it is for, and how to use it. My skin feels calmer and the shopping
-                            process feels much simpler.
-                        </p>
-                        <p class="pv-review-author">ELENA M. &middot; VERIFIED BUYER</p>
-                    </article>
-
-                    <article class="pv-review-card">
-                        <div class="pv-review-stars" role="img" aria-label="5 out of 5 stars">★★★★★</div>
-                        <blockquote>&ldquo;I can actually compare products now.&rdquo;</blockquote>
-                        <p>
-                            The ingredient labels and usage guidance are clear, the recommended skin
-                            types are helpful, and the price is transparent. It feels like a brand
-                            built for people who want to make informed decisions.
-                        </p>
-                        <p class="pv-review-author">NAOMI R. &middot; VERIFIED BUYER</p>
-                    </article>
-
-                    <article class="pv-review-card">
-                        <div class="pv-review-stars" role="img" aria-label="5 out of 5 stars">★★★★★</div>
-                        <blockquote>&ldquo;The information I need is right there.&rdquo;</blockquote>
-                        <p>
-                            I can see the ingredients, the recommended skin type, the usage guidance,
-                            and the price before I buy. That clarity alone makes PureVia feel
-                            trustworthy and premium.
-                        </p>
-                        <p class="pv-review-author">CAMILLE J. &middot; VERIFIED BUYER</p>
-                    </article>
-                </div>
-            </div>
-        </section>
+        <?php require __DIR__ . '/../includes/home-reviews.php'; ?>
 
         <section class="pv-skin-quiz" aria-labelledby="skinQuizTitle">
             <div class="pv-skin-quiz-banner">
@@ -1227,6 +1183,7 @@ function renderHomeProductCard(array $product, array $homeVariants): void
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/home-reviews.js?v=<?= filemtime(__DIR__.'/../assets/js/home-reviews.js') ?>"></script>
 </body>
 
 </html>

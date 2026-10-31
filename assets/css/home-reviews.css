@@ -1,0 +1,32 @@
+/* Loaded on the homepage only; review forms and product reviews are unchanged. */
+.pv-home-reviews .pv-home-review-controls { display:flex; align-items:center; justify-content:flex-end; gap:18px; flex-wrap:wrap; }
+.pv-home-reviews .pv-home-reviews-toggle { border:1px solid #cfcfc3; border-radius:20px; padding:8px 13px; background:transparent; color:#53634b; font:500 11px 'Poppins',sans-serif; cursor:pointer; white-space:nowrap; }
+.pv-home-reviews .pv-home-reviews-toggle:hover { background:#31382c; color:#fff; border-color:#31382c; }
+.pv-home-reviews .pv-home-reviews-toggle:focus-visible,.pv-home-reviews .pv-home-review-card a:focus-visible { outline:2px solid #53634b; outline-offset:4px; }
+.pv-home-reviews [hidden] { display:none!important; }
+.pv-home-reviews .pv-home-reviews-viewport { overflow-x:auto; overflow-y:hidden; padding:4px 0 12px; scrollbar-width:thin; }
+.pv-home-reviews .pv-home-reviews-track { display:flex; width:max-content; gap:24px; }
+.pv-home-reviews .pv-home-reviews-group { display:flex; gap:24px; align-items:stretch; flex-shrink:0; }
+.pv-home-reviews .pv-home-review-card { display:flex; flex-direction:column; flex:0 0 var(--home-review-width,360px); width:var(--home-review-width,360px); padding:28px; background:#fffdf9; border:1px solid #e2dbd0; border-radius:14px; }
+.pv-home-reviews .pv-home-review-card h3 { margin:0 0 12px; color:#383b32; font:500 17px/1.5 'Poppins',sans-serif; overflow-wrap:anywhere; }
+.pv-home-reviews .pv-home-review-card blockquote { margin:0 0 24px; color:#53554b; font:400 15px/1.85 'Poppins',sans-serif; overflow-wrap:anywhere; }
+.pv-home-reviews .pv-home-review-card footer { margin-top:auto; }
+.pv-home-reviews .pv-home-review-card .pv-review-author { margin:0 0 8px; color:#41443a; font-size:11px; font-weight:500; }
+.pv-home-reviews .pv-home-review-card .pv-review-author span { color:#69745d; font-size:10px; font-weight:400; }
+.pv-home-reviews .pv-home-review-card footer a { color:#77766e; font-size:11px; line-height:1.6; text-underline-offset:3px; overflow-wrap:anywhere; }
+.pv-home-reviews .pv-home-review-empty-stars { color:#c8b8a5; }
+.pv-home-reviews .pv-home-reviews-empty { margin:0; color:#77766e; font-size:14px; }
+.pv-home-reviews.is-moving .pv-home-reviews-viewport { overflow:hidden; }
+.pv-home-reviews.is-moving .pv-home-reviews-track { animation:pv-home-review-scroll var(--home-review-duration,80s) linear infinite; will-change:transform; }
+.pv-home-reviews.is-paused .pv-home-reviews-track,
+.pv-home-reviews .pv-home-reviews-viewport:hover .pv-home-reviews-track,
+.pv-home-reviews .pv-home-reviews-viewport:focus-within .pv-home-reviews-track { animation-play-state:paused; }
+@keyframes pv-home-review-scroll { to { transform:translateX(calc(-50% - 12px)); } }
+@media(max-width:900px) { .pv-home-reviews .pv-home-review-controls { justify-content:flex-start; gap:12px; } }
+@media(max-width:600px) { .pv-home-reviews .pv-home-review-card { padding:24px; } }
+@media(prefers-reduced-motion:reduce) {
+ .pv-home-reviews.is-moving .pv-home-reviews-track { animation:none; transform:none; will-change:auto; }
+ .pv-home-reviews.is-moving .pv-home-reviews-viewport { overflow-x:auto; }
+ .pv-home-reviews [data-review-clone] { display:none; }
+ .pv-home-reviews .pv-home-reviews-toggle { display:none; }
+}

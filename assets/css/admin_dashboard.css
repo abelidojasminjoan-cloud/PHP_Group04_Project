@@ -223,6 +223,20 @@ body {
     line-height: 1;
 }
 
+.stat-emoji svg {
+    display: block;
+    width: 34px;
+    height: 34px;
+    color: #c39a73;
+}
+
+.stat-customers .stat-emoji svg,
+.stat-low-stock .stat-emoji svg,
+.stat-payments .stat-emoji svg,
+.stat-revenue .stat-emoji svg {
+    color: #c39a73;
+}
+
 
 .stat-dot {
 
@@ -633,14 +647,22 @@ body {
 }
 
 
-.low-stock-heading i {
-
-    font-size: 17px;
+.low-stock-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ef7816;
+    line-height: 1;
 }
 
+.low-stock-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    color: #ef7816;
+}
 
 .low-stock-heading h2 {
-
     margin: 0;
 
     font-family: 'Poppins', sans-serif;

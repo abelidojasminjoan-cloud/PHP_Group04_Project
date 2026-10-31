@@ -261,7 +261,6 @@ body {
 
 .pv-favorites-link { position: relative; isolation: isolate; }
 .pv-favorites-link:hover { color: #c73728; transform: none; }
-.pv-favorites-link:hover::before { content: ""; position: absolute; inset: -8px; z-index: -1; border-radius: 9px; background: #eee9df; }
 .pv-favorites-link > svg { display: block; flex-shrink: 0; }
 .pv-favorites-count { position: absolute; top: -7px; right: -8px; display: flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 999px; background: #c73728; color: #fff; font: 600 9px/1 'Poppins', sans-serif; }
 .pv-favorites-count[hidden] { display: none !important; }
