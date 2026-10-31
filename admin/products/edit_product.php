@@ -34,6 +34,8 @@ try {
         productEditResponse(400, ['success' => false, 'message' => 'Invalid product.']);
     }
 
+    // Authentication is complete; do not block other requests on the session during database reads.
+    session_write_close();
     $conn->begin_transaction(MYSQLI_TRANS_START_READ_ONLY);
     $product = productEditData($conn, $productId);
     $conn->commit();

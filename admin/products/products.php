@@ -783,43 +783,7 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
 
                     
-<div class="form-group product-match-group">
 
-    <label class="product-match-label">
-        Skin Types
-    </label>
-
-    <div
-        id="skinTypeOptions"
-        class="skin-type-options product-match-options"
-        role="group"
-        aria-label="Skin Types"
-    >
-        <?php foreach ($skinTypes as $item): ?>
-            <label class="product-checkbox">
-                <input
-                    type="checkbox"
-                    name="skin_type_ids[]"
-                    value="<?= (int) $item['id'] ?>"
-                >
-                <span>
-                    <?= productEscape($item['label']) ?>
-                </span>
-            </label>
-        <?php endforeach; ?>
-    </div>
-
-    <!-- SELECT ALL BELOW THE CHOICES -->
-    <label class="product-checkbox product-select-all">
-        <input
-            type="checkbox"
-            id="selectAllSkinTypes"
-            aria-controls="skinTypeOptions"
-        >
-        <span>Select all skin types</span>
-    </label>
-
-</div>
 
 
                     <!-- SKIN CONCERNS -->
@@ -914,6 +878,14 @@ include __DIR__ . '/../../includes/sidemenu.php';
                         <label class="product-checkbox" for="productIngredientsComplete"><input type="checkbox" id="productIngredientsComplete" name="ingredients_complete" value="1"><span>All ingredients on the product label are recorded above</span></label>
                     </div>
 
+                    <div class="form-group">
+                        <label>Suitability Tags</label>
+                        <div id="suitabilityOptions" class="product-match-options" role="group" aria-label="Suitability Tags">
+                            <?php foreach ($suitabilityTags as $item): ?>
+                                <label class="product-checkbox"><input type="checkbox" name="suitability_tag_ids[]" value="<?= (int) $item['id'] ?>"><span><?= productEscape($item['label']) ?></span></label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                     <!-- KEY BENEFITS -->
 
                     <div class="form-group">
@@ -1107,7 +1079,7 @@ include __DIR__ . '/../../includes/sidemenu.php';
 
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/sidemenu.js"></script>
 <script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/products.js"></script>
-<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/product_form.js"></script>
+<script nonce="<?= pvScriptNonce() ?>" src="<?= BASE_URL ?>/assets/js/product_form.js?v=<?= filemtime(__DIR__ . '/../../assets/js/product_form.js') ?>"></script>
 
 <script nonce="<?= pvScriptNonce() ?>" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
